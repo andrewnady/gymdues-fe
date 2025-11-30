@@ -1,19 +1,24 @@
 import Link from 'next/link';
 import { Dumbbell } from 'lucide-react';
+import { NewsletterSubscription } from '@/components/newsletter-subscription';
 
 export function Footer() {
   return (
     <footer className="border-t bg-background mt-auto">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+          <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2 font-bold text-lg mb-4">
               <Dumbbell className="h-5 w-5" />
               <span>GymDues</span>
             </Link>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               Find your perfect gym and start your fitness journey today.
             </p>
+            <div className="mt-4">
+              <h3 className="font-semibold mb-3 text-sm">Newsletter</h3>
+              <NewsletterSubscription variant="compact" />
+            </div>
           </div>
           <div>
             <h3 className="font-semibold mb-4">Explore</h3>

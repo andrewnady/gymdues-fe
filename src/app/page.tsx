@@ -1,9 +1,21 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Dumbbell, TrendingUp, Users, Award } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, Dumbbell, TrendingUp, Users, Award, MapPin, ArrowRight, Flame, Star, BookOpen } from 'lucide-react';
+import { getStatesWithCounts, getTrendingGyms, getAllReviews } from '@/data/mock-gyms';
+import { getRecentBlogPosts } from '@/data/mock-blog';
+import { GymCard } from '@/components/gym-card';
+import { ReviewsCarousel } from '@/components/reviews-carousel';
+import { BlogCard } from '@/components/blog-card';
+import { NewsletterSubscription } from '@/components/newsletter-subscription';
 
 export default function Home() {
+  const states = getStatesWithCounts();
+  const trendingGyms = getTrendingGyms(3);
+  const reviews = getAllReviews(12);
+  const recentPosts = getRecentBlogPosts(3);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -70,16 +82,134 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-muted/50">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Fitness Journey?</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Browse our curated list of gyms and find the perfect place to achieve your fitness goals.
-          </p>
-          <Button size="lg" asChild>
-            <Link href="/gyms">Browse All Gyms</Link>
-          </Button>
+      {/* Listing by State Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Browse Gyms by State</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Find fitness centers in your state. Explore gyms across different locations.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+            {states.map((state) => (
+              <Card key={state.state} className="hover:shadow-md transition-shadow cursor-pointer group">
+                <CardContent className="p-6">
+                  <Link href={`/gyms?state=${state.state}`} className="block">
+                    <div className="flex items-center justify-center mb-3">
+                      <div className="rounded-full bg-primary/10 p-3 group-hover:bg-primary/20 transition-colors">
+                        <MapPin className="h-6 w-6 text-primary" />
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-center mb-1 group-hover:text-primary transition-colors">
+                      {state.stateName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground text-center">
+                      {state.count} {state.count === 1 ? 'gym' : 'gyms'}
+                    </p>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/gyms">
+                Explore More
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Trending Gyms Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center gap-2 mb-4">
+              <Flame className="h-6 w-6 text-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold">Trending Gyms</h2>
+            </div>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Discover the most popular and highly-rated fitness centers
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {trendingGyms.map((gym) => (
+              <GymCard key={gym.id} gym={gym} />
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" asChild>
+              <Link href="/gyms">
+                View All Gyms
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews Carousel Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center gap-2 mb-4">
+              <Star className="h-6 w-6 text-primary fill-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold">What Our Members Say</h2>
+            </div>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Real reviews from real members. See what people are saying about their gym experiences.
+            </p>
+          </div>
+          
+          {reviews.length > 0 && (
+            <div className="max-w-7xl mx-auto">
+              <ReviewsCarousel reviews={reviews} />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center gap-2 mb-4">
+              <BookOpen className="h-6 w-6 text-primary" />
+              <h2 className="text-3xl md:text-4xl font-bold">Latest from Our Blog</h2>
+            </div>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Expert tips, guides, and insights to help you on your fitness journey
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {recentPosts.map((post) => (
+              <BlogCard key={post.id} post={post} />
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/blog">
+                View All Posts
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-20 bg-primary/5">
+        <div className="container mx-auto px-4">
+          <NewsletterSubscription />
         </div>
       </section>
     </div>

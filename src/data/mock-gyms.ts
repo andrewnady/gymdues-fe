@@ -19,18 +19,32 @@ export const mockGyms: Gym[] = [
     reviewCount: 234,
     reviews: [
       {
-        id: '1',
+        id: 'elite-1',
         author: 'John Doe',
         rating: 5,
-        comment: 'Amazing facility with top-notch equipment and friendly staff!',
+        comment: 'Amazing facility with top-notch equipment and friendly staff! The trainers are knowledgeable and always willing to help.',
         date: '2024-01-15',
       },
       {
-        id: '2',
+        id: 'elite-2',
         author: 'Jane Smith',
         rating: 4,
-        comment: 'Great gym, but can get crowded during peak hours.',
+        comment: 'Great gym, but can get crowded during peak hours. The equipment is well-maintained and the atmosphere is motivating.',
         date: '2024-01-10',
+      },
+      {
+        id: 'elite-3',
+        author: 'Michael Chen',
+        rating: 5,
+        comment: 'Best gym in the area! Clean facilities, great variety of equipment, and excellent group classes. Highly recommend!',
+        date: '2024-01-08',
+      },
+      {
+        id: 'elite-4',
+        author: 'Sarah Johnson',
+        rating: 5,
+        comment: 'Love this place! The staff is amazing and the facilities are top-notch. Worth every penny of the membership.',
+        date: '2024-01-05',
       },
     ],
     plans: [
@@ -104,11 +118,32 @@ export const mockGyms: Gym[] = [
     reviewCount: 189,
     reviews: [
       {
-        id: '1',
+        id: 'powerhouse-1',
         author: 'Mike Johnson',
         rating: 5,
-        comment: 'Best gym for serious lifters. Great equipment and atmosphere.',
+        comment: 'Best gym for serious lifters. Great equipment and atmosphere. The powerlifting area is exactly what I needed.',
         date: '2024-01-12',
+      },
+      {
+        id: 'powerhouse-2',
+        author: 'David Martinez',
+        rating: 4,
+        comment: 'Solid gym with heavy-duty equipment. Perfect for strength training. Could use more cardio machines though.',
+        date: '2024-01-09',
+      },
+      {
+        id: 'powerhouse-3',
+        author: 'Chris Wilson',
+        rating: 5,
+        comment: 'No-nonsense gym that focuses on what matters. Great community of serious lifters. Highly recommend!',
+        date: '2024-01-07',
+      },
+      {
+        id: 'powerhouse-4',
+        author: 'Alex Thompson',
+        rating: 4,
+        comment: 'Good value for money. Equipment is well-maintained and the staff is helpful. Gets busy in the evenings.',
+        date: '2024-01-04',
       },
     ],
     plans: [
@@ -165,11 +200,32 @@ export const mockGyms: Gym[] = [
     reviewCount: 156,
     reviews: [
       {
-        id: '1',
+        id: 'zen-1',
         author: 'Sarah Williams',
         rating: 5,
-        comment: 'Perfect place to unwind and find inner peace. Excellent instructors!',
+        comment: 'Perfect place to unwind and find inner peace. Excellent instructors! The meditation sessions are life-changing.',
         date: '2024-01-14',
+      },
+      {
+        id: 'zen-2',
+        author: 'Emily Davis',
+        rating: 5,
+        comment: 'Beautiful studio with a calming atmosphere. The yoga classes are diverse and the instructors are very knowledgeable.',
+        date: '2024-01-11',
+      },
+      {
+        id: 'zen-3',
+        author: 'Lisa Anderson',
+        rating: 4,
+        comment: 'Great yoga studio! The classes are well-structured and the community is welcoming. Love the wellness workshops.',
+        date: '2024-01-06',
+      },
+      {
+        id: 'zen-4',
+        author: 'Maria Garcia',
+        rating: 5,
+        comment: 'This studio has become my sanctuary. The holistic approach to wellness is exactly what I was looking for.',
+        date: '2024-01-03',
       },
     ],
     plans: [
@@ -216,5 +272,85 @@ export function getGymBySlug(slug: string): Gym | undefined {
 
 export function getAllGyms(): Gym[] {
   return mockGyms;
+}
+
+export interface StateWithCount {
+  state: string;
+  stateName: string;
+  count: number;
+}
+
+export function getStatesWithCounts(): StateWithCount[] {
+  const stateMap = new Map<string, number>();
+  
+  mockGyms.forEach((gym) => {
+    const count = stateMap.get(gym.state) || 0;
+    stateMap.set(gym.state, count + 1);
+  });
+
+  const stateNames: Record<string, string> = {
+    'NY': 'New York',
+    'CA': 'California',
+    'TX': 'Texas',
+    'FL': 'Florida',
+    'IL': 'Illinois',
+    'PA': 'Pennsylvania',
+    'OH': 'Ohio',
+    'GA': 'Georgia',
+    'NC': 'North Carolina',
+    'MI': 'Michigan',
+  };
+
+  return Array.from(stateMap.entries())
+    .map(([state, count]) => ({
+      state,
+      stateName: stateNames[state] || state,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+export function getTrendingGyms(limit: number = 3): Gym[] {
+  // Sort by rating and review count to get trending gyms
+  return [...mockGyms]
+    .sort((a, b) => {
+      // First sort by rating (higher is better)
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      // Then by review count (more reviews = more popular)
+      return b.reviewCount - a.reviewCount;
+    })
+    .slice(0, limit);
+}
+
+export interface ReviewWithGym {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+  date: string;
+  avatar?: string;
+  gymName: string;
+  gymSlug: string;
+}
+
+export function getAllReviews(maxReviews: number = 12): ReviewWithGym[] {
+  const allReviews: ReviewWithGym[] = [];
+  
+  mockGyms.forEach((gym) => {
+    gym.reviews.forEach((review) => {
+      allReviews.push({
+        ...review,
+        gymName: gym.name,
+        gymSlug: gym.slug,
+      });
+    });
+  });
+  
+  // Sort by date (most recent first) and limit
+  return allReviews
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, maxReviews);
 }
 
