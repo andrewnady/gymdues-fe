@@ -7,7 +7,12 @@ const nextConfig: NextConfig = {
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
   },
 
   // Enable experimental features for better performance
