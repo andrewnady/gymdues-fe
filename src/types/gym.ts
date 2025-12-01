@@ -27,6 +27,7 @@ export interface GymFAQ {
   id: string;
   question: string;
   answer: string;
+  category?: string;
 }
 
 export interface Gym {

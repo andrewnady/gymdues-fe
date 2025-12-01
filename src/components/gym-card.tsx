@@ -24,14 +24,25 @@ export function GymCard({ gym }: GymCardProps) {
       </div>
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-xl mb-2">{gym.name}</CardTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <MapPin className="h-4 w-4" />
-              <span>{gym.city}, {gym.state}</span>
+          <div className="flex items-start gap-3 flex-1">
+            <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
+              <Image
+                src={gym.logo}
+                alt={`${gym.name} logo`}
+                fill
+                className="object-cover"
+                sizes="48px"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-xl mb-2">{gym.name}</CardTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <span>{gym.city}, {gym.state}</span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="font-semibold">{gym.rating}</span>
             <span className="text-sm text-muted-foreground">({gym.reviewCount})</span>
