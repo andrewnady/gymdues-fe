@@ -35,10 +35,32 @@ function normalizeGyms(gyms: any[]): Gym[] {
 
 /**
  * Fetches all gyms from the API
+ * @param search - Optional search term to filter gyms
+ * @param state - Optional state filter
+ * @param city - Optional city filter
+ * @param trending - Optional trending filter (true/false)
  */
-export async function getAllGyms(): Promise<Gym[]> {
+export async function getAllGyms(
+  search?: string,
+  state?: string,
+  city?: string,
+  trending?: boolean
+): Promise<Gym[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/gyms`, {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
+    if (search && search.trim()) {
+      url.searchParams.append('search', search.trim())
+    }
+    if (state && state.trim()) {
+      url.searchParams.append('state', state.trim())
+    }
+    if (city && city.trim()) {
+      url.searchParams.append('city', city.trim())
+    }
+    if (trending !== undefined) {
+      url.searchParams.append('trending', trending.toString())
+    }
+    const response = await fetch(url.toString(), {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
 
@@ -59,7 +81,15 @@ export async function getAllGyms(): Promise<Gym[]> {
     } else if (Array.isArray(data)) {
       gyms = data
     } else {
-      throw new Error('Invalid response format from API')
+    if (state && state.trim()) {
+      url.searchParams.append('state', state.trim())
+    }
+    if (city && city.trim()) {
+      url.searchParams.append('city', city.trim())
+    }
+    if (trending !== undefined) {
+      url.searchParams.append('trending', trending.toString())
+    }      throw new Error('Invalid response format from API')
     }
 
     // Normalize all gyms to ensure reviewCount is set

@@ -1,12 +1,28 @@
+import { Suspense } from 'react';
 import { getAllGyms } from '@/lib/gyms-api';
 import { GymCard } from '@/components/gym-card';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { GymSearchInput } from '@/components/gym-search-input';
+import { Gym } from '@/types/gym';
 
-export default async function GymsPage() {
-  let gyms = [];
+interface GymsPageProps {
+  searchParams: Promise<{
+    search?: string;
+    state?: string;
+    city?: string;
+    trending?: string;
+  }>;
+}
+
+export default async function GymsPage({ searchParams }: GymsPageProps) {
+  const params = await searchParams;
+  const searchTerm = params.search || '';
+  const state = params.state || '';
+  const city = params.city || '';
+  const trending = params.trending === 'true' ? true : params.trending === 'false' ? false : undefined;
+
+  let gyms: Gym[] = [];
   try {
-    gyms = await getAllGyms();
+    gyms = await getAllGyms(searchTerm, state, city, trending);
   } catch (error) {
     console.error('Failed to load gyms:', error);
     // You could show an error message to the user here
@@ -21,14 +37,13 @@ export default async function GymsPage() {
             Discover fitness centers in your area
           </p>
           <div className="max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search gyms..."
-                className="pl-10"
-              />
-            </div>
+            <Suspense fallback={
+              <div className="relative">
+                <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
+              </div>
+            }>
+              <GymSearchInput />
+            </Suspense>
           </div>
         </div>
 
@@ -40,7 +55,11 @@ export default async function GymsPage() {
 
         {gyms.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No gyms found. Try adjusting your search.</p>
+            <p className="text-muted-foreground">
+              {searchTerm 
+                ? `No gyms found matching "${searchTerm}". Try adjusting your search.`
+                : 'No gyms found. Try adjusting your search.'}
+            </p>
           </div>
         )}
       </div>
