@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getGymBySlug } from '@/data/mock-gyms';
+import { getGymBySlug } from '@/lib/gyms-api';
+import { getReviewCount } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,14 @@ interface PageProps {
 
 export default async function GymDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const gym = getGymBySlug(slug);
+  let gym;
+  
+  try {
+    gym = await getGymBySlug(slug);
+  } catch (error) {
+    console.error('Failed to load gym:', error);
+    notFound();
+  }
 
   if (!gym) {
     notFound();
@@ -38,8 +46,8 @@ export default async function GymDetailPage({ params }: PageProps) {
                 <div className='flex flex-wrap items-center gap-4 mb-4'>
                   <div className='flex items-center gap-1'>
                     <Star className='h-5 w-5 fill-yellow-400 text-yellow-400' />
-                    <span className='font-semibold'>{gym.rating}</span>
-                    <span className='text-sm opacity-90'>({gym.reviewCount} reviews)</span>
+                    <span className='font-semibold'>{gym.rating || 0}</span>
+                    <span className='text-sm opacity-90'>({getReviewCount(gym)} reviews)</span>
                   </div>
                   <div className='flex items-center gap-1'>
                     <MapPin className='h-5 w-5' />
@@ -115,7 +123,7 @@ export default async function GymDetailPage({ params }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Reviews</CardTitle>
-              <CardDescription>{gym.reviewCount} total reviews</CardDescription>
+              <CardDescription>{getReviewCount(gym)} total reviews</CardDescription>
             </CardHeader>
             <CardContent>
               <div className='space-y-4'>

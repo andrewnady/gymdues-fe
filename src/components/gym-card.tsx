@@ -5,6 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin } from 'lucide-react';
+import { getReviewCount } from '@/lib/utils';
+
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]*>/g, '').trim();
+}
 
 interface GymCardProps {
   gym: Gym;
@@ -15,7 +20,7 @@ export function GymCard({ gym }: GymCardProps) {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative h-48 w-full bg-muted">
         <Image
-          src={gym.featureImage}
+          src={gym.gallery?.[0]?.path || ''}
           alt={gym.name}
           fill
           className="object-cover"
@@ -27,7 +32,7 @@ export function GymCard({ gym }: GymCardProps) {
           <div className="flex items-start gap-3 flex-1">
             <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
               <Image
-                src={gym.logo}
+                src={gym.logo?.path || ''}
                 alt={`${gym.name} logo`}
                 fill
                 className="object-cover"
@@ -44,8 +49,8 @@ export function GymCard({ gym }: GymCardProps) {
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-semibold">{gym.rating}</span>
-            <span className="text-sm text-muted-foreground">({gym.reviewCount})</span>
+            <span className="font-semibold">{gym.rating || 0}</span>
+            <span className="text-sm text-muted-foreground">({getReviewCount(gym)})</span>
           </div>
         </div>
         {gym.tags && gym.tags.length > 0 && (
@@ -59,7 +64,7 @@ export function GymCard({ gym }: GymCardProps) {
         )}
       </CardHeader>
       <CardContent>
-        <CardDescription className="line-clamp-2">{gym.description}</CardDescription>
+        <CardDescription className="line-clamp-2">{stripHtmlTags(gym.description)}</CardDescription>
         {gym.amenities && gym.amenities.length > 0 && (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground mb-1">Amenities:</p>

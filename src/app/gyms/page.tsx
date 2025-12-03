@@ -1,10 +1,16 @@
-import { getAllGyms } from '@/data/mock-gyms';
+import { getAllGyms } from '@/lib/gyms-api';
 import { GymCard } from '@/components/gym-card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
-export default function GymsPage() {
-  const gyms = getAllGyms();
+export default async function GymsPage() {
+  let gyms = [];
+  try {
+    gyms = await getAllGyms();
+  } catch (error) {
+    console.error('Failed to load gyms:', error);
+    // You could show an error message to the user here
+  }
 
   return (
     <div className="min-h-screen py-8">

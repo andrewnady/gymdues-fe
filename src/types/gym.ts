@@ -35,7 +35,14 @@ export interface Gym {
   slug: string;
   name: string;
   description: string;
-  logo: string;
+  logo?: {
+    path: string;
+    alt: string;
+  };
+  gallery?: {
+    path: string;
+    alt: string;
+  }[];
   featureImage: string;
   address: string;
   city: string;
