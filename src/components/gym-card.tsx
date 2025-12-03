@@ -19,25 +19,29 @@ export function GymCard({ gym }: GymCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative h-48 w-full bg-muted">
-        <Image
-          src={gym.gallery?.[0]?.path || ''}
-          alt={gym.name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+        {gym.gallery?.[0]?.path && (
+          <Image
+            src={gym.gallery[0].path}
+            alt={gym.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        )}
       </div>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">
             <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
-              <Image
-                src={gym.logo?.path || ''}
-                alt={`${gym.name} logo`}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
+              {gym.logo?.path && (
+                <Image
+                  src={gym.logo.path}
+                  alt={`${gym.name} logo`}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <CardTitle className="text-xl mb-2">{gym.name}</CardTitle>
