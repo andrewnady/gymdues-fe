@@ -21,33 +21,33 @@ export default function FAQsPage() {
 
           <Card>
             <CardContent className="p-6">
-              <Tabs defaultValue={faqCategories[0]} className="w-full">
+              <Tabs defaultValue={faqCategories[0].title} className="w-full">
                 <TabsList className="flex flex-wrap w-full gap-2 mb-6 h-auto p-2 bg-transparent">
                   {faqCategories.map((category) => (
                     <TabsTrigger 
-                      key={category} 
-                      value={category} 
+                      key={category.id} 
+                      value={category.title} 
                       className="text-xs md:text-sm whitespace-normal min-h-[3rem] px-4 py-2 leading-tight text-center border rounded-md data-[state=active]:bg-background data-[state=active]:border-primary data-[state=inactive]:bg-muted data-[state=inactive]:border-border"
                     >
-                      {category}
+                      {category.title}
                     </TabsTrigger>
                   ))}
                 </TabsList>
 
                 {faqCategories.map((category) => (
-                  <TabsContent key={category} value={category}>
+                  <TabsContent key={category.id} value={category.title}>
                     <Card>
                       <CardHeader>
-                        <CardTitle>{category}</CardTitle>
+                        <CardTitle>{category.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <Accordion 
                           type="single" 
                           collapsible 
                           className="w-full"
-                          defaultValue={faqsByCategory[category][0]?.id}
+                          defaultValue={faqsByCategory[category.title][0]?.id}
                         >
-                          {faqsByCategory[category].map((faq) => (
+                          {faqsByCategory[category.title].map((faq) => (
                             <AccordionItem key={faq.id} value={faq.id}>
                               <AccordionTrigger>{faq.question}</AccordionTrigger>
                               <AccordionContent>{faq.answer}</AccordionContent>

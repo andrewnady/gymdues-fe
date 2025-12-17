@@ -7,6 +7,22 @@ export interface ApiError {
   status?: number
 }
 
+export interface GymsPaginationMeta {
+  current_page: number
+  from: number | null
+  last_page: number
+  per_page: number
+  to: number | null
+  total: number
+  next_page_url?: string | null
+  prev_page_url?: string | null
+}
+
+export interface PaginatedGymsResponse {
+  gyms: Gym[]
+  meta: GymsPaginationMeta
+}
+
 /**
  * Normalizes gym data from API to ensure all required fields are present
  * Handles different field name variations and calculates missing values
@@ -34,11 +50,8 @@ function normalizeGyms(gyms: Record<string, unknown>[]): Gym[] {
 }
 
 /**
- * Fetches all gyms from the API
- * @param search - Optional search term to filter gyms
- * @param state - Optional state filter
- * @param city - Optional city filter
- * @param trending - Optional trending filter (true/false)
+ * Fetches all gyms from the API (non-paginated helper)
+ * Primarily used internally where we just need the list.
  */
 export async function getAllGyms(
   search?: string,
@@ -88,6 +101,140 @@ export async function getAllGyms(
     return normalizeGyms(gyms)
   } catch (error) {
     console.error('Error fetching gyms:', error)
+    throw error
+  }
+}
+
+/**
+ * Fetches paginated gyms from the API (Laravel-style paginator)
+ * and returns both the gyms and pagination metadata.
+ */
+export async function getPaginatedGyms(options: {
+  search?: string
+  state?: string
+  city?: string
+  trending?: boolean
+  page?: number
+  perPage?: number
+}): Promise<PaginatedGymsResponse> {
+  const { search, state, city, trending, page, perPage } = options
+
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
+
+    if (search && search.trim()) {
+      url.searchParams.append('search', search.trim())
+    }
+    if (state && state.trim()) {
+      url.searchParams.append('state', state.trim())
+    }
+    if (city && city.trim()) {
+      url.searchParams.append('city', city.trim())
+    }
+    if (trending !== undefined) {
+      url.searchParams.append('trending', trending.toString())
+    }
+    if (page && page > 0) {
+      url.searchParams.append('page', page.toString())
+    }
+    if (perPage && perPage > 0) {
+      // Laravel-style per-page parameter
+      url.searchParams.append('per_page', perPage.toString())
+    }
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch gyms: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+    // Laravel-style pagination: { current_page, data: [...], last_page, per_page, total, ... }
+    type LaravelPaginatedResponse = {
+        data: Record<string, unknown>[]
+        current_page: number
+        from: number | null
+        last_page: number
+        per_page: number
+        to: number | null
+        total: number
+        next_page_url?: string | null
+        prev_page_url?: string | null
+    }
+
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'current_page' in (data as Record<string, unknown>) &&
+      Array.isArray((data as LaravelPaginatedResponse).data)
+    ) {
+      const paginated = data as LaravelPaginatedResponse
+
+      const gyms = normalizeGyms(paginated.data)
+
+      const meta: GymsPaginationMeta = {
+        current_page: paginated.current_page,
+        from: paginated.from,
+        last_page: paginated.last_page,
+        per_page: paginated.per_page,
+        to: paginated.to,
+        total: paginated.total,
+        next_page_url: paginated.next_page_url,
+        prev_page_url: paginated.prev_page_url,
+      }
+
+      return { gyms, meta }
+    }
+
+    // Fallback to non-paginated handling
+    let gymsArray: Record<string, unknown>[] = []
+
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'gyms' in (data as Record<string, unknown>) &&
+      Array.isArray((data as { gyms: Record<string, unknown>[] }).gyms)
+    ) {
+      gymsArray = (data as { gyms: Record<string, unknown>[] }).gyms
+    } else if (Array.isArray(data)) {
+      gymsArray = data as Record<string, unknown>[]
+    } else if (
+      typeof data === 'object' &&
+      data !== null &&
+      'data' in (data as Record<string, unknown>) &&
+      Array.isArray((data as { data: Record<string, unknown>[] }).data)
+    ) {
+      gymsArray = (data as { data: Record<string, unknown>[] }).data
+    } else {
+      throw new Error('Invalid response format from API')
+    }
+
+    const gyms = normalizeGyms(gymsArray)
+
+    const total = gyms.length
+    const effectivePerPage = perPage && perPage > 0 ? perPage : total || 1
+    const currentPage = page && page > 0 ? page : 1
+    const lastPage = Math.max(1, Math.ceil(total / effectivePerPage))
+    const from = total === 0 ? null : (currentPage - 1) * effectivePerPage + 1
+    const to = total === 0 ? null : Math.min(currentPage * effectivePerPage, total)
+
+    const meta: GymsPaginationMeta = {
+      current_page: currentPage,
+      from,
+      last_page: lastPage,
+      per_page: effectivePerPage,
+      to,
+      total,
+      next_page_url: null,
+      prev_page_url: null,
+    }
+
+    return { gyms, meta }
+  } catch (error) {
+    console.error('Error fetching paginated gyms:', error)
     throw error
   }
 }

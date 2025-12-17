@@ -119,13 +119,7 @@ export default async function GymDetailPage({ params }: PageProps) {
       {/* Hero Section */}
       <div className='relative h-64 md:h-96 w-full bg-muted'>
         {gym.gallery?.[0]?.path && (
-          <Image
-            src={gym.gallery[0].path}
-            alt={gym.name}
-            fill
-            className='object-cover'
-            priority
-          />
+          <Image src={gym.gallery[0].path} alt={gym.name} fill className='object-cover' priority />
         )}
         <div className='absolute inset-0 bg-black/40' />
         <div className='absolute bottom-0 left-0 right-0 p-8 text-white'>
@@ -332,22 +326,25 @@ export default async function GymDetailPage({ params }: PageProps) {
           gym.faqs.length > 0 &&
           (() => {
             // Group FAQs by category
-            const faqsByCategory: Record<string, typeof gym.faqs> = {}
-            gym.faqs.forEach((faq) => {
+            const faqsByCategory: Record<string, typeof gym.faqs> = gym.faqs.reduce((acc, faq) => {
               const category = faq.category || 'General'
-              if (!faqsByCategory[category]) {
-                faqsByCategory[category] = []
+              if (!acc[category]) {
+                acc[category] = []
               }
-              faqsByCategory[category].push(faq)
-            })
+              acc[category].push(faq)
+              return acc
+            }, {} as Record<string, typeof gym.faqs>)
 
             // Get categories that have FAQs
             const availableCategories = faqCategories.filter(
-              (cat) => faqsByCategory[cat]?.length > 0,
+              (cat) => faqsByCategory[cat.id]?.length > 0,
             )
             // Add 'General' category if there are FAQs without categories
-            if (faqsByCategory['General']?.length > 0 && !availableCategories.includes('General')) {
-              availableCategories.push('General')
+            if (
+              faqsByCategory['General']?.length > 0 &&
+              !availableCategories.some((cat) => cat.id === 'General')
+            ) {
+              availableCategories.unshift({ id: 'General', title: 'General' })
             }
 
             return (
@@ -356,36 +353,40 @@ export default async function GymDetailPage({ params }: PageProps) {
                   <CardTitle>Frequently Asked Questions</CardTitle>
                 </CardHeader>
                 <CardContent className='p-6'>
-                  <Tabs defaultValue={availableCategories[0] || 'General'} className='w-full'>
+                  <Tabs defaultValue={availableCategories[0]?.id || 'General'} className='w-full'>
                     <TabsList className='flex flex-wrap w-full gap-2 mb-6 h-auto p-2 bg-transparent'>
                       {availableCategories.map((category) => (
                         <TabsTrigger
-                          key={category}
-                          value={category}
+                          key={category.id}
+                          value={category.id}
                           className='text-xs md:text-sm whitespace-normal min-h-[3rem] px-4 py-2 leading-tight text-center border rounded-md data-[state=active]:bg-background data-[state=active]:border-primary data-[state=inactive]:bg-muted data-[state=inactive]:border-border'
                         >
-                          {category}
+                          {category.title}
                         </TabsTrigger>
                       ))}
                     </TabsList>
 
                     {availableCategories.map((category) => (
-                      <TabsContent key={category} value={category}>
+                      <TabsContent key={category.id} value={category.id}>
                         <Card>
                           <CardHeader>
-                            <CardTitle>{category}</CardTitle>
+                            <CardTitle>{category.title}</CardTitle>
                           </CardHeader>
                           <CardContent>
                             <Accordion
                               type='single'
                               collapsible
                               className='w-full'
-                              defaultValue={faqsByCategory[category]?.[0]?.id}
+                              defaultValue={faqsByCategory[category.id]?.[0]?.id}
                             >
-                              {faqsByCategory[category].map((faq) => (
+                              {faqsByCategory[category.id].map((faq) => (
                                 <AccordionItem key={faq.id} value={faq.id}>
-                                  <AccordionTrigger>{faq.question}</AccordionTrigger>
-                                  <AccordionContent>{faq.answer}</AccordionContent>
+                                  <AccordionTrigger>
+                                    <div dangerouslySetInnerHTML={{ __html: faq.question }} />
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                                  </AccordionContent>
                                 </AccordionItem>
                               ))}
                             </Accordion>
