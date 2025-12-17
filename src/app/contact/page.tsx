@@ -11,7 +11,7 @@ export default function ContactPage() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
             <p className="text-muted-foreground text-lg">
-              Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              Have questions? We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
             </p>
           </div>
 
@@ -20,7 +20,7 @@ export default function ContactPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Send us a Message</CardTitle>
-                <CardDescription>Fill out the form below and we'll get back to you</CardDescription>
+                <CardDescription>Fill out the form below and we&apos;ll get back to you</CardDescription>
               </CardHeader>
               <CardContent>
                 <form className="space-y-4">
@@ -66,7 +66,7 @@ export default function ContactPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Get in Touch</CardTitle>
-                  <CardDescription>We're here to help you find the perfect gym</CardDescription>
+                  <CardDescription>We&apos;re here to help you find the perfect gym</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-start gap-4">

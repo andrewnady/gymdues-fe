@@ -1,0 +1,13 @@
+# cPanel Configuration File
+# This file helps cPanel understand your Node.js application setup
+
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/$USER/public_html
+    - /bin/cp -R * $DEPLOYPATH/
+    - cd $DEPLOYPATH
+    - npm install --production
+    - npm run build
+
+
+

@@ -2,7 +2,7 @@ export interface FAQ {
   id: string;
   question: string;
   answer: string;
-  category: string;
+  category?: string;
 }
 
 export const faqsByCategory: Record<string, FAQ[]> = {

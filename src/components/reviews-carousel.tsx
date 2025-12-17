@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   Carousel,
   CarouselContent,
@@ -49,9 +48,9 @@ export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
                           />
                         ))}
                       </div>
-                      <p className="text-sm font-semibold">{review.author}</p>
+                      <p className="text-sm font-semibold">{review.reviewer}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(review.date).toLocaleDateString('en-US', {
+                        {new Date(review.reviewed_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
@@ -61,7 +60,7 @@ export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
                   </div>
                   
                   <p className="text-muted-foreground mb-4 flex-1 line-clamp-4">
-                    {review.comment}
+                    {review.text}
                   </p>
                   
                   <div className="pt-4 border-t">

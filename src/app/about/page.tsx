@@ -22,7 +22,7 @@ export default function AboutPage() {
                 At GymDues, we believe that everyone deserves access to quality fitness facilities that match their goals, budget, and lifestyle. Our mission is to simplify the process of finding and choosing the right gym by providing comprehensive, up-to-date information about fitness centers in your area.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                We're committed to helping you make informed decisions through detailed listings, authentic reviews, and transparent pricing information. Whether you're a fitness enthusiast, a beginner starting your journey, or someone looking to switch gyms, we're here to help you find your perfect fit.
+                We&apos;re committed to helping you make informed decisions through detailed listings, authentic reviews, and transparent pricing information. Whether you&apos;re a fitness enthusiast, a beginner starting your journey, or someone looking to switch gyms, we&apos;re here to help you find your perfect fit.
               </p>
             </CardContent>
           </Card>

@@ -14,7 +14,7 @@ export default function NotFound() {
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-muted-foreground">
-            The blog post you're looking for doesn't exist or has been removed.
+            The blog post you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <div className="flex gap-4 justify-center">
             <Button asChild>

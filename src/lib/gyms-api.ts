@@ -11,9 +11,9 @@ export interface ApiError {
  * Normalizes gym data from API to ensure all required fields are present
  * Handles different field name variations and calculates missing values
  */
-function normalizeGym(gym: any): Gym {
+function normalizeGym(gym: Record<string, unknown>): Gym {
   // Handle reviewCount - check for various field name variations
-  let reviewCount = gym.reviewCount || gym.review_count || gym.reviews_count || gym.reviewsCount
+  let reviewCount = (gym.reviewCount || gym.review_count || gym.reviews_count || gym.reviewsCount) as number | undefined
 
   // If reviewCount is not provided, calculate it from reviews array
   if (reviewCount === undefined || reviewCount === null) {
@@ -23,13 +23,13 @@ function normalizeGym(gym: any): Gym {
   return {
     ...gym,
     reviewCount: Number(reviewCount) || 0,
-  }
+  } as Gym
 }
 
 /**
  * Normalizes an array of gyms
  */
-function normalizeGyms(gyms: any[]): Gym[] {
+function normalizeGyms(gyms: Record<string, unknown>[]): Gym[] {
   return gyms.map(normalizeGym)
 }
 
@@ -72,30 +72,17 @@ export async function getAllGyms(
 
     // Handle different response formats
     // If the API returns { data: [...] } or { gyms: [...] }, extract the array
-    let gyms: Gym[] = []
+    let gyms: Record<string, unknown>[] = []
 
     if (data.data && Array.isArray(data.data)) {
-      gyms = data.data
+      gyms = data.data as Record<string, unknown>[]
     } else if (data.gyms && Array.isArray(data.gyms)) {
-      gyms = data.gyms
+      gyms = data.gyms as Record<string, unknown>[]
     } else if (Array.isArray(data)) {
-      gyms = data
+      gyms = data as Record<string, unknown>[]
     } else {
-    if (state && state.trim()) {
-      url.searchParams.append('state', state.trim())
+      throw new Error('Invalid response format from API')
     }
-    if (city && city.trim()) {
-      url.searchParams.append('city', city.trim())
-    }
-    if (trending !== undefined) {
-      url.searchParams.append('trending', trending.toString())
-    }      throw new Error('Invalid response format from API')
-    }
-
-    // Normalize all gyms to ensure reviewCount is set
-    return normalizeGyms(gyms)
-
-    throw new Error('Invalid response format from API')
 
     // Normalize all gyms to ensure reviewCount is set
     return normalizeGyms(gyms)
@@ -121,13 +108,13 @@ export async function getGymBySlug(slug: string): Promise<Gym | null> {
         const data = await response.json()
 
         // Handle different response formats
-        let gym: any = null
+        let gym: Record<string, unknown> | null = null
         if (data.data) {
-          gym = data.data
+          gym = data.data as Record<string, unknown>
         } else if (data.gym) {
-          gym = data.gym
+          gym = data.gym as Record<string, unknown>
         } else {
-          gym = data
+          gym = data as Record<string, unknown>
         }
 
         // Normalize the gym data
@@ -138,7 +125,7 @@ export async function getGymBySlug(slug: string): Promise<Gym | null> {
       if (response.status === 404) {
         return null
       }
-    } catch (slugError) {
+    } catch {
       // If slug endpoint doesn't exist or fails, fall back to fetching all and filtering
       console.warn('Slug endpoint not available, falling back to filtering all gyms')
     }
@@ -169,23 +156,20 @@ export async function getTrendingGyms(limit?: number): Promise<Gym[]> {
     const data = await response.json()
 
     // Handle different response formats
-    let gyms: Gym[] = []
+    let gyms: Record<string, unknown>[] = []
 
     if (data.data && Array.isArray(data.data)) {
-      gyms = data.data
+      gyms = data.data as Record<string, unknown>[]
     } else if (data.gyms && Array.isArray(data.gyms)) {
-      gyms = data.gyms
+      gyms = data.gyms as Record<string, unknown>[]
     } else if (Array.isArray(data)) {
-      gyms = data
+      gyms = data as Record<string, unknown>[]
     } else {
       throw new Error('Invalid response format from API')
-
-      // Normalize all gyms to ensure reviewCount is set
-      return normalizeGyms(gyms)
     }
 
     // Normalize all gyms to ensure reviewCount is set
-    let normalizedGyms = normalizeGyms(gyms)
+    const normalizedGyms = normalizeGyms(gyms)
 
     // Limit the results if a limit is specified
     if (limit && limit > 0) {
@@ -218,13 +202,13 @@ export async function getGymById(id: string): Promise<Gym | null> {
     const data = await response.json()
 
     // Handle different response formats
-    let gym: any = null
+    let gym: Record<string, unknown> | null = null
     if (data.data) {
-      gym = data.data
+      gym = data.data as Record<string, unknown>
     } else if (data.gym) {
-      gym = data.gym
+      gym = data.gym as Record<string, unknown>
     } else {
-      gym = data
+      gym = data as Record<string, unknown>
     }
 
     // Normalize the gym data
@@ -234,3 +218,5 @@ export async function getGymById(id: string): Promise<Gym | null> {
     throw error
   }
 }
+
+

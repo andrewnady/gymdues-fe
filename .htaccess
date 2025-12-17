@@ -1,0 +1,19 @@
+# Next.js Rewrite Rules for cPanel
+# This file handles routing for Next.js on Apache/cPanel
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Handle Next.js static files
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ http://localhost:%{SERVER_PORT}/$1 [P,L]
+  
+  # Proxy to Node.js application
+  ProxyPreserveHost On
+  ProxyPass / http://localhost:3000/
+  ProxyPassReverse / http://localhost:3000/
+</IfModule>
+
+
+

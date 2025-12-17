@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         port: '8001',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cms.gymdues.staging-apps.net',
+        pathname: '/**',
+      },
     ],
   },
 

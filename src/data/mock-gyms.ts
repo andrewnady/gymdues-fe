@@ -6,7 +6,7 @@ export const mockGyms: Gym[] = [
     slug: 'elite-fitness-center',
     name: 'Elite Fitness Center',
     description: 'A state-of-the-art fitness facility offering comprehensive training programs, modern equipment, and expert trainers. Perfect for athletes and fitness enthusiasts of all levels.',
-    logo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop',
+    logo: { path: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop', alt: 'Gym logo' },
     featureImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&h=600&fit=crop',
     address: '123 Main Street',
     city: 'New York',
@@ -20,55 +20,55 @@ export const mockGyms: Gym[] = [
     reviews: [
       {
         id: 'elite-1',
-        author: 'John Doe',
-        rating: 5,
-        comment: 'Amazing facility with top-notch equipment and friendly staff! The trainers are knowledgeable and always willing to help.',
-        date: '2024-01-15',
+        reviewer: 'John Doe',
+        rate: 5,
+        text: 'Amazing facility with top-notch equipment and friendly staff! The trainers are knowledgeable and always willing to help.',
+        reviewed_at: '2024-01-15',
       },
       {
         id: 'elite-2',
-        author: 'Jane Smith',
-        rating: 4,
-        comment: 'Great gym, but can get crowded during peak hours. The equipment is well-maintained and the atmosphere is motivating.',
-        date: '2024-01-10',
+        reviewer: 'Jane Smith',
+        rate: 4,
+        text: 'Great gym, but can get crowded during peak hours. The equipment is well-maintained and the atmosphere is motivating.',
+        reviewed_at: '2024-01-10',
       },
       {
         id: 'elite-3',
-        author: 'Michael Chen',
-        rating: 5,
-        comment: 'Best gym in the area! Clean facilities, great variety of equipment, and excellent group classes. Highly recommend!',
-        date: '2024-01-08',
+        reviewer: 'Michael Chen',
+        rate: 5,
+        text: 'Best gym in the area! Clean facilities, great variety of equipment, and excellent group classes. Highly recommend!',
+        reviewed_at: '2024-01-08',
       },
       {
         id: 'elite-4',
-        author: 'Sarah Johnson',
-        rating: 5,
-        comment: 'Love this place! The staff is amazing and the facilities are top-notch. Worth every penny of the membership.',
-        date: '2024-01-05',
+        reviewer: 'Sarah Johnson',
+        rate: 5,
+        text: 'Love this place! The staff is amazing and the facilities are top-notch. Worth every penny of the membership.',
+        reviewed_at: '2024-01-05',
       },
     ],
-    plans: [
+    pricing: [
       {
         id: '1',
-        name: 'Basic',
+        tier_name: 'Basic',
         price: 49.99,
-        duration: 'Monthly',
-        features: ['Access to all equipment', 'Locker room access', 'Free parking'],
+        frequency: 'Monthly',
+        description: 'Access to all equipment, Locker room access, Free parking',
       },
       {
         id: '2',
-        name: 'Premium',
+        tier_name: 'Premium',
         price: 79.99,
-        duration: 'Monthly',
-        features: ['Everything in Basic', 'Personal trainer sessions', 'Nutrition consultation', 'Priority booking'],
-        popular: true,
+        frequency: 'Monthly',
+        description: 'Everything in Basic, Personal trainer sessions, Nutrition consultation, Priority booking',
+        is_popular: true,
       },
       {
         id: '3',
-        name: 'Annual',
+        tier_name: 'Annual',
         price: 799.99,
-        duration: 'Yearly',
-        features: ['Everything in Premium', '2 months free', 'Guest passes', 'Exclusive events'],
+        frequency: 'Yearly',
+        description: 'Everything in Premium, 2 months free, Guest passes, Exclusive events',
       },
     ],
     faqs: [
@@ -170,13 +170,13 @@ export const mockGyms: Gym[] = [
       },
     ],
     hours: [
-      { day: 'Monday', open: '5:00 AM', close: '11:00 PM' },
-      { day: 'Tuesday', open: '5:00 AM', close: '11:00 PM' },
-      { day: 'Wednesday', open: '5:00 AM', close: '11:00 PM' },
-      { day: 'Thursday', open: '5:00 AM', close: '11:00 PM' },
-      { day: 'Friday', open: '5:00 AM', close: '11:00 PM' },
-      { day: 'Saturday', open: '6:00 AM', close: '10:00 PM' },
-      { day: 'Sunday', open: '7:00 AM', close: '9:00 PM' },
+      { day: 'Monday', from: '5:00 AM', to: '11:00 PM' },
+      { day: 'Tuesday', from: '5:00 AM', to: '11:00 PM' },
+      { day: 'Wednesday', from: '5:00 AM', to: '11:00 PM' },
+      { day: 'Thursday', from: '5:00 AM', to: '11:00 PM' },
+      { day: 'Friday', from: '5:00 AM', to: '11:00 PM' },
+      { day: 'Saturday', from: '6:00 AM', to: '10:00 PM' },
+      { day: 'Sunday', from: '7:00 AM', to: '9:00 PM' },
     ],
     amenities: ['24/7 Access', 'Personal Training', 'Group Classes', 'Sauna', 'Pool'],
     tags: ['Premium', '24/7', 'Pool'],
@@ -186,7 +186,7 @@ export const mockGyms: Gym[] = [
     slug: 'power-house-gym',
     name: 'Power House Gym',
     description: 'A no-nonsense gym focused on strength training and bodybuilding. Equipped with heavy-duty machines and free weights for serious lifters.',
-    logo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop',
+    logo: { path: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop', alt: 'Gym logo' },
     featureImage: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&h=600&fit=crop',
     address: '456 Oak Avenue',
     city: 'Los Angeles',
@@ -200,48 +200,48 @@ export const mockGyms: Gym[] = [
     reviews: [
       {
         id: 'powerhouse-1',
-        author: 'Mike Johnson',
-        rating: 5,
-        comment: 'Best gym for serious lifters. Great equipment and atmosphere. The powerlifting area is exactly what I needed.',
-        date: '2024-01-12',
+        reviewer: 'Mike Johnson',
+        rate: 5,
+        text: 'Best gym for serious lifters. Great equipment and atmosphere. The powerlifting area is exactly what I needed.',
+        reviewed_at: '2024-01-12',
       },
       {
         id: 'powerhouse-2',
-        author: 'David Martinez',
-        rating: 4,
-        comment: 'Solid gym with heavy-duty equipment. Perfect for strength training. Could use more cardio machines though.',
-        date: '2024-01-09',
+        reviewer: 'David Martinez',
+        rate: 4,
+        text: 'Solid gym with heavy-duty equipment. Perfect for strength training. Could use more cardio machines though.',
+        reviewed_at: '2024-01-09',
       },
       {
         id: 'powerhouse-3',
-        author: 'Chris Wilson',
-        rating: 5,
-        comment: 'No-nonsense gym that focuses on what matters. Great community of serious lifters. Highly recommend!',
-        date: '2024-01-07',
+        reviewer: 'Chris Wilson',
+        rate: 5,
+        text: 'No-nonsense gym that focuses on what matters. Great community of serious lifters. Highly recommend!',
+        reviewed_at: '2024-01-07',
       },
       {
         id: 'powerhouse-4',
-        author: 'Alex Thompson',
-        rating: 4,
-        comment: 'Good value for money. Equipment is well-maintained and the staff is helpful. Gets busy in the evenings.',
-        date: '2024-01-04',
+        reviewer: 'Alex Thompson',
+        rate: 4,
+        text: 'Good value for money. Equipment is well-maintained and the staff is helpful. Gets busy in the evenings.',
+        reviewed_at: '2024-01-04',
       },
     ],
-    plans: [
+    pricing: [
       {
         id: '1',
-        name: 'Standard',
+        tier_name: 'Standard',
         price: 39.99,
-        duration: 'Monthly',
-        features: ['Full gym access', 'Locker room', 'Shower facilities'],
+        frequency: 'Monthly',
+        description: 'Full gym access, Locker room, Shower facilities',
       },
       {
         id: '2',
-        name: 'Pro',
+        tier_name: 'Pro',
         price: 59.99,
-        duration: 'Monthly',
-        features: ['Everything in Standard', 'Supplement discounts', 'Training programs'],
-        popular: true,
+        frequency: 'Monthly',
+        description: 'Everything in Standard, Supplement discounts, Training programs',
+        is_popular: true,
       },
     ],
     faqs: [
@@ -331,13 +331,13 @@ export const mockGyms: Gym[] = [
       },
     ],
     hours: [
-      { day: 'Monday', open: '6:00 AM', close: '10:00 PM' },
-      { day: 'Tuesday', open: '6:00 AM', close: '10:00 PM' },
-      { day: 'Wednesday', open: '6:00 AM', close: '10:00 PM' },
-      { day: 'Thursday', open: '6:00 AM', close: '10:00 PM' },
-      { day: 'Friday', open: '6:00 AM', close: '10:00 PM' },
-      { day: 'Saturday', open: '7:00 AM', close: '8:00 PM' },
-      { day: 'Sunday', open: '8:00 AM', close: '6:00 PM' },
+      { day: 'Monday', from: '6:00 AM', to: '10:00 PM' },
+      { day: 'Tuesday', from: '6:00 AM', to: '10:00 PM' },
+      { day: 'Wednesday', from: '6:00 AM', to: '10:00 PM' },
+      { day: 'Thursday', from: '6:00 AM', to: '10:00 PM' },
+      { day: 'Friday', from: '6:00 AM', to: '10:00 PM' },
+      { day: 'Saturday', from: '7:00 AM', to: '8:00 PM' },
+      { day: 'Sunday', from: '8:00 AM', to: '6:00 PM' },
     ],
     amenities: ['Heavy Weights', 'Powerlifting Area', 'Cardio Equipment'],
     tags: ['Strength Training', 'Bodybuilding'],
@@ -347,7 +347,7 @@ export const mockGyms: Gym[] = [
     slug: 'zen-yoga-studio',
     name: 'Zen Yoga Studio',
     description: 'A peaceful yoga and wellness center offering various yoga classes, meditation sessions, and holistic wellness programs.',
-    logo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop',
+    logo: { path: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop', alt: 'Gym logo' },
     featureImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&h=600&fit=crop',
     address: '789 Peace Lane',
     city: 'San Francisco',
@@ -361,48 +361,48 @@ export const mockGyms: Gym[] = [
     reviews: [
       {
         id: 'zen-1',
-        author: 'Sarah Williams',
-        rating: 5,
-        comment: 'Perfect place to unwind and find inner peace. Excellent instructors! The meditation sessions are life-changing.',
-        date: '2024-01-14',
+        reviewer: 'Sarah Williams',
+        rate: 5,
+        text: 'Perfect place to unwind and find inner peace. Excellent instructors! The meditation sessions are life-changing.',
+        reviewed_at: '2024-01-14',
       },
       {
         id: 'zen-2',
-        author: 'Emily Davis',
-        rating: 5,
-        comment: 'Beautiful studio with a calming atmosphere. The yoga classes are diverse and the instructors are very knowledgeable.',
-        date: '2024-01-11',
+        reviewer: 'Emily Davis',
+        rate: 5,
+        text: 'Beautiful studio with a calming atmosphere. The yoga classes are diverse and the instructors are very knowledgeable.',
+        reviewed_at: '2024-01-11',
       },
       {
         id: 'zen-3',
-        author: 'Lisa Anderson',
-        rating: 4,
-        comment: 'Great yoga studio! The classes are well-structured and the community is welcoming. Love the wellness workshops.',
-        date: '2024-01-06',
+        reviewer: 'Lisa Anderson',
+        rate: 4,
+        text: 'Great yoga studio! The classes are well-structured and the community is welcoming. Love the wellness workshops.',
+        reviewed_at: '2024-01-06',
       },
       {
         id: 'zen-4',
-        author: 'Maria Garcia',
-        rating: 5,
-        comment: 'This studio has become my sanctuary. The holistic approach to wellness is exactly what I was looking for.',
-        date: '2024-01-03',
+        reviewer: 'Maria Garcia',
+        rate: 5,
+        text: 'This studio has become my sanctuary. The holistic approach to wellness is exactly what I was looking for.',
+        reviewed_at: '2024-01-03',
       },
     ],
-    plans: [
+    pricing: [
       {
         id: '1',
-        name: 'Drop-in',
+        tier_name: 'Drop-in',
         price: 20,
-        duration: 'Single Class',
-        features: ['One yoga class'],
+        frequency: 'Single Class',
+        description: 'One yoga class',
       },
       {
         id: '2',
-        name: 'Monthly Unlimited',
+        tier_name: 'Monthly Unlimited',
         price: 99.99,
-        duration: 'Monthly',
-        features: ['Unlimited classes', 'Meditation sessions', 'Wellness workshops'],
-        popular: true,
+        frequency: 'Monthly',
+        description: 'Unlimited classes, Meditation sessions, Wellness workshops',
+        is_popular: true,
       },
     ],
     faqs: [
@@ -498,13 +498,13 @@ export const mockGyms: Gym[] = [
       },
     ],
     hours: [
-      { day: 'Monday', open: '7:00 AM', close: '9:00 PM' },
-      { day: 'Tuesday', open: '7:00 AM', close: '9:00 PM' },
-      { day: 'Wednesday', open: '7:00 AM', close: '9:00 PM' },
-      { day: 'Thursday', open: '7:00 AM', close: '9:00 PM' },
-      { day: 'Friday', open: '7:00 AM', close: '9:00 PM' },
-      { day: 'Saturday', open: '8:00 AM', close: '7:00 PM' },
-      { day: 'Sunday', open: '9:00 AM', close: '6:00 PM' },
+      { day: 'Monday', from: '7:00 AM', to: '9:00 PM' },
+      { day: 'Tuesday', from: '7:00 AM', to: '9:00 PM' },
+      { day: 'Wednesday', from: '7:00 AM', to: '9:00 PM' },
+      { day: 'Thursday', from: '7:00 AM', to: '9:00 PM' },
+      { day: 'Friday', from: '7:00 AM', to: '9:00 PM' },
+      { day: 'Saturday', from: '8:00 AM', to: '7:00 PM' },
+      { day: 'Sunday', from: '9:00 AM', to: '6:00 PM' },
     ],
     amenities: ['Yoga Mats', 'Meditation Room', 'Wellness Shop'],
     tags: ['Yoga', 'Wellness', 'Meditation'],
@@ -571,10 +571,11 @@ export function getTrendingGyms(limit: number = 3): Gym[] {
 
 export interface ReviewWithGym {
   id: string;
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
+  reviewer: string;
+  rate: number;
+  rating: number; // Alias for rate for compatibility
+  text: string;
+  reviewed_at: string;
   avatar?: string;
   gymName: string;
   gymSlug: string;
@@ -587,6 +588,7 @@ export function getAllReviews(maxReviews: number = 12): ReviewWithGym[] {
     gym.reviews.forEach((review) => {
       allReviews.push({
         ...review,
+        rating: review.rate, // Add rating alias
         gymName: gym.name,
         gymSlug: gym.slug,
       });
@@ -595,7 +597,7 @@ export function getAllReviews(maxReviews: number = 12): ReviewWithGym[] {
   
   // Sort by date (most recent first) and limit
   return allReviews
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort((a, b) => new Date(b.reviewed_at).getTime() - new Date(a.reviewed_at).getTime())
     .slice(0, maxReviews);
 }
 
