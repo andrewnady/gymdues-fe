@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import Link from 'next/link'
 import { getGymBySlug } from '@/lib/gyms-api'
 import { getReviewCount } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import { GymHeroImage } from '@/components/gym-hero-image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,7 +19,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Star, MapPin, Phone, Mail, Globe, Check } from 'lucide-react'
+import { Star, MapPin, Check } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
 import { GymNewsletterSection } from '@/components/gym-newsletter-section'
 import { GymAboutSection } from '@/components/gym-about-section'
