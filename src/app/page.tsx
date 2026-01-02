@@ -12,6 +12,9 @@ import {
   Flame,
   Star,
   BookOpen,
+  ChevronDown,
+  Calendar,
+  Coffee,
 } from 'lucide-react'
 import { getStatesWithCounts, getAllReviews } from '@/data/mock-gyms'
 import { getTrendingGyms } from '@/lib/gyms-api'
@@ -37,28 +40,102 @@ export default async function Home() {
   return (
     <div className='min-h-screen'>
       {/* Hero Section */}
-      <section className='relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-20 md:py-32'>
-        <div className='container mx-auto px-4'>
-          <div className='max-w-3xl mx-auto text-center'>
-            <h1 className='text-4xl md:text-6xl font-bold mb-6'>Find Your Perfect Gym</h1>
-            <p className='text-xl text-muted-foreground mb-8'>
-              Discover the best fitness centers near you. Compare plans, read reviews, and join the
-              gym that fits your lifestyle.
+      <section 
+        className='relative pt-32 pb-24 md:pt-48 md:pb-40 bg-cover bg-center bg-no-repeat min-h-[600px] md:min-h-[700px] flex items-center -mt-16'
+        style={{
+          backgroundImage: 'url(/images/bg-header.jpg)',
+        }}
+      >
+        <div className='absolute inset-0 bg-black/50' />
+        <div className='container mx-auto px-4 relative z-10 w-full pt-16'>
+          <div className='max-w-4xl mx-auto text-center'>
+            <h1 className='text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white'>
+              Find Your Perfect Gym
+            </h1>
+            <p className='text-xl md:text-2xl text-white/90 mb-12 max-w-2xl mx-auto'>
+              The best way to find yourself in the service of others.
             </p>
 
             {/* Search Bar */}
-            <div className='flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto'>
-              <div className='relative flex-1'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-                <Input
-                  type='text'
-                  placeholder='Search for a gym by name, location, or amenities...'
-                  className='pl-10 h-12 text-base'
-                />
+            <div className='bg-white rounded-2xl p-2 shadow-2xl max-w-4xl mx-auto mb-8'>
+              <div className='flex flex-col md:flex-row gap-2'>
+                <div className='relative flex-1'>
+                  <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+                  <Input
+                    type='text'
+                    placeholder='What are you looking for'
+                    className='pl-12 h-14 text-base border-0 focus-visible:ring-0 bg-transparent'
+                  />
+                </div>
+                <div className='relative flex-1'>
+                  <MapPin className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+                  <Input
+                    type='text'
+                    placeholder='Location'
+                    className='pl-12 pr-10 h-14 text-base border-0 focus-visible:ring-0 bg-transparent'
+                  />
+                  <ChevronDown className='absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+                </div>
+                <div className='relative flex-1'>
+                  <Dumbbell className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+                  <Input
+                    type='text'
+                    placeholder='Category'
+                    className='pl-12 pr-10 h-14 text-base border-0 focus-visible:ring-0 bg-transparent'
+                  />
+                  <ChevronDown className='absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
+                </div>
+                <Button size='lg' className='h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl' asChild>
+                  <Link href='/gyms'>Search</Link>
+                </Button>
               </div>
-              <Button size='lg' className='h-12 px-8' asChild>
-                <Link href='/gyms'>Search</Link>
-              </Button>
+            </div>
+
+            {/* Featured Categories */}
+            <div className='text-white/90 mb-4'>
+              <p className='text-sm md:text-base mb-4'>Or browse featured categories:</p>
+              <div className='flex flex-wrap justify-center gap-3'>
+                <Button
+                  variant='outline'
+                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
+                  asChild
+                >
+                  <Link href='/gyms'>
+                    <Dumbbell className='h-4 w-4 mr-2' />
+                    Fitness
+                  </Link>
+                </Button>
+                <Button
+                  variant='outline'
+                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
+                  asChild
+                >
+                  <Link href='/gyms'>
+                    <Calendar className='h-4 w-4 mr-2' />
+                    Events
+                  </Link>
+                </Button>
+                <Button
+                  variant='outline'
+                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
+                  asChild
+                >
+                  <Link href='/gyms'>
+                    <Coffee className='h-4 w-4 mr-2' />
+                    Wellness
+                  </Link>
+                </Button>
+                <Button
+                  variant='outline'
+                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
+                  asChild
+                >
+                  <Link href='/gyms'>
+                    <Users className='h-4 w-4 mr-2' />
+                    Community
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

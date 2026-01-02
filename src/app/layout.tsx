@@ -34,7 +34,7 @@ export default function RootLayout({
           <CounterStoreProvider>
             <div className="flex flex-col min-h-screen">
               <Navigation />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 relative">{children}</main>
               <Footer />
             </div>
           </CounterStoreProvider>
