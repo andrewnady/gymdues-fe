@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Dumbbell } from 'lucide-react'
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -27,19 +27,24 @@ export function Navigation() {
   // On home page: transparent with white text at top, white with dark text when scrolled
   // On other pages: white background with dark text from the start
   const shouldShowWhiteText = isHomePage && !isScrolled
-  const navBackground = isHomePage && !isScrolled 
-    ? 'bg-transparent backdrop-blur-sm' 
-    : 'bg-white/95 backdrop-blur-md shadow-md border-b'
+  const navBackground =
+    isHomePage && !isScrolled
+      ? 'bg-transparent backdrop-blur-sm'
+      : 'bg-white/95 backdrop-blur-md shadow-md border-b'
 
   return (
-    <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${navBackground}`}
-    >
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${navBackground}`}>
       <div className='container mx-auto px-4'>
         <div className='flex h-16 items-center justify-between'>
-          <Link href='/' className='flex items-center gap-2 font-bold text-xl'>
-            <Dumbbell className='h-6 w-6' />
-            <span className={shouldShowWhiteText ? 'text-white' : 'text-foreground'}>GymDues</span>
+          <Link href='/' className='flex items-center'>
+            <Image
+              src='/images/logo.svg'
+              alt='GymDues'
+              width={104}
+              height={36}
+              className={`h-8 w-auto ${shouldShowWhiteText ? 'brightness-0 invert' : ''}`}
+              priority
+            />
           </Link>
           <div className='flex items-center gap-6'>
             <Link
@@ -66,14 +71,7 @@ export function Navigation() {
             >
               About
             </Link>
-            <Link
-              href='/faqs'
-              className={`text-sm font-medium hover:text-primary transition-colors ${
-                shouldShowWhiteText ? 'text-white' : 'text-foreground'
-              }`}
-            >
-              FAQs
-            </Link>
+
             <Link
               href='/contact'
               className={`text-sm font-medium hover:text-primary transition-colors ${

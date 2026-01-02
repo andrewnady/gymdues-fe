@@ -20,6 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'GymDues - Find Your Perfect Gym',
   description: 'Discover the best fitness centers near you. Compare plans, read reviews, and join the gym that fits your lifestyle.',
+  icons: {
+    icon: '/images/fav-ic.png',
+  },
 }
 
 export default function RootLayout({

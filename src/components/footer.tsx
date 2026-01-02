@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Dumbbell } from 'lucide-react';
+import Image from 'next/image';
 import { NewsletterSubscription } from '@/components/newsletter-subscription';
 
 export function Footer() {
@@ -8,9 +8,14 @@ export function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 font-bold text-lg mb-4">
-              <Dumbbell className="h-5 w-5" />
-              <span>GymDues</span>
+            <Link href="/" className="flex items-center mb-4">
+              <Image
+                src='/images/logo.svg'
+                alt='GymDues'
+                width={104}
+                height={36}
+                className='h-8 w-auto'
+              />
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
               Find your perfect gym and start your fitness journey today.

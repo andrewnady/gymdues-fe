@@ -9,11 +9,9 @@ import {
   MapPin,
   ArrowRight,
   ChevronDown,
-  Calendar,
-  Coffee,
 } from 'lucide-react'
 import { getStatesWithCounts, getAllReviews } from '@/data/mock-gyms'
-import { getTrendingGyms } from '@/lib/gyms-api'
+import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
 import { getRecentBlogPosts } from '@/data/mock-blog'
 import { GymCard } from '@/components/gym-card'
 import { Gym } from '@/types/gym'
@@ -30,6 +28,16 @@ export default async function Home() {
     console.error('Failed to load trending gyms:', error)
     // Fallback to empty array if API fails
   }
+  
+  let popularGyms: Gym[] = []
+  try {
+    const allGyms = await getAllGyms()
+    popularGyms = allGyms.slice(0, 5)
+  } catch (error) {
+    console.error('Failed to load popular gyms:', error)
+    // Fallback to empty array if API fails
+  }
+  
   const reviews = getAllReviews(12)
   const recentPosts = getRecentBlogPosts(3)
 
@@ -96,50 +104,33 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Featured Categories */}
+            {/* Most Popular Gyms and Prices */}
             <div className='text-white/90 mb-4'>
-              <p className='text-sm md:text-base mb-4'>Or browse featured categories:</p>
+              <p className='text-sm md:text-base mb-4'>Most Popular Gyms and Prices</p>
               <div className='flex flex-wrap justify-center gap-3'>
-                <Button
-                  variant='outline'
-                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
-                  asChild
-                >
-                  <Link href='/gyms'>
-                    <Dumbbell className='h-4 w-4 mr-2' />
-                    Fitness
-                  </Link>
-                </Button>
-                <Button
-                  variant='outline'
-                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
-                  asChild
-                >
-                  <Link href='/gyms'>
-                    <Calendar className='h-4 w-4 mr-2' />
-                    Events
-                  </Link>
-                </Button>
-                <Button
-                  variant='outline'
-                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
-                  asChild
-                >
-                  <Link href='/gyms'>
-                    <Coffee className='h-4 w-4 mr-2' />
-                    Wellness
-                  </Link>
-                </Button>
-                <Button
-                  variant='outline'
-                  className='bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full'
-                  asChild
-                >
-                  <Link href='/gyms'>
-                    <Users className='h-4 w-4 mr-2' />
-                    Community
-                  </Link>
-                </Button>
+                {popularGyms.length > 0 ? (
+                  popularGyms.map((gym) => {
+                    const lowestPrice = gym.membershipPlans && gym.membershipPlans.length > 0
+                      ? Math.min(...gym.membershipPlans.map((plan) => plan.price || 0))
+                      : null
+                    return (
+                      <Link
+                        key={gym.id}
+                        href={`/gyms/${gym.slug}`}
+                        className='bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full flex items-center gap-2 transition-colors'
+                      >
+                        <span className='font-medium'>{gym.name}</span>
+                        {lowestPrice !== null && (
+                          <span className='text-white/80 text-sm'>
+                            ${lowestPrice.toFixed(0)}/mo
+                          </span>
+                        )}
+                      </Link>
+                    )
+                  })
+                ) : (
+                  <p className='text-white/70 text-sm'>Loading popular gyms...</p>
+                )}
               </div>
             </div>
           </div>
@@ -229,7 +220,7 @@ export default async function Home() {
                     <h3 className='text-2xl font-bold text-white'>{state.stateName}</h3>
                   </div>
                   <p className='text-white/90 text-sm'>
-                    {state.count} {state.count === 1 ? 'Listing' : 'Listings'} available
+                    {state.count} {state.count === 1 ? 'Gym' : 'Gyms'} available
                   </p>
                 </div>
               </Link>

@@ -39,17 +39,17 @@ export default async function BlogPostPage({ params }: PageProps) {
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <div className="container mx-auto">
-            <div className="flex items-center gap-2 mb-4">
+            {/* <div className="flex items-center gap-2 mb-4">
               <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                 {post.category}
               </Badge>
-            </div>
+            </div> */}
             <h1 className="text-3xl md:text-5xl font-bold mb-4">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span>{post.author.name}</span>
-              </div>
+              </div> */}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span>
@@ -60,10 +60,10 @@ export default async function BlogPostPage({ params }: PageProps) {
                   })}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>{post.readTime} min read</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -85,14 +85,14 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           <Separator className="my-12" />
 
-          <div className="flex flex-wrap gap-2 mb-8">
+          {/* <div className="flex flex-wrap gap-2 mb-8">
             <span className="text-sm font-medium">Tags:</span>
             {post.tags.map((tag) => (
               <Badge key={tag} variant="outline">
                 {tag}
               </Badge>
             ))}
-          </div>
+          </div> */}
 
           <div className="bg-muted/50 rounded-lg p-6">
             <div className="flex items-center gap-4">
