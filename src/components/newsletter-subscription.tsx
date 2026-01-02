@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, Check } from 'lucide-react';
@@ -69,49 +70,71 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
 
   return (
     <div className={className}>
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
-          <Mail className="h-6 w-6 text-primary" />
-        </div>
-        <h3 className="text-2xl font-bold mb-2">Subscribe to Our Newsletter</h3>
-        <p className="text-muted-foreground">
-          Get the latest fitness tips, gym updates, and exclusive offers delivered to your inbox.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Input
-            type="email"
-            placeholder="Enter your email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="flex-1"
-            disabled={isSubscribed || isLoading}
-          />
-          <Button type="submit" size="lg" disabled={isSubscribed || isLoading}>
-            {isSubscribed ? (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Subscribed!
-              </>
-            ) : isLoading ? (
-              'Subscribing...'
-            ) : (
-              'Subscribe'
-            )}
-          </Button>
-        </div>
-        {isSubscribed && (
-          <p className="text-sm text-green-600 dark:text-green-400 mt-3 text-center">
-            Thank you for subscribing! Check your email for confirmation.
+      <div className="grid md:grid-cols-2 gap-12 items-center">
+        {/* Left Side - Form */}
+        <div>
+          <h3 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
+            Subscribe Our Newsletter
+          </h3>
+          <p className="text-muted-foreground text-lg mb-8">
+            Get important update to your email.
           </p>
-        )}
-        <p className="text-xs text-muted-foreground mt-3 text-center">
-          We respect your privacy. Unsubscribe at any time.
-        </p>
-      </form>
+
+          <form onSubmit={handleSubmit}>
+            <div className="bg-white rounded-2xl p-2 shadow">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="pl-12 h-14 text-base border-0 focus-visible:ring-0 bg-transparent"
+                    disabled={isSubscribed || isLoading}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl"
+                  disabled={isSubscribed || isLoading}
+                >
+                  {isSubscribed ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Subscribed!
+                    </>
+                  ) : isLoading ? (
+                    'Subscribing...'
+                  ) : (
+                    'Subscribe'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </form>
+          {isSubscribed && (
+            <p className="text-sm text-green-600 dark:text-green-400 mt-3">
+              Thank you for subscribing! Check your email for confirmation.
+            </p>
+          )}
+        </div>
+
+        {/* Right Side - Illustration */}
+        <div className="relative hidden md:block">
+          <div className="relative w-full h-80">
+            <Image
+              src="/images/newsletter.svg"
+              alt="Newsletter illustration"
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 0vw, 50vw"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

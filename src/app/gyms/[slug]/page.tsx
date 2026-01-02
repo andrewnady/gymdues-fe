@@ -9,13 +9,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Star, MapPin, Phone, Mail, Globe } from 'lucide-react'
+import { Star, MapPin, Phone, Mail, Globe, Check } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
 import { GymNewsletterSection } from '@/components/gym-newsletter-section'
 import { GymAboutSection } from '@/components/gym-about-section'
@@ -119,10 +126,7 @@ export default async function GymDetailPage({ params }: PageProps) {
     <div className='min-h-screen'>
       {/* Hero Section */}
       <div className='relative h-64 md:h-96 w-full bg-muted'>
-        <GymHeroImage
-          src={gym.gallery?.[0]?.path}
-          alt={gym.name}
-        />
+        <GymHeroImage src={gym.gallery?.[0]?.path} alt={gym.name} />
         <div className='absolute inset-0 bg-black/40' />
         <div className='absolute bottom-0 left-0 right-0 p-8 text-white'>
           <div className='container mx-auto'>
@@ -147,7 +151,7 @@ export default async function GymDetailPage({ params }: PageProps) {
               </div>
 
               {/* Contact Info in Hero */}
-              <div className='bg-white/10 backdrop-blur-sm rounded-lg p-4 md:p-6 border border-white/20'>
+              {/* <div className='bg-white/10 backdrop-blur-sm rounded-lg p-4 md:p-6 border border-white/20'>
                 <h3 className='font-semibold mb-3 text-lg'>Contact Information</h3>
                 <div className='space-y-2 text-sm'>
                   <div className='flex items-start gap-2'>
@@ -188,7 +192,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                     <Link href={`tel:${gym.phone}`}>Call Now</Link>
                   </Button>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -287,38 +291,83 @@ export default async function GymDetailPage({ params }: PageProps) {
         )}
 
         {/* Membership Plans - Full Width */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Membership Plans</CardTitle>
-            <CardDescription>Choose the plan that works best for you</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {gym.pricing?.map((plan) => (
-                <Card key={plan.id} className={plan.is_popular ? 'border-primary border-2' : ''}>
-                  <CardHeader>
-                    <div className='flex items-center justify-between'>
-                      <CardTitle className='text-lg'>{plan.tier_name}</CardTitle>
-                      {plan.is_popular && <Badge variant='default'>Popular</Badge>}
-                    </div>
-                    <div className='mt-2'>
-                      <span className='text-3xl font-bold'>
-                        ${typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price}
-                      </span>
-                      <span className='text-muted-foreground'>/{plan.frequency}</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: plan.description }}
-                      className='text-primary'
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+        <section className='py-20 bg-background'>
+          <div className='container mx-auto px-4'>
+            <div className='mb-12'>
+              <h2 className='text-3xl md:text-4xl font-bold mb-2'>Membership Plans</h2>
+              <p className='text-muted-foreground text-lg'>
+                Choose the plan that works best for you
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className='relative bg-muted/30 py-10'>
+              <Carousel
+                opts={{
+                  align: 'start',
+                  loop: false,
+                }}
+                className='w-full'
+              >
+                <CarouselContent className='-ml-2 md:-ml-4'>
+                  {gym.pricing?.map((plan, index) => {
+                    // Parse description into features list
+                    const features = plan.description
+                      .split(',')
+                      .map((f) => f.trim())
+                      .filter((f) => f.length > 0)
+
+                    return (
+                      <CarouselItem key={plan.id} className='basis-full md:basis-1/2 lg:basis-1/3'>
+                        <div className='relative flex h-full'>
+                          <div
+                            className={`relative p-6 pl-10 flex flex-col h-full w-full ${
+                              index < (gym.pricing?.length || 0) - 1 ? 'border-r border-border' : ''
+                            }`}
+                          >
+                            {plan.is_popular && (
+                              <div className='absolute -top-3 left-1/2 transform -translate-x-1/2'>
+                                <Badge className='bg-green-500 text-white px-3 py-1'>
+                                  <Star className='h-3 w-3 mr-1 fill-white' />
+                                  Most Popular
+                                </Badge>
+                              </div>
+                            )}
+                            <div className='mb-4'>
+                              <div className='text-4xl font-bold mb-2'>
+                                $
+                                {typeof plan.price === 'number'
+                                  ? plan.price.toFixed(2)
+                                  : plan.price}
+                                <span className='text-lg font-normal text-muted-foreground'>
+                                  /{plan.frequency.toLowerCase()}
+                                </span>
+                              </div>
+                              <h3 className='text-xl font-semibold mb-2'>{plan.tier_name}</h3>
+                              <p className='text-sm text-muted-foreground mb-6'>
+                                {plan.description.split(',')[0]}
+                              </p>
+                            </div>
+                            <div className='flex-1'>
+                              <ul className='space-y-3'>
+                                {features.map((feature, idx) => (
+                                  <li key={idx} className='flex items-start gap-2'>
+                                    <Check className='h-5 w-5 text-primary flex-shrink-0 mt-0.5' />
+                                    <span className='text-sm text-foreground'>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    )
+                  })}
+                </CarouselContent>
+                <CarouselPrevious className='-left-12' />
+                <CarouselNext className='-right-12' />
+              </Carousel>
+            </div>
+          </div>
+        </section>
 
         {/* Newsletter Section - Full Width */}
         <GymNewsletterSection />
