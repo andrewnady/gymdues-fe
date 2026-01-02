@@ -18,3 +18,15 @@ export function getReviewCount(gym: Gym | Record<string, unknown>): number {
   // Fallback to reviews array length
   return Array.isArray((gym as Gym).reviews) ? (gym as Gym).reviews.length : 0;
 }
+
+/**
+ * Get placeholder image URL for gyms
+ */
+export function getPlaceholderImage(type: 'gym' | 'logo' = 'gym'): string {
+  if (type === 'logo') {
+    // Placeholder for logo (square, smaller)
+    return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop&q=80'
+  }
+  // Placeholder for gym feature image (landscape)
+  return 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=600&fit=crop&q=80'
+}

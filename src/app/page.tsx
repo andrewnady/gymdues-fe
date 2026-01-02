@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Search,
   Dumbbell,
@@ -36,6 +35,15 @@ export default async function Home() {
   }
   const reviews = getAllReviews(12)
   const recentPosts = getRecentBlogPosts(3)
+
+  // City skyline images mapping
+  const cityImages: Record<string, string> = {
+    NY: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop&q=80', // New York
+    CA: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=600&fit=crop&q=80', // Los Angeles
+    TX: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?w=800&h=600&fit=crop&q=80', // Texas
+    FL: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600&fit=crop&q=80', // Miami
+    IL: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop&q=80', // Chicago
+  }
 
   return (
     <div className='min-h-screen'>
@@ -144,6 +152,12 @@ export default async function Home() {
       {/* Features Section */}
       <section className='py-20 bg-background'>
         <div className='container mx-auto px-4'>
+          <div className='text-center mb-12'>
+            <h2 className='text-3xl md:text-4xl font-bold mb-2'>Why Choose GymDues</h2>
+            <p className='text-muted-foreground text-lg max-w-2xl mx-auto'>
+              Everything you need to find and compare fitness centers
+            </p>
+          </div>
           <div className='grid md:grid-cols-3 gap-8'>
             <div className='text-center'>
               <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4'>
@@ -182,45 +196,47 @@ export default async function Home() {
       {/* Listing by State Section */}
       <section className='py-20 bg-muted/30'>
         <div className='container mx-auto px-4'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl md:text-4xl font-bold mb-4'>Browse Gyms by State</h2>
-            <p className='text-muted-foreground text-lg max-w-2xl mx-auto'>
-              Find fitness centers in your state. Explore gyms across different locations.
-            </p>
+          <div className='flex flex-col md:flex-row md:items-start md:justify-between mb-12'>
+            <div>
+              <h2 className='text-3xl md:text-4xl font-bold mb-2'>Browse Gyms By State</h2>
+              <p className='text-muted-foreground text-lg'>
+                A selection of listing verified for quality.
+              </p>
+            </div>
+            <Link
+              href='/gyms'
+              className='flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-4 md:mt-0'
+            >
+              Explore More
+              <ArrowRight className='h-4 w-4' />
+            </Link>
           </div>
 
-          <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8'>
-            {states.map((state) => (
-              <Card
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+            {states.slice(0, 4).map((state) => (
+              <Link
                 key={state.state}
-                className='hover:shadow-md transition-shadow cursor-pointer group'
+                href={`/gyms?state=${state.state}`}
+                className='group relative overflow-hidden rounded-xl h-64 md:h-80 cursor-pointer'
               >
-                <CardContent className='p-6'>
-                  <Link href={`/gyms?state=${state.state}`} className='block'>
-                    <div className='flex items-center justify-center mb-3'>
-                      <div className='rounded-full bg-primary/10 p-3 group-hover:bg-primary/20 transition-colors'>
-                        <MapPin className='h-6 w-6 text-primary' />
-                      </div>
-                    </div>
-                    <h3 className='font-semibold text-center mb-1 group-hover:text-primary transition-colors'>
-                      {state.stateName}
-                    </h3>
-                    <p className='text-sm text-muted-foreground text-center'>
-                      {state.count} {state.count === 1 ? 'gym' : 'gyms'}
-                    </p>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className='text-center'>
-            <Button size='lg' variant='outline' asChild>
-              <Link href='/gyms'>
-                Explore More
-                <ArrowRight className='ml-2 h-4 w-4' />
+                <div
+                  className='absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110'
+                  style={{
+                    backgroundImage: `url(${cityImages[state.state] || 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop&q=80'})`,
+                  }}
+                />
+                <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent' />
+                <div className='absolute bottom-0 left-0 right-0 p-6'>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <MapPin className='h-5 w-5 text-orange-500' />
+                    <h3 className='text-2xl font-bold text-white'>{state.stateName}</h3>
+                  </div>
+                  <p className='text-white/90 text-sm'>
+                    {state.count} {state.count === 1 ? 'Listing' : 'Listings'} available
+                  </p>
+                </div>
               </Link>
-            </Button>
+            ))}
           </div>
         </div>
       </section>
@@ -228,29 +244,28 @@ export default async function Home() {
       {/* Trending Gyms Section */}
       <section className='py-20 bg-background'>
         <div className='container mx-auto px-4'>
-          <div className='text-center mb-12'>
-            <div className='inline-flex items-center justify-center gap-2 mb-4'>
-              <Flame className='h-6 w-6 text-primary' />
-              <h2 className='text-3xl md:text-4xl font-bold'>Trending Gyms</h2>
+          <div className='flex flex-col md:flex-row md:items-start md:justify-between mb-12'>
+            <div>
+              <div className='flex items-center gap-2 mb-2'>
+                <h2 className='text-3xl md:text-4xl font-bold'>Trending Gyms</h2>
+              </div>
+              <p className='text-muted-foreground text-lg'>
+                Discover the most popular and highly-rated fitness centers
+              </p>
             </div>
-            <p className='text-muted-foreground text-lg max-w-2xl mx-auto'>
-              Discover the most popular and highly-rated fitness centers
-            </p>
+            <Link
+              href='/gyms'
+              className='flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-4 md:mt-0'
+            >
+              View All Gyms
+              <ArrowRight className='h-4 w-4' />
+            </Link>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {trendingGyms.map((gym) => (
               <GymCard key={gym.id} gym={gym} />
             ))}
-          </div>
-
-          <div className='text-center'>
-            <Button size='lg' asChild>
-              <Link href='/gyms'>
-                View All Gyms
-                <ArrowRight className='ml-2 h-4 w-4' />
-              </Link>
-            </Button>
           </div>
         </div>
       </section>
@@ -260,7 +275,6 @@ export default async function Home() {
         <div className='container mx-auto px-4'>
           <div className='text-center mb-12'>
             <div className='inline-flex items-center justify-center gap-2 mb-4'>
-              <Star className='h-6 w-6 text-primary fill-primary' />
               <h2 className='text-3xl md:text-4xl font-bold'>What Our Members Say</h2>
             </div>
             <p className='text-muted-foreground text-lg max-w-2xl mx-auto'>
@@ -280,29 +294,28 @@ export default async function Home() {
       {/* Blog Section */}
       <section className='py-20 bg-background'>
         <div className='container mx-auto px-4'>
-          <div className='text-center mb-12'>
-            <div className='inline-flex items-center justify-center gap-2 mb-4'>
-              <BookOpen className='h-6 w-6 text-primary' />
-              <h2 className='text-3xl md:text-4xl font-bold'>Latest from Our Blog</h2>
+          <div className='flex flex-col md:flex-row md:items-start md:justify-between mb-12'>
+            <div>
+              <div className='flex items-center gap-2 mb-2'>
+                <h2 className='text-3xl md:text-4xl font-bold'>Latest from Our Blog</h2>
+              </div>
+              <p className='text-muted-foreground text-lg'>
+                Expert tips, guides, and insights to help you on your fitness journey
+              </p>
             </div>
-            <p className='text-muted-foreground text-lg max-w-2xl mx-auto'>
-              Expert tips, guides, and insights to help you on your fitness journey
-            </p>
+            <Link
+              href='/blog'
+              className='flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-4 md:mt-0'
+            >
+              View All Posts
+              <ArrowRight className='h-4 w-4' />
+            </Link>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {recentPosts.map((post) => (
               <BlogCard key={post.id} post={post} />
             ))}
-          </div>
-
-          <div className='text-center'>
-            <Button size='lg' variant='outline' asChild>
-              <Link href='/blog'>
-                View All Posts
-                <ArrowRight className='ml-2 h-4 w-4' />
-              </Link>
-            </Button>
           </div>
         </div>
       </section>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { getGymBySlug } from '@/lib/gyms-api'
 import { getReviewCount } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { GymHeroImage } from '@/components/gym-hero-image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -118,9 +119,10 @@ export default async function GymDetailPage({ params }: PageProps) {
     <div className='min-h-screen'>
       {/* Hero Section */}
       <div className='relative h-64 md:h-96 w-full bg-muted'>
-        {gym.gallery?.[0]?.path && (
-          <Image src={gym.gallery[0].path} alt={gym.name} fill className='object-cover' priority />
-        )}
+        <GymHeroImage
+          src={gym.gallery?.[0]?.path}
+          alt={gym.name}
+        />
         <div className='absolute inset-0 bg-black/40' />
         <div className='absolute bottom-0 left-0 right-0 p-8 text-white'>
           <div className='container mx-auto'>
