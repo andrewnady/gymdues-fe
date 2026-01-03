@@ -23,6 +23,7 @@ import { Star, MapPin, Check } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
 import { GymNewsletterSection } from '@/components/gym-newsletter-section'
 import { GymAboutSection } from '@/components/gym-about-section'
+import { NewsletterSubscription } from '@/components/newsletter-subscription'
 
 /**
  * Formats a time string to AM/PM format without leading zeros
@@ -207,9 +208,9 @@ export default async function GymDetailPage({ params }: PageProps) {
         </Card>
 
         {/* Membership Plans and Hours - Side by Side */}
-        <div className='grid md:grid-cols-2 gap-8'>
+        <div className='grid md:grid-cols-3 gap-8'>
           {/* Membership Plans */}
-          <Card>
+          <Card className='md:col-span-2'>
             <CardHeader>
               <CardTitle>Reviews</CardTitle>
               <CardDescription>{getReviewCount(gym)} total reviews</CardDescription>
@@ -255,9 +256,9 @@ export default async function GymDetailPage({ params }: PageProps) {
               <CardTitle>Operating Hours</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className='space-y-2'>
+              <div className='space-y-2 divide-y divide-border'>
                 {gym.hours.map((hour, index) => (
-                  <div key={index} className='flex items-center justify-between text-sm'>
+                  <div key={index} className='flex items-center justify-between text-sm py-2'>
                     <span className='font-medium capitalize'>{hour.day}</span>
                     <span>
                       {formatTimeToAmPm(hour.from)} - {formatTimeToAmPm(hour.to)}
@@ -290,7 +291,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         {/* Membership Plans - Full Width */}
         <section className='py-20 bg-background'>
           <div className='container mx-auto px-4'>
-            <div className='mb-12'>
+            <div className='mb-12 text-center'>
               <h2 className='text-3xl md:text-4xl font-bold mb-2'>Membership Plans</h2>
               <p className='text-muted-foreground text-lg'>
                 Choose the plan that works best for you
@@ -367,7 +368,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         </section>
 
         {/* Newsletter Section - Full Width */}
-        <GymNewsletterSection />
+        <NewsletterSubscription />
 
         {/* FAQs - Full Width */}
         {gym.faqs &&
@@ -396,9 +397,13 @@ export default async function GymDetailPage({ params }: PageProps) {
             }
 
             return (
-              <Card>
+              <Card className='border-none shadow-none p-0'>
                 <CardHeader>
-                  <CardTitle>Frequently Asked Questions</CardTitle>
+                  <CardTitle className='text-center'>
+                    <h2 className='text-3xl md:text-4xl font-bold mb-2'>
+                      Frequently Asked Questions
+                    </h2>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className='p-6'>
                   <Tabs defaultValue={availableCategories[0]?.id || 'General'} className='w-full'>
@@ -417,9 +422,6 @@ export default async function GymDetailPage({ params }: PageProps) {
                     {availableCategories.map((category) => (
                       <TabsContent key={category.id} value={category.id}>
                         <Card>
-                          <CardHeader>
-                            <CardTitle>{category.title}</CardTitle>
-                          </CardHeader>
                           <CardContent>
                             <Accordion
                               type='single'
@@ -429,7 +431,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                             >
                               {faqsByCategory[category.id].map((faq) => (
                                 <AccordionItem key={faq.id} value={faq.id}>
-                                  <AccordionTrigger>
+                                  <AccordionTrigger className='text-lg font-semibold'>
                                     <div dangerouslySetInnerHTML={{ __html: faq.question }} />
                                   </AccordionTrigger>
                                   <AccordionContent>

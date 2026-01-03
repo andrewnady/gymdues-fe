@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -49,7 +50,7 @@ export function Navigation() {
           <div className='flex items-center gap-6'>
             <Link
               href='/gyms'
-              className={`text-sm font-medium hover:text-primary transition-colors ${
+              className={`hover:text-primary transition-colors ${
                 shouldShowWhiteText ? 'text-white' : 'text-foreground'
               }`}
             >
@@ -57,7 +58,7 @@ export function Navigation() {
             </Link>
             <Link
               href='/blog'
-              className={`text-sm font-medium hover:text-primary transition-colors ${
+              className={`hover:text-primary transition-colors ${
                 shouldShowWhiteText ? 'text-white' : 'text-foreground'
               }`}
             >
@@ -65,7 +66,7 @@ export function Navigation() {
             </Link>
             <Link
               href='/about'
-              className={`text-sm font-medium hover:text-primary transition-colors ${
+              className={`hover:text-primary transition-colors ${
                 shouldShowWhiteText ? 'text-white' : 'text-foreground'
               }`}
             >
@@ -74,14 +75,17 @@ export function Navigation() {
 
             <Link
               href='/contact'
-              className={`text-sm font-medium hover:text-primary transition-colors ${
+              className={`hover:text-primary transition-colors ${
                 shouldShowWhiteText ? 'text-white' : 'text-foreground'
               }`}
             >
               Contact
             </Link>
-            <Button asChild size='sm'>
-              <Link href='/gyms'>Find a Gym</Link>
+            <Button asChild size='default'>
+              <Link href='#'>
+                <Plus className='h-4 w-4' />
+                Add a Gym
+              </Link>
             </Button>
           </div>
         </div>
