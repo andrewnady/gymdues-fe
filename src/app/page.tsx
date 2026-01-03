@@ -1,15 +1,12 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
-  Search,
   Dumbbell,
   TrendingUp,
   Users,
   MapPin,
   ArrowRight,
-  ChevronDown,
 } from 'lucide-react'
+import { GymAutocompleteSearch } from '@/components/gym-autocomplete-search'
 import { getStatesWithCounts, getAllReviews } from '@/data/mock-gyms'
 import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
 import { getRecentBlogPosts } from '@/data/mock-blog'
@@ -70,38 +67,8 @@ export default async function Home() {
             </p>
 
             {/* Search Bar */}
-            <div className='bg-white rounded-2xl p-2 shadow-2xl max-w-4xl mx-auto mb-8'>
-              <div className='flex flex-col md:flex-row gap-2'>
-                <div className='relative flex-1'>
-                  <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-                  <Input
-                    type='text'
-                    placeholder='What are you looking for'
-                    className='pl-12 h-14 text-base border-0 focus-visible:ring-0 bg-transparent'
-                  />
-                </div>
-                <div className='relative flex-1'>
-                  <MapPin className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-                  <Input
-                    type='text'
-                    placeholder='Location'
-                    className='pl-12 pr-10 h-14 text-base border-0 focus-visible:ring-0 bg-transparent'
-                  />
-                  <ChevronDown className='absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-                </div>
-                <div className='relative flex-1'>
-                  <Dumbbell className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-                  <Input
-                    type='text'
-                    placeholder='Category'
-                    className='pl-12 pr-10 h-14 text-base border-0 focus-visible:ring-0 bg-transparent'
-                  />
-                  <ChevronDown className='absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground' />
-                </div>
-                <Button size='lg' className='h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl' asChild>
-                  <Link href='/gyms'>Search</Link>
-                </Button>
-              </div>
+            <div className='max-w-4xl mx-auto mb-8'>
+              <GymAutocompleteSearch />
             </div>
 
             {/* Most Popular Gyms and Prices */}
@@ -110,8 +77,8 @@ export default async function Home() {
               <div className='flex flex-wrap justify-center gap-3'>
                 {popularGyms.length > 0 ? (
                   popularGyms.map((gym) => {
-                    const lowestPrice = gym.membershipPlans && gym.membershipPlans.length > 0
-                      ? Math.min(...gym.membershipPlans.map((plan) => plan.price || 0))
+                    const lowestPrice = gym.pricing && gym.pricing.length > 0
+                      ? Math.min(...gym.pricing.map((plan) => plan.price || 0))
                       : null
                     return (
                       <Link
