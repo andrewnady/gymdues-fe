@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Mail, Check } from 'lucide-react';
 
 interface NewsletterSubscriptionProps {
-  variant?: 'default' | 'compact';
+  variant?: 'default' | 'compact' | 'footer';
   className?: string;
 }
 
@@ -58,6 +58,45 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
               'Subscribe'
             )}
           </Button>
+        </form>
+        {isSubscribed && (
+          <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+            Thank you for subscribing! Check your email for confirmation.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (variant === 'footer') {
+    return (
+      <div className={className}>
+        <form onSubmit={handleSubmit}>
+          <div className="relative max-w-md">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="pl-10 pr-24 h-11 bg-white border border-input rounded-lg"
+              disabled={isSubscribed || isLoading}
+            />
+            <Button
+              type="submit"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-9 px-4 bg-primary hover:bg-primary/90 text-white rounded-md text-sm"
+              disabled={isSubscribed || isLoading}
+            >
+              {isSubscribed ? (
+                <Check className="h-4 w-4" />
+              ) : isLoading ? (
+                '...'
+              ) : (
+                'Subscribe'
+              )}
+            </Button>
+          </div>
         </form>
         {isSubscribed && (
           <p className="text-sm text-green-600 dark:text-green-400 mt-2">
