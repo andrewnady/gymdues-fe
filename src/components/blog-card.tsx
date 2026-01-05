@@ -21,8 +21,8 @@ export function BlogCard({ post }: BlogCardProps) {
       <Card className='overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col cursor-pointer'>
         <div className='relative h-48 w-full bg-muted'>
           <Image
-            src={post.coverImage}
-            alt={post.title}
+            src={post.featured_images?.length > 0 ? post.featured_images[0].path : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=600&fit=crop&q=80'}
+            alt={post.featured_images?.length > 0 ? post.featured_images[0].alt : post.title}
             fill
             className='object-cover'
             sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
@@ -69,7 +69,7 @@ export function BlogCard({ post }: BlogCardProps) {
             <div className='flex items-center gap-1 text-sm text-muted-foreground'>
               <Calendar className='h-4 w-4' />
               <span>
-                {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                {new Date(post.published_at).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

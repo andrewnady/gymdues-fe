@@ -1,18 +1,25 @@
 export interface BlogPost {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  summary: string
+  content: string
   author: {
-    name: string;
-    avatar?: string;
-  };
-  publishedAt: string;
-  updatedAt?: string;
-  coverImage: string;
-  category: string;
-  tags: string[];
-  readTime: number; // in minutes
+    id: number
+    name: string
+    avatar?: string
+  }
+  published_at: string
+  updated_at?: string
+  featured_images: {
+    id: number
+    path: string
+    alt: string
+  }[]
+  categories: {
+    id: number
+    name: string
+    slug: string
+  }[]
 }
-

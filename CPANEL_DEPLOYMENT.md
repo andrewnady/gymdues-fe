@@ -53,6 +53,7 @@ Upload the following files and folders to your cPanel public_html directory (or 
    - **Application URL**: `/` (or your subdirectory path)
    - **Application startup file**: `server.js` (or leave default if using `package.json` start script)
    - **Application entry point**: `server.js` (if using custom server) or leave blank for `npm start`
+   - **Important**: The `server.js` file is configured to always run in production mode. Do not set `NODE_ENV=development` as this will cause errors.
 
 ### 4. Set Environment Variables
 

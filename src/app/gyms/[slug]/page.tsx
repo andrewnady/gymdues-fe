@@ -21,7 +21,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Star, MapPin, Check } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
-import { GymNewsletterSection } from '@/components/gym-newsletter-section'
 import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 

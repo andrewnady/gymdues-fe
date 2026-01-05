@@ -1,10 +1,17 @@
-import { getAllBlogPosts } from '@/data/mock-blog';
+import { getAllBlogPosts } from '@/lib/blog-api';
 import { BlogCard } from '@/components/blog-card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { BlogPost } from '@/types/blog';
 
-export default function BlogPage() {
-  const posts = getAllBlogPosts();
+export default async function BlogPage() {
+  let posts: BlogPost[] = [];
+  try {
+    posts = await getAllBlogPosts();
+  } catch (error) {
+    console.error('Failed to load blog posts:', error);
+    // Fallback to empty array if API fails
+  }
 
   return (
     <div className="min-h-screen py-8">

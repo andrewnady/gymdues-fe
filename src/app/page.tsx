@@ -9,7 +9,8 @@ import {
 import { GymAutocompleteSearch } from '@/components/gym-autocomplete-search'
 import { getStatesWithCounts, getAllReviews } from '@/data/mock-gyms'
 import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
-import { getRecentBlogPosts } from '@/data/mock-blog'
+import { getRecentBlogPosts } from '@/lib/blog-api'
+import { BlogPost } from '@/types/blog'
 import { GymCard } from '@/components/gym-card'
 import { Gym } from '@/types/gym'
 import { ReviewsCarousel } from '@/components/reviews-carousel'
@@ -36,7 +37,13 @@ export default async function Home() {
   }
   
   const reviews = getAllReviews(12)
-  const recentPosts = getRecentBlogPosts(3)
+  let recentPosts: BlogPost[] = []
+  try {
+    recentPosts = await getRecentBlogPosts(3)
+  } catch (error) {
+    console.error('Failed to load recent blog posts:', error)
+    // Fallback to empty array if API fails
+  }
 
   // City skyline images mapping
   const cityImages: Record<string, string> = {

@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getBlogPostBySlug, getAllBlogPosts } from '@/data/mock-blog';
-import { getTrendingGyms } from '@/data/mock-gyms';
+import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/blog-api';
+import { getTrendingGyms } from '@/lib/gyms-api';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { GymCard } from '@/components/gym-card';
@@ -13,21 +13,26 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = getAllBlogPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const posts = await getAllBlogPosts();
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch (error) {
+    console.error('Failed to generate static params:', error);
+    return [];
+  }
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = getBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
 
-  const featuredGyms = getTrendingGyms(3);
+  const featuredGyms = await getTrendingGyms(3);
 
   return (
     <div className="min-h-screen">
@@ -46,7 +51,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <span>
-                {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                {new Date(post.published_at).toLocaleDateString('en-US', {
                   month: 'long',
                   day: 'numeric',
                   year: 'numeric',
@@ -64,8 +69,8 @@ export default async function BlogPostPage({ params }: PageProps) {
             {/* Post Image */}
             <div className="relative h-64 md:h-96 w-full bg-muted rounded-lg overflow-hidden">
               <Image
-                src={post.coverImage}
-                alt={post.title}
+                src={post.featured_images?.length > 0 ? post.featured_images[0].path : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=600&fit=crop&q=80'}
+                alt={post.featured_images?.length > 0 ? post.featured_images[0].alt : post.title}
                 fill
                 className="object-cover"
                 priority
