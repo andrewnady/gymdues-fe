@@ -1,32 +1,51 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { submitComment } from '@/lib/comments-api';
 
-export function CommentForm() {
+interface CommentFormProps {
+  onSuccess?: () => void;
+}
+
+export function CommentForm({ onSuccess }: CommentFormProps) {
+  const pathname = usePathname();
+  const postSlug = pathname?.split('/').pop() || '';
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     comment: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
 
-    // TODO: Implement actual comment submission logic
-    // For now, just simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Reset form
-    setFormData({ name: '', email: '', comment: '' });
-    setIsSubmitting(false);
-
-    // You can add a toast notification here
-    alert('Comment submitted successfully!');
+    try {
+      await submitComment(postSlug, formData);
+      
+      // Reset form
+      setFormData({ name: '', email: '', comment: '' });
+      setSuccess(true);
+      
+      // Call onSuccess callback if provided (to refresh comments list)
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit comment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -77,6 +96,18 @@ export function CommentForm() {
           className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
         />
       </div>
+
+      {error && (
+        <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+          {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="p-3 text-sm text-green-600 bg-green-50 dark:bg-green-900/20 rounded-md">
+          Comment submitted successfully! It will be visible after approval.
+        </div>
+      )}
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Submitting...' : 'Submit Comment'}

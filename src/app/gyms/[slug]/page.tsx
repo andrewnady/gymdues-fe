@@ -206,9 +206,9 @@ export default async function GymDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* Membership Plans and Hours - Side by Side */}
+        {/* Reviews and Hours - Side by Side */}
         <div className='grid md:grid-cols-3 gap-8'>
-          {/* Membership Plans */}
+          {/* Reviews */}
           <Card className='md:col-span-2'>
             <CardHeader>
               <CardTitle>Reviews</CardTitle>
@@ -306,12 +306,6 @@ export default async function GymDetailPage({ params }: PageProps) {
               >
                 <CarouselContent className='-ml-2 md:-ml-4'>
                   {gym.pricing?.map((plan, index) => {
-                    // Parse description into features list
-                    const features = plan.description
-                      .split(',')
-                      .map((f) => f.trim())
-                      .filter((f) => f.length > 0)
-
                     return (
                       <CarouselItem key={plan.id} className='basis-full md:basis-1/2 lg:basis-1/3'>
                         <div className='relative flex h-full'>
@@ -339,20 +333,11 @@ export default async function GymDetailPage({ params }: PageProps) {
                                 </span>
                               </div>
                               <h3 className='text-xl font-semibold mb-2'>{plan.tier_name}</h3>
-                              <p className='text-sm text-muted-foreground mb-6'>
-                                {plan.description.split(',')[0]}
-                              </p>
                             </div>
-                            <div className='flex-1'>
-                              <ul className='space-y-3'>
-                                {features.map((feature, idx) => (
-                                  <li key={idx} className='flex items-start gap-2'>
-                                    <Check className='h-5 w-5 text-primary flex-shrink-0 mt-0.5' />
-                                    <span className='text-sm text-foreground'>{feature}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
+                            <div
+                              className='flex-1'
+                              dangerouslySetInnerHTML={{ __html: plan.description }}
+                            />
                           </div>
                         </div>
                       </CarouselItem>

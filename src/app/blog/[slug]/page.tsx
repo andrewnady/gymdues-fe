@@ -6,7 +6,7 @@ import { getTrendingGyms } from '@/lib/gyms-api';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { GymCard } from '@/components/gym-card';
-import { CommentForm } from '@/components/comment-form';
+import { BlogCommentsSection } from '@/components/blog-comments-section';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -103,13 +103,8 @@ export default async function BlogPostPage({ params }: PageProps) {
               </div>
             </div>
 
-            <Separator />
-
-            {/* Comment Form */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Leave a Comment</h2>
-              <CommentForm />
-            </div>
+            {/* Comments Section */}
+            <BlogCommentsSection postSlug={slug} />
           </div>
 
           {/* Right Column - 4 columns */}
