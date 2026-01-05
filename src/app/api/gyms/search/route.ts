@@ -39,34 +39,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(filteredGyms)
   } catch (error) {
     console.error('Error searching gyms:', error)
-    // Fallback to mock data if API fails
-    try {
-      const { getAllGyms: getMockGyms } = await import('@/data/mock-gyms')
-      const mockGyms = getMockGyms()
-      const searchLower = query.toLowerCase()
-      
-      const filtered = mockGyms
-        .filter((gym) => {
-          return (
-            gym.name.toLowerCase().includes(searchLower) ||
-            gym.city?.toLowerCase().includes(searchLower) ||
-            gym.state?.toLowerCase().includes(searchLower) ||
-            gym.description?.toLowerCase().includes(searchLower)
-          )
-        })
-        .sort((a, b) => {
-          const aNameMatch = a.name.toLowerCase().startsWith(searchLower) ? 0 : 1
-          const bNameMatch = b.name.toLowerCase().startsWith(searchLower) ? 0 : 1
-          if (aNameMatch !== bNameMatch) return aNameMatch - bNameMatch
-          return (b.rating || 0) - (a.rating || 0)
-        })
-        .slice(0, 5)
-      
-      return NextResponse.json(filtered)
-    } catch (fallbackError) {
-      console.error('Fallback search also failed:', fallbackError)
-      return NextResponse.json([], { status: 500 })
-    }
+    return NextResponse.json([], { status: 500 })
   }
 }
 

@@ -7,18 +7,25 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { GymAutocompleteSearch } from '@/components/gym-autocomplete-search'
-import { getStatesWithCounts, getAllReviews } from '@/data/mock-gyms'
-import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
+import { getTrendingGyms, getAllGyms, getStatesWithCounts } from '@/lib/gyms-api'
+import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
 import { BlogPost } from '@/types/blog'
 import { GymCard } from '@/components/gym-card'
-import { Gym } from '@/types/gym'
+import { Gym, ReviewWithGym, StateWithCount } from '@/types/gym'
 import { ReviewsCarousel } from '@/components/reviews-carousel'
 import { BlogCard } from '@/components/blog-card'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 
 export default async function Home() {
-  const states = getStatesWithCounts()
+  let states: StateWithCount[] = []
+  try {
+    states = await getStatesWithCounts()
+  } catch (error) {
+    console.error('Failed to load states:', error)
+    // Fallback to empty array if API fails
+  }
+  
   let trendingGyms: Gym[] = []
   try {
     trendingGyms = await getTrendingGyms(3)
@@ -36,7 +43,14 @@ export default async function Home() {
     // Fallback to empty array if API fails
   }
   
-  const reviews = getAllReviews(12)
+  let reviews: ReviewWithGym[] = []
+  try {
+    reviews = await getAllReviews(12)
+  } catch (error) {
+    console.error('Failed to load reviews:', error)
+    // Fallback to empty array if API fails
+  }
+  
   let recentPosts: BlogPost[] = []
   try {
     recentPosts = await getRecentBlogPosts(3)
@@ -178,7 +192,7 @@ export default async function Home() {
             {states.slice(0, 4).map((state) => (
               <Link
                 key={state.state}
-                href={`/gyms?state=${state.state}`}
+                href={`/gyms#state=${state.state}`}
                 className='group relative overflow-hidden rounded-xl h-64 md:h-80 cursor-pointer'
               >
                 <div

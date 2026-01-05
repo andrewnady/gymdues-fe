@@ -1,4 +1,4 @@
-import { Gym } from '@/types/gym'
+import { Gym, StateWithCount } from '@/types/gym'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
 
@@ -363,6 +363,50 @@ export async function getGymById(id: string): Promise<Gym | null> {
   } catch (error) {
     console.error('Error fetching gym by id:', error)
     throw error
+  }
+}
+
+/**
+ * Gets states with gym counts from the API
+ */
+export async function getStatesWithCounts(): Promise<StateWithCount[]> {
+  try {
+    const gyms = await getAllGyms()
+    const stateMap = new Map<string, number>()
+    
+    gyms.forEach((gym) => {
+      if (gym.state) {
+        const count = stateMap.get(gym.state) || 0
+        stateMap.set(gym.state, count + 1)
+      }
+    })
+
+    const stateNames: Record<string, string> = {
+      'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+      'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+      'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+      'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+      'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+      'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+      'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+      'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+      'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia',
+    }
+
+    return Array.from(stateMap.entries())
+      .map(([state, count]) => ({
+        state,
+        stateName: stateNames[state] || state,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count)
+  } catch (error) {
+    console.error('Error fetching states with counts:', error)
+    return []
   }
 }
 

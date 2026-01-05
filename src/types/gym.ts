@@ -5,6 +5,12 @@ export interface Review {
   text: string
   reviewed_at: string
   avatar?: string
+  gym?: {
+    id: string
+    name: string
+    slug: string
+    logo: string
+  }
 }
 
 export interface Plan {
@@ -59,4 +65,28 @@ export interface Gym {
   hours: OperatingHours[]
   amenities?: string[]
   tags?: string[]
+}
+
+export interface ReviewWithGym {
+  id: string
+  reviewer: string
+  rate: number
+  rating: number // Alias for rate for compatibility
+  text: string
+  reviewed_at: string
+  avatar?: string
+  gymName: string
+  gymSlug: string
+  gym: {
+    id: string
+    name: string
+    slug: string
+    logo: string
+  }
+}
+
+export interface StateWithCount {
+  state: string
+  stateName: string
+  count: number
 }

@@ -1,25 +1,63 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback'
 
-export function GymSearchInput() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+// Helper to parse hash parameters
+function parseHashParams(): Record<string, string> {
+  if (typeof window === 'undefined') return {}
+  const hash = window.location.hash.slice(1) // Remove #
+  const params: Record<string, string> = {}
+  if (hash) {
+    hash.split('&').forEach((pair) => {
+      const [key, value] = pair.split('=')
+      if (key && value) {
+        params[decodeURIComponent(key)] = decodeURIComponent(value)
+      }
+    })
+  }
+  return params
+}
 
-  // Update URL with search parameter (preserves other params like state, city, trending)
-  const updateSearch = useDebouncedCallback((value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (value.trim()) {
-      params.set('search', value.trim())
-    } else {
-      params.delete('search')
+// Helper to build hash string from params
+function buildHashString(params: Record<string, string>): string {
+  const parts: string[] = []
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) {
+      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     }
-    router.push(`/gyms?${params.toString()}`)
+  })
+  return parts.length > 0 ? `#${parts.join('&')}` : ''
+}
+
+export function GymSearchInput() {
+  const [searchTerm, setSearchTerm] = useState('')
+
+  // Initialize from hash on mount
+  useEffect(() => {
+    const params = parseHashParams()
+    setSearchTerm(params.search || '')
+  }, [])
+
+  // Update URL hash with search parameter
+  const updateSearch = useDebouncedCallback((value: string) => {
+    const params = parseHashParams()
+    
+    if (value.trim()) {
+      params.search = value.trim()
+    } else {
+      delete params.search
+      delete params.page // Reset page when clearing search
+    }
+
+    const hashString = buildHashString(params)
+    // Update hash without page reload
+    window.history.replaceState(null, '', `/gyms${hashString}`)
+    
+    // Trigger a custom event to notify the page component
+    window.dispatchEvent(new CustomEvent('hashchange'))
   }, 300)
 
   // Handle input change
@@ -29,11 +67,21 @@ export function GymSearchInput() {
     updateSearch(value)
   }
 
-  // Sync with URL changes (e.g., browser back/forward)
+  // Sync with hash changes (e.g., browser back/forward)
   useEffect(() => {
-    const search = searchParams.get('search') || ''
-    setSearchTerm(search)
-  }, [searchParams])
+    const handleHashChange = () => {
+      const params = parseHashParams()
+      setSearchTerm(params.search || '')
+    }
+
+    // Listen to both native hashchange and custom hashchange events
+    window.addEventListener('hashchange', handleHashChange)
+    window.addEventListener('hashchange', handleHashChange)
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange)
+    }
+  }, [])
 
   return (
     <div className="relative">
