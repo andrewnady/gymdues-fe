@@ -70,3 +70,38 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .static-page-content {
+    @apply text-muted-foreground leading-relaxed;
+  }
+  
+  .static-page-content h2 {
+    @apply text-2xl font-bold mt-8 mb-4 text-foreground;
+  }
+  
+  .static-page-content h3 {
+    @apply text-xl font-semibold mt-6 mb-3 text-foreground;
+  }
+  
+  .static-page-content p {
+    @apply mb-4 leading-relaxed;
+  }
+  
+  .static-page-content ul,
+  .static-page-content ol {
+    @apply mb-4 ml-6;
+  }
+  
+  .static-page-content li {
+    @apply mb-2;
+  }
+  
+  .static-page-content a {
+    @apply text-primary hover:underline;
+  }
+  
+  .static-page-content strong {
+    @apply font-semibold text-foreground;
+  }
+}

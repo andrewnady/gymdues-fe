@@ -45,19 +45,19 @@ export function Footer() {
             <h3 className='font-semibold mb-4'>Resources</h3>
             <ul className='space-y-2 text-sm'>
               <li>
-                <a href='#' className='text-muted-foreground hover:text-primary'>
+                <Link href='/how-it-works' className='text-muted-foreground hover:text-primary'>
                   How It Works
-                </a>
+                </Link>
               </li>
               <li>
-                <a href='#' className='text-muted-foreground hover:text-primary'>
+                <Link href='/privacy-policy' className='text-muted-foreground hover:text-primary'>
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href='#' className='text-muted-foreground hover:text-primary'>
+                <Link href='/terms-of-service' className='text-muted-foreground hover:text-primary'>
                   Terms of Service
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
