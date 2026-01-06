@@ -112,11 +112,11 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
       <div className="grid md:grid-cols-2 gap-12 items-center">
         {/* Left Side - Form */}
         <div>
-          <h3 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
-            Subscribe Our Newsletter
-          </h3>
+          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
+            Subscribe Gymdues Newsletter
+          </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            Get important update to your email.
+            Get gym pricing updates, deals, and new guides straight to your inbox—covering <strong>la fitness prices</strong>, <strong>anytime fitness prices</strong>, <strong>24 hour fitness prices</strong>, and more.
           </p>
 
           <form onSubmit={handleSubmit}>

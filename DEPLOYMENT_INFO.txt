@@ -1,0 +1,62 @@
+========================================
+GymDues Next.js - Deployment Package
+========================================
+
+Build Date: Mon Jan  5 20:42:37 EET 2026
+Build Size: 145M (.next folder)
+Dependencies: 461M (node_modules)
+Total Size: 629M
+
+Files to Upload:
+----------------
+✓ .next/                    (Build output - REQUIRED)
+✓ node_modules/             (Dependencies - REQUIRED)
+✓ src/                      (Source code - REQUIRED)
+✓ public/                   (Static assets - REQUIRED)
+✓ package.json              (Dependencies config - REQUIRED)
+✓ pnpm-lock.yaml            (Lock file - if using pnpm)
+✓ next.config.ts            (Next.js config - REQUIRED)
+✓ tsconfig.json             (TypeScript config - REQUIRED)
+✓ tailwind.config.ts        (Tailwind config - REQUIRED)
+✓ postcss.config.mjs        (PostCSS config - REQUIRED)
+✓ .htaccess                 (Apache config - REQUIRED)
+✓ server.js                 (Custom server - REQUIRED)
+✓ .env                      (Environment variables - REQUIRED)
+
+cPanel Configuration:
+--------------------
+1. Create Node.js App in cPanel:
+   - Software → Setup Node.js App
+   - Node.js version: 18.x or higher
+   - Mode: Production
+   - Application root: /home/username/public_html
+   - Application URL: / (or your subdirectory)
+   - Startup file: server.js
+
+2. Set Environment Variables:
+   - NODE_ENV=production
+   - NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net
+   - HOSTNAME=localhost
+   - PORT (cPanel will set this automatically)
+
+3. Install Dependencies:
+   - Click "Run NPM Install" in cPanel
+   - Or via SSH: npm install --production
+
+4. Start Application:
+   - Click "Start App" in cPanel
+
+Important Notes:
+----------------
+- Build was created with NODE_ENV=production
+- API URL is set to: https://cms.gymdues.staging-apps.net
+- Ensure .env file is configured with production values
+- Verify API URL in NEXT_PUBLIC_API_BASE_URL matches production
+- Check that all required Node.js modules are installed
+- Monitor application logs in cPanel for any errors
+
+For detailed instructions, see:
+- CPANEL_DEPLOYMENT.md
+- QUICK_START_CPANEL.md
+- DEPLOYMENT_CHECKLIST.md
+

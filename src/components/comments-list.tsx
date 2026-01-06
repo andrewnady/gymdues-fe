@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getPostComments, type BlogComment } from '@/lib/comments-api'
 import { MessageSquare, User } from 'lucide-react'
 
@@ -14,7 +14,7 @@ export function CommentsList({ postSlug, refreshKey }: CommentsListProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -25,11 +25,11 @@ export function CommentsList({ postSlug, refreshKey }: CommentsListProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [postSlug])
 
   useEffect(() => {
     loadComments()
-  }, [postSlug, refreshKey])
+  }, [loadComments, refreshKey])
 
   if (loading) {
     return <div className='text-center py-8 text-muted-foreground'>Loading comments...</div>

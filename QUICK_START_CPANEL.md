@@ -2,11 +2,15 @@
 
 ## Fast Deployment Steps
 
-### 1. Build the Application
+### 1. Build the Application (Production Mode)
 ```bash
-pnpm build
+# Use the deployment script (recommended)
+./prepare-deploy.sh
+
+# Or manually build in production mode
+NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net pnpm build
 # or
-npm run build
+NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net npm run build
 ```
 
 ### 2. Upload to cPanel
@@ -38,7 +42,8 @@ Upload these folders/files to `public_html`:
 In Node.js App settings, add:
 ```
 NODE_ENV=production
-NEXT_PUBLIC_API_BASE_URL=https://cms.dev.gymdues.com
+NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net
+HOSTNAME=localhost
 ```
 
 ### 5. Install & Start
@@ -48,8 +53,11 @@ NEXT_PUBLIC_API_BASE_URL=https://cms.dev.gymdues.com
 ## Quick Commands
 
 ```bash
-# Build
-pnpm build
+# Build for production (use deployment script)
+./prepare-deploy.sh
+
+# Or build manually in production mode
+NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net pnpm build
 
 # Start (for testing)
 pnpm start

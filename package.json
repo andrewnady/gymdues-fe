@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:production": "NODE_ENV=production next build",
     "start": "next start -p ${PORT:-3000}",
     "start:server": "node server.js",
     "lint": "next lint",

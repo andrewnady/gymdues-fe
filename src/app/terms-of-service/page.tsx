@@ -2,12 +2,22 @@ import { getStaticPageBySlug } from '@/lib/static-pages-api'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
-export async function generateMetadata(): Promise<Metadata> {
-  const page = await getStaticPageBySlug('terms-of-service')
+// Force dynamic rendering to avoid build-time API calls
+export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
-  return {
-    title: page?.meta_title || page?.title || 'Terms of Service - GymDues',
-    description: page?.meta_description || 'Terms of Service for GymDues',
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const page = await getStaticPageBySlug('terms-of-service')
+    return {
+      title: page?.meta_title || page?.title || 'Terms of Service - GymDues',
+      description: page?.meta_description || 'Terms of Service for GymDues',
+    }
+  } catch {
+    return {
+      title: 'Terms of Service - GymDues',
+      description: 'Terms of Service for GymDues',
+    }
   }
 }
 

@@ -1,7 +1,15 @@
+import type { Metadata } from 'next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Target, Users, Award, Heart } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ReadMoreText } from '@/components/read-more-text'
+
+export const metadata: Metadata = {
+  title: 'About Gymdues | How We Track Gym Membership Prices',
+  description:
+    'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
+}
 
 export default function AboutPage() {
   return (
@@ -10,9 +18,17 @@ export default function AboutPage() {
         <div className='max-w-4xl mx-auto'>
           <div className='text-center mb-12'>
             <h1 className='text-4xl font-bold mb-4'>About GymDues</h1>
-            <p className='text-muted-foreground text-lg'>
-              Your trusted partner in finding the perfect fitness center
-            </p>
+            <ReadMoreText className='text-muted-foreground text-lg'>
+              GymDues helps you find the right gym faster by making memberships easier to
+              compare—prices, plans, and real experiences all in one place. We turn common searches
+              like <strong>la fitness membership cost</strong>,{' '}
+              <strong>anytime fitness membership cost</strong>,{' '}
+              <strong>24 hour fitness membership cost</strong>, and{' '}
+              <strong>lifetime gym membership cost</strong> into clear, side-by-side insights so you
+              can understand the real monthly cost, what’s included, and what fees to expect.
+              Whether you&apos;re choosing a neighborhood gym or a premium club, GymDues helps you
+              avoid surprises, spot the best value, and join with confidence.
+            </ReadMoreText>
           </div>
 
           <Card className='mb-8'>

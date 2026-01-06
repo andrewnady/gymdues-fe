@@ -19,10 +19,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Star, MapPin, Check } from 'lucide-react'
+import { Star, MapPin } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
 import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
+import { ReadMoreText } from '@/components/read-more-text'
 
 /**
  * Formats a time string to AM/PM format without leading zeros
@@ -129,7 +130,9 @@ export default async function GymDetailPage({ params }: PageProps) {
           <div className='container mx-auto'>
             <div className='flex flex-col md:flex-row md:items-end md:justify-between gap-6'>
               <div>
-                <h1 className='text-4xl md:text-5xl font-bold mb-2'>{gym.name}</h1>
+                <h1 className='text-4xl md:text-5xl font-bold mb-2'>
+                  {gym.name}: Memberships, Fees, Classes, and Facilities
+                </h1>
                 <div className='flex flex-wrap items-center gap-4 mb-4'>
                   <div className='flex items-center gap-1'>
                     <Star className='h-5 w-5 fill-yellow-400 text-yellow-400' />
@@ -199,7 +202,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         {/* About - Full Width */}
         <Card>
           <CardHeader>
-            <CardTitle>About</CardTitle>
+            <CardTitle>About {gym.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <GymAboutSection description={gym.description} />
@@ -211,7 +214,7 @@ export default async function GymDetailPage({ params }: PageProps) {
           {/* Reviews */}
           <Card className='md:col-span-2'>
             <CardHeader>
-              <CardTitle>Reviews</CardTitle>
+              <CardTitle>Reviews for {gym.name}</CardTitle>
               <CardDescription>{getReviewCount(gym)} total reviews</CardDescription>
             </CardHeader>
             <CardContent>
@@ -252,7 +255,7 @@ export default async function GymDetailPage({ params }: PageProps) {
           {/* Hours */}
           <Card>
             <CardHeader>
-              <CardTitle>Operating Hours</CardTitle>
+              <CardTitle>Operating Hours for {gym.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='space-y-2 divide-y divide-border'>
@@ -273,7 +276,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         {gym.amenities && gym.amenities.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Amenities</CardTitle>
+              <CardTitle>Amenities for {gym.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='flex flex-wrap gap-2'>
@@ -291,10 +294,21 @@ export default async function GymDetailPage({ params }: PageProps) {
         <section className='py-20 bg-background'>
           <div className='container mx-auto px-4'>
             <div className='mb-12 text-center'>
-              <h2 className='text-3xl md:text-4xl font-bold mb-2'>Membership Plans</h2>
-              <p className='text-muted-foreground text-lg'>
-                Choose the plan that works best for you
-              </p>
+              <h2 className='text-3xl md:text-4xl font-bold mb-2'>
+                Membership Plans for {gym.name}
+              </h2>
+              <ReadMoreText className='text-muted-foreground text-lg'>
+                Choose the right {gym.name} plan by comparing what&apos;s included—not just the
+                monthly price. In this section, we break down {gym.name} membership tiers, typical
+                perks (club access, classes, guest privileges), and common fees so you can
+                understand the real cost before you join. If you&apos;re researching pricing,
+                you&apos;ll also see guidance aligned with high-intent searches like{' '}
+                <strong>{gym.name} membership</strong>, <strong>{gym.name} membership cost</strong>,{' '}
+                <strong>{gym.name} membership cost per month</strong>,{' '}
+                <strong>{gym.name} membership plans</strong>, and{' '}
+                <strong>{gym.name} membership price per month</strong>—so you can pick the
+                best-value plan for your goals and schedule.
+              </ReadMoreText>
             </div>
             <div className='relative bg-muted/30 py-10'>
               <Carousel
@@ -385,8 +399,20 @@ export default async function GymDetailPage({ params }: PageProps) {
                 <CardHeader>
                   <CardTitle className='text-center'>
                     <h2 className='text-3xl md:text-4xl font-bold mb-2'>
-                      Frequently Asked Questions
+                      Frequently Asked Questions for {gym.name}
                     </h2>
+                    <ReadMoreText className='font-normal text-muted-foreground text-lg'>
+                      Have questions before joining {gym.name}? This FAQ covers the most common
+                      things people want to know—membership options, pricing expectations, fees,
+                      cancellations, guest policies, and what&apos;s included in each plan. We also
+                      answer the same high-intent searches members ask online, like{' '}
+                      <strong>{gym.name} membership</strong>,{' '}
+                      <strong>{gym.name} membership cost</strong>,{' '}
+                      <strong>{gym.name} membership cost per month</strong>,{' '}
+                      <strong>{gym.name} membership plans</strong>, and{' '}
+                      <strong>{gym.name} membership price per month</strong>—so you can make a
+                      confident decision without surprises.
+                    </ReadMoreText>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='p-6'>

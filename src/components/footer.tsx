@@ -18,7 +18,7 @@ export function Footer() {
               />
             </Link>
             <p className='text-sm text-muted-foreground'>
-              Find your perfect gym and start your fitness journey today.
+              Find the best gym near you compare memberships, prices, and reviews in minutes.
             </p>
           </div>
           <div>
@@ -62,9 +62,9 @@ export function Footer() {
             </ul>
           </div>
           <div className='md:col-span-2'>
-            <h3 className='text-2xl font-bold mb-2 text-foreground'>Subscribe Our Newsletter</h3>
+            <h3 className='text-2xl font-bold mb-2 text-foreground'>Subscribe Gymdues Newsletter</h3>
             <p className='text-sm text-muted-foreground mb-4'>
-              Get important update to your email.
+              Get gym pricing updates, deals, and new guides straight to your inbox—covering <strong>la fitness prices</strong>, <strong>anytime fitness prices</strong>, <strong>24 hour fitness prices</strong>, and more.
             </p>
             <NewsletterSubscription variant='footer' />
           </div>
