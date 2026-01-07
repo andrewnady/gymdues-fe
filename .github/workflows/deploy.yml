@@ -1,0 +1,114 @@
+name: Build and Deploy Next.js
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.15.3
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm run build:production
+        env:
+          NODE_ENV: production
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp -r .next deploy/
+          cp -r public deploy/ 2>/dev/null || true
+          cp package.json deploy/
+          cp pnpm-lock.yaml deploy/
+          cp server.js deploy/ 2>/dev/null || true
+          cp next.config.ts deploy/ 2>/dev/null || true
+          cp next.config.js deploy/ 2>/dev/null || true
+          cp tsconfig.json deploy/ 2>/dev/null || true
+          # Copy env file if it exists
+          if [ -f .env.production ]; then
+            cp .env.production deploy/.env
+          elif [ -f .env ]; then
+            cp .env deploy/.env
+          fi
+          tar -czf deploy.tar.gz -C deploy .
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to DigitalOcean
+        run: |
+          scp -i ~/.ssh/deploy_key deploy.tar.gz ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            # Backup current deployment
+            if [ -d ".next" ]; then
+              mkdir -p backups
+              mv .next backups/.next.backup.$(date +%Y%m%d_%H%M%S)
+            fi
+            
+            # Extract new deployment
+            tar -xzf /tmp/deploy.tar.gz -C /tmp
+            cp -r /tmp/deploy/* .
+            rm -rf /tmp/deploy /tmp/deploy.tar.gz
+            
+            # Install only production dependencies
+            if command -v pnpm &> /dev/null; then
+              pnpm install --prod --frozen-lockfile || pnpm install --prod
+            else
+              npm install --production
+            fi
+            
+            # Restart PM2
+            pm2 restart gymdues-nextjs || pm2 start npm --name "gymdues-nextjs" -- start
+            
+            # Cleanup old backups (keep last 3)
+            if [ -d "backups" ]; then
+              ls -dt backups/.next.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf
+            fi
+          EOF
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f deploy.tar.gz
+          rm -rf deploy
+          rm -f ~/.ssh/deploy_key
+
