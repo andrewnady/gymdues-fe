@@ -74,6 +74,7 @@ export interface ReviewWithGym {
   rating: number // Alias for rate for compatibility
   text: string
   reviewed_at: string
+  formattedDate?: string // Optional formatted date to prevent hydration mismatches
   avatar?: string
   gymName: string
   gymSlug: string

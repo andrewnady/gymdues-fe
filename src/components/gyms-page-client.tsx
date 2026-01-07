@@ -55,7 +55,8 @@ export function GymsPageClient() {
     const search = params.search || ''
     const stateParam = params.state || ''
     const cityParam = params.city || ''
-    const trendingParam = params.trending === 'true' ? true : params.trending === 'false' ? false : undefined
+    const trendingParam =
+      params.trending === 'true' ? true : params.trending === 'false' ? false : undefined
     const page = params.page ? parseInt(params.page, 10) || 1 : 1
 
     setSearchTerm(search)
@@ -136,9 +137,9 @@ export function GymsPageClient() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-64 bg-muted animate-pulse rounded-lg" />
+          <div key={i} className='h-64 bg-muted animate-pulse rounded-lg' />
         ))}
       </div>
     )
@@ -147,7 +148,7 @@ export function GymsPageClient() {
   return (
     <>
       {gyms.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {gyms.map((gym) => (
             <GymCard key={gym.id} gym={gym} />
           ))}
@@ -155,8 +156,8 @@ export function GymsPageClient() {
       )}
 
       {totalGyms === 0 && !loading && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">
+        <div className='text-center py-12'>
+          <p className='text-muted-foreground'>
             {searchTerm
               ? `No gyms found matching "${searchTerm}". Try adjusting your search.`
               : 'No gyms found. Try adjusting your search.'}
@@ -165,41 +166,28 @@ export function GymsPageClient() {
       )}
 
       {totalGyms > 0 && totalPages > 1 && (
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-8">
-          <p className="text-sm text-muted-foreground">
+        <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-8'>
+          <p className='text-sm text-muted-foreground'>
             Showing{' '}
-            <span className="font-medium">
-              {fromIndex ?? (currentPage - 1) * perPage + 1}
-            </span>
-            {'–'}
-            <span className="font-medium">
+            <span className='font-medium'>{fromIndex ?? (currentPage - 1) * perPage + 1}</span>
+            {'-'}
+            <span className='font-medium'>
               {toIndex ?? Math.min(currentPage * perPage, totalGyms)}
             </span>{' '}
-            of{' '}
-            <span className="font-medium">{totalGyms}</span> gyms
+            of <span className='font-medium'>{totalGyms}</span> gyms
           </p>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1}
-              asChild
-            >
+          <div className='flex items-center gap-2'>
+            <Button variant='outline' size='sm' disabled={currentPage === 1}>
               <Link href={buildPageUrl(currentPage - 1)}>Previous</Link>
             </Button>
 
-            <span className="text-sm text-muted-foreground">
-              Page <span className="font-medium">{currentPage}</span> of{' '}
-              <span className="font-medium">{totalPages}</span>
+            <span className='text-sm text-muted-foreground'>
+              Page <span className='font-medium'>{currentPage}</span> of{' '}
+              <span className='font-medium'>{totalPages}</span>
             </span>
 
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === totalPages}
-              asChild
-            >
+            <Button variant='outline' size='sm' disabled={currentPage === totalPages}>
               <Link href={buildPageUrl(currentPage + 1)}>Next</Link>
             </Button>
           </div>
@@ -208,4 +196,3 @@ export function GymsPageClient() {
     </>
   )
 }
-

@@ -196,7 +196,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                       </a>
                     </div>
                   )}
-                  <Button className='w-full mt-3 bg-white text-black hover:bg-white/90' asChild>
+                  <Button className='w-full mt-3 bg-white text-black hover:bg-white/90'>
                     <Link href={`tel:${gym.phone}`}>Call Now</Link>
                   </Button>
                 </div>
@@ -227,7 +227,7 @@ export default async function GymDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent>
               <div className='space-y-4'>
-                {gym.reviews.map((review) => (
+                {gym.reviews?.map((review) => (
                   <div key={review.id} className='space-y-2'>
                     <div className='flex items-center justify-between'>
                       <div>
@@ -267,7 +267,7 @@ export default async function GymDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent>
               <div className='space-y-2 divide-y divide-border'>
-                {gym.hours.map((hour, index) => (
+                {gym.hours?.map((hour, index) => (
                   <div key={index} className='flex items-center justify-between text-sm py-2'>
                     <span className='font-medium capitalize'>{hour.day}</span>
                     <span>

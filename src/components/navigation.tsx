@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Menu, X } from 'lucide-react'
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const isHomePage = pathname === '/'
 
@@ -23,6 +25,23 @@ export function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isMobileMenuOpen])
+
   // On home page: transparent with white text at top, white with dark text when scrolled
   // On other pages: white background with dark text from the start
   const shouldShowWhiteText = isHomePage && !isScrolled
@@ -30,6 +49,13 @@ export function Navigation() {
     isHomePage && !isScrolled
       ? 'bg-transparent backdrop-blur-sm'
       : 'bg-white/95 backdrop-blur-md shadow-md border-b'
+
+  const navLinks = [
+    { href: '/gyms', label: 'Browse Gyms' },
+    { href: '/blog', label: 'Blog' },
+    { href: '/about', label: 'About' },
+    { href: '/contact', label: 'Contact' },
+  ]
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${navBackground}`}>
@@ -45,41 +71,58 @@ export function Navigation() {
               priority
             />
           </Link>
-          <div className='flex items-center gap-6'>
-            <Link
-              href='/gyms'
-              className={`hover:text-primary transition-colors ${
-                shouldShowWhiteText ? 'text-white' : 'text-foreground'
-              }`}
-            >
-              Browse Gyms
-            </Link>
-            <Link
-              href='/blog'
-              className={`hover:text-primary transition-colors ${
-                shouldShowWhiteText ? 'text-white' : 'text-foreground'
-              }`}
-            >
-              Blog
-            </Link>
-            <Link
-              href='/about'
-              className={`hover:text-primary transition-colors ${
-                shouldShowWhiteText ? 'text-white' : 'text-foreground'
-              }`}
-            >
-              About
-            </Link>
 
-            <Link
-              href='/contact'
-              className={`hover:text-primary transition-colors ${
-                shouldShowWhiteText ? 'text-white' : 'text-foreground'
-              }`}
-            >
-              Contact
-            </Link>
+          {/* Desktop Navigation */}
+          <div className='hidden md:flex items-center gap-6'>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`hover:text-primary transition-colors ${
+                  shouldShowWhiteText ? 'text-white' : 'text-foreground'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`md:hidden p-2 transition-colors ${
+              shouldShowWhiteText ? 'text-white' : 'text-foreground'
+            }`}
+            aria-label='Toggle menu'
+          >
+            {isMobileMenuOpen ? (
+              <X className='h-6 w-6' />
+            ) : (
+              <Menu className='h-6 w-6' />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div
+        className={`md:hidden fixed inset-0 top-16 bg-white border-t transition-transform duration-300 ease-in-out ${
+          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className='bg-white container mx-auto px-4 py-6'>
+          <nav className='flex flex-col gap-4'>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className='text-foreground hover:text-primary transition-colors py-2 text-lg font-medium'
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
     </nav>

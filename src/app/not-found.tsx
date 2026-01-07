@@ -31,13 +31,13 @@ export default function NotFound() {
                   Go Home
                 </Link>
               </Button>
-              <Button variant='outline' asChild size='lg' className='w-full sm:w-auto'>
+              <Button asChild variant='outline' size='lg' className='w-full sm:w-auto'>
                 <Link href='/gyms'>
                   <Search className='mr-2 h-4 w-4' />
                   Browse Gyms
                 </Link>
               </Button>
-              <Button variant='outline' asChild size='lg' className='w-full sm:w-auto'>
+              <Button asChild variant='outline' size='lg' className='w-full sm:w-auto'>
                 <Link href='/blog'>
                   <Book className='mr-2 h-4 w-4' />
                   Browse Blog
