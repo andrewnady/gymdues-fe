@@ -113,6 +113,14 @@ export default async function GymDetailPage({ params }: PageProps) {
     gym = await getGymBySlug(slug)
   } catch (error) {
     console.error('Failed to load gym:', error)
+    // Log more details in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error details:', {
+        slug,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+    }
     notFound()
   }
 

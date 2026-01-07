@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -81,12 +79,6 @@ export function Navigation() {
             >
               Contact
             </Link>
-            <Button asChild size='default'>
-              <Link href='#'>
-                <Plus className='h-4 w-4' />
-                Add a Gym
-              </Link>
-            </Button>
           </div>
         </div>
       </div>

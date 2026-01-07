@@ -244,10 +244,16 @@ export async function getPaginatedGyms(options: {
  * Falls back to fetching all gyms and filtering by slug if the slug endpoint doesn't exist
  */
 export async function getGymBySlug(slug: string): Promise<Gym | null> {
+  if (!slug || typeof slug !== 'string') {
+    console.error('Invalid slug provided:', slug)
+    return null
+  }
+
   try {
     // Try the slug endpoint first
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/gyms/${slug}`, {
+      const url = `${API_BASE_URL}/api/v1/gyms/${encodeURIComponent(slug)}`
+      const response = await fetch(url, {
         next: { revalidate: 60 },
       })
 
@@ -264,25 +270,46 @@ export async function getGymBySlug(slug: string): Promise<Gym | null> {
           gym = data as Record<string, unknown>
         }
 
-        // Normalize the gym data
-        return normalizeGym(gym)
+        if (!gym) {
+          return null
+        }
+
+        // Normalize the gym data with error handling
+        try {
+          return normalizeGym(gym)
+        } catch (normalizeError) {
+          console.error('Error normalizing gym data:', normalizeError)
+          // Return the gym as-is if normalization fails
+          return gym as Gym
+        }
       }
 
       // If 404, return null
       if (response.status === 404) {
         return null
       }
-    } catch {
+
+      // If other error status, log and continue to fallback
+      if (!response.ok) {
+        console.warn(`API returned ${response.status} for slug ${slug}, falling back to filtering all gyms`)
+      }
+    } catch (fetchError) {
       // If slug endpoint doesn't exist or fails, fall back to fetching all and filtering
-      console.warn('Slug endpoint not available, falling back to filtering all gyms')
+      console.warn('Slug endpoint not available, falling back to filtering all gyms:', fetchError)
     }
 
     // Fallback: fetch all gyms and filter by slug
-    const allGyms = await getAllGyms()
-    const gym = allGyms.find((g) => g.slug === slug)
-    return gym || null
+    try {
+      const allGyms = await getAllGyms()
+      const gym = allGyms.find((g) => g.slug === slug)
+      return gym || null
+    } catch (fallbackError) {
+      console.error('Error in fallback gym fetch:', fallbackError)
+      throw fallbackError
+    }
   } catch (error) {
     console.error('Error fetching gym by slug:', error)
+    // Re-throw to let the page component handle it
     throw error
   }
 }
