@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -59,17 +59,53 @@ jobs:
           cp -r .next/standalone/* deploy/
           # Copy public folder (standalone doesn't include it)
           cp -r public deploy/ 2>/dev/null || true
-          # Copy .next/static into the existing .next folder from standalone
-          # The standalone build already has a .next folder, we just need to add static assets
+
+          # Standalone's .next folder is incomplete - copy missing files from root .next
+          # Copy BUILD_ID (required for production server)
+          if [ -f ".next/BUILD_ID" ]; then
+            cp .next/BUILD_ID deploy/.next/ 2>/dev/null || true
+          fi
+
+          # Copy server directory (contains server-side code)
+          if [ -d ".next/server" ]; then
+            cp -r .next/server deploy/.next/ 2>/dev/null || true
+          fi
+
+          # Copy static assets (required for static files)
           if [ -d ".next/static" ]; then
             cp -r .next/static deploy/.next/ 2>/dev/null || true
           fi
+
+          # Copy any other critical .next files that might be missing
+          # Copy standalone build manifest if it exists
+          if [ -f ".next/BUILD_MANIFEST.json" ]; then
+            cp .next/BUILD_MANIFEST.json deploy/.next/ 2>/dev/null || true
+          fi
+          if [ -f ".next/PRERENDER_MANIFEST.json" ]; then
+            cp .next/PRERENDER_MANIFEST.json deploy/.next/ 2>/dev/null || true
+          fi
+          if [ -f ".next/ROUTES_MANIFEST.json" ]; then
+            cp .next/ROUTES_MANIFEST.json deploy/.next/ 2>/dev/null || true
+          fi
+
           # Copy env file if it exists
           if [ -f .env.production ]; then
             cp .env.production deploy/.env
           elif [ -f .env ]; then
             cp .env deploy/.env
           fi
+
+          # Clean macOS files
+          find deploy -name "._*" -delete 2>/dev/null || true
+          find deploy -name ".DS_Store" -delete 2>/dev/null || true
+
+          # Verify critical files before packaging
+          echo "=== Verifying deployment package ==="
+          [ -f "deploy/.next/BUILD_ID" ] && echo "✓ BUILD_ID exists" || echo "✗ BUILD_ID missing"
+          [ -d "deploy/.next/server" ] && echo "✓ server directory exists" || echo "✗ server directory missing"
+          [ -d "deploy/.next/static" ] && echo "✓ static directory exists" || echo "✗ static directory missing"
+          [ -f "deploy/server.js" ] && echo "✓ server.js exists" || echo "✗ server.js missing"
+
           tar -czf deploy.tar.gz -C deploy .
 
       - name: Upload deployment package
@@ -83,7 +119,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: success()
-    
+
     steps:
       - name: Download deployment package
         uses: actions/download-artifact@v4
@@ -112,16 +148,16 @@ jobs:
           fi
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          
+
           # Verify key file was created correctly
           if [ ! -f ~/.ssh/deploy_key ]; then
             echo "Error: Failed to create SSH key file"
             exit 1
           fi
-          
+
           # Test SSH connection with verbose output
           ssh-keyscan -H ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-          
+
           # Test SSH connection (dry run)
           echo "Testing SSH connection..."
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} "echo 'SSH connection successful'" || {
