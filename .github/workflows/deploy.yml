@@ -61,19 +61,38 @@ jobs:
           cp -r public deploy/ 2>/dev/null || true
 
           # Standalone's .next folder is incomplete - copy missing files from root .next
+          # Ensure deploy/.next exists
+          mkdir -p deploy/.next
+          
           # Copy BUILD_ID (required for production server)
           if [ -f ".next/BUILD_ID" ]; then
-            cp .next/BUILD_ID deploy/.next/ 2>/dev/null || true
+            cp .next/BUILD_ID deploy/.next/ || {
+              echo "Error: Failed to copy BUILD_ID"
+              exit 1
+            }
+          else
+            echo "Error: BUILD_ID not found in .next folder"
+            exit 1
           fi
 
           # Copy server directory (contains server-side code)
           if [ -d ".next/server" ]; then
-            cp -r .next/server deploy/.next/ 2>/dev/null || true
+            cp -r .next/server deploy/.next/ || {
+              echo "Error: Failed to copy server directory"
+              exit 1
+            }
+          else
+            echo "Error: server directory not found in .next folder"
+            exit 1
           fi
 
           # Copy static assets (required for static files)
           if [ -d ".next/static" ]; then
-            cp -r .next/static deploy/.next/ 2>/dev/null || true
+            cp -r .next/static deploy/.next/ || {
+              echo "Warning: Failed to copy static directory (may already exist)"
+            }
+          else
+            echo "Warning: static directory not found in .next folder"
           fi
 
           # Copy any other critical .next files that might be missing
