@@ -54,34 +54,37 @@ jobs:
 
       - name: Create deployment package
         run: |
-          # 1. Prepare directory
           mkdir -p deploy
+          cp -r .next/standalone/. deploy/
 
-          # 2. Copy Standalone Output (This contains server.js and minimal node_modules)
-          # Note: We rely on Next.js to package the logic correctly.
-          cp -r .next/standalone/* deploy/
-
-          # 3. Copy Static Assets (Next.js Standalone excludes these by default)
-          # We must manually copy .next/static to deploy/.next/static
+          # Copy static assets (standalone excludes these by default)
           mkdir -p deploy/.next/static
           cp -r .next/static/* deploy/.next/static/
 
-          # 4. Copy Public Folder (Images, fonts, etc.)
+          # Copy public folder (images, fonts, etc)
           cp -r public deploy/ 2>/dev/null || true
 
-          # 5. Copy Environment Variables
+          # Copy environment variables
           if [ -f .env.production ]; then
             cp .env.production deploy/.env
           elif [ -f .env ]; then
             cp .env deploy/.env
           fi
-          
-          # 6. Verify Critical Files
-          echo "=== Verifying deployment package ==="
-          [ -f "deploy/server.js" ] && echo "✓ server.js exists" || { echo "✗ server.js missing"; exit 1; }
-          [ -d "deploy/.next/static" ] && echo "✓ static assets exist" || { echo "✗ static assets missing"; exit 1; }
 
-          # 7. Compress
+          # --------------------------------------------------------
+          # VERIFICATION: Ensure BUILD_ID exists before packaging
+          # --------------------------------------------------------
+          echo "=== Verifying critical files ==="
+          if [ ! -f "deploy/.next/BUILD_ID" ]; then
+            echo "❌ Error: BUILD_ID is missing in deploy/.next/"
+            echo "Listing deploy/.next contents:"
+            ls -la deploy/.next/
+            exit 1
+          else
+            echo "✅ BUILD_ID found"
+          fi
+
+          # Compress
           tar -czf deploy.tar.gz -C deploy .
 
       - name: Upload deployment package
@@ -108,7 +111,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          
+
           # Add host to known_hosts to avoid interactive prompt
           ssh-keyscan -H ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
@@ -116,7 +119,7 @@ jobs:
         run: |
           # Upload tarball
           scp -i ~/.ssh/deploy_key deploy.tar.gz ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:/tmp/
-          
+
           # Execute commands on server
           ssh -i ~/.ssh/deploy_key ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} << 'EOF'
             set -e
