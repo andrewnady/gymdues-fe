@@ -54,77 +54,34 @@ jobs:
 
       - name: Create deployment package
         run: |
+          # 1. Prepare directory
           mkdir -p deploy
-          # Copy standalone build (includes minimal node_modules, server.js, and .next folder)
+
+          # 2. Copy Standalone Output (This contains server.js and minimal node_modules)
+          # Note: We rely on Next.js to package the logic correctly.
           cp -r .next/standalone/* deploy/
-          # Copy public folder (standalone doesn't include it)
+
+          # 3. Copy Static Assets (Next.js Standalone excludes these by default)
+          # We must manually copy .next/static to deploy/.next/static
+          mkdir -p deploy/.next/static
+          cp -r .next/static/* deploy/.next/static/
+
+          # 4. Copy Public Folder (Images, fonts, etc.)
           cp -r public deploy/ 2>/dev/null || true
 
-          # Standalone's .next folder is incomplete - copy missing files from root .next
-          # Ensure deploy/.next exists
-          mkdir -p deploy/.next
-          
-          # Copy BUILD_ID (required for production server)
-          if [ -f ".next/BUILD_ID" ]; then
-            cp .next/BUILD_ID deploy/.next/ || {
-              echo "Error: Failed to copy BUILD_ID"
-              exit 1
-            }
-          else
-            echo "Error: BUILD_ID not found in .next folder"
-            exit 1
-          fi
-
-          # Copy server directory (contains server-side code)
-          if [ -d ".next/server" ]; then
-            cp -r .next/server deploy/.next/ || {
-              echo "Error: Failed to copy server directory"
-              exit 1
-            }
-          else
-            echo "Error: server directory not found in .next folder"
-            exit 1
-          fi
-
-          # Copy static assets (required for static files)
-          if [ -d ".next/static" ]; then
-            cp -r .next/static deploy/.next/ || {
-              echo "Warning: Failed to copy static directory (may already exist)"
-            }
-          else
-            echo "Warning: static directory not found in .next folder"
-          fi
-
-          # Copy any other critical .next files that might be missing
-          # Copy standalone build manifest if it exists
-          if [ -f ".next/BUILD_MANIFEST.json" ]; then
-            cp .next/BUILD_MANIFEST.json deploy/.next/ 2>/dev/null || true
-          fi
-          if [ -f ".next/PRERENDER_MANIFEST.json" ]; then
-            cp .next/PRERENDER_MANIFEST.json deploy/.next/ 2>/dev/null || true
-          fi
-          if [ -f ".next/ROUTES_MANIFEST.json" ]; then
-            cp .next/ROUTES_MANIFEST.json deploy/.next/ 2>/dev/null || true
-          fi
-
-          # Copy env file if it exists
+          # 5. Copy Environment Variables
           if [ -f .env.production ]; then
             cp .env.production deploy/.env
           elif [ -f .env ]; then
             cp .env deploy/.env
           fi
-
-          # Clean macOS files
-          find deploy -name "._*" -delete 2>/dev/null || true
-          find deploy -name ".DS_Store" -delete 2>/dev/null || true
-
-          # Verify critical files before packaging
+          
+          # 6. Verify Critical Files
           echo "=== Verifying deployment package ==="
-          [ -f "deploy/.next/BUILD_ID" ] && echo "✓ BUILD_ID exists" || echo "✗ BUILD_ID missing"
-          [ -d "deploy/.next/server" ] && echo "✓ server directory exists" || echo "✗ server directory missing"
-          [ -d "deploy/.next/static" ] && echo "✓ static directory exists" || echo "✗ static directory missing"
-          [ -f "deploy/server.js" ] && echo "✓ server.js exists" || echo "✗ server.js missing"
+          [ -f "deploy/server.js" ] && echo "✓ server.js exists" || { echo "✗ server.js missing"; exit 1; }
+          [ -d "deploy/.next/static" ] && echo "✓ static assets exist" || { echo "✗ static assets missing"; exit 1; }
 
+          # 7. Compress
           tar -czf deploy.tar.gz -C deploy .
 
       - name: Upload deployment package
@@ -149,131 +106,75 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
-            echo "Error: DEPLOY_SSH_KEY secret is not set"
-            exit 1
-          fi
-          if [ -z "${{ vars.DEPLOY_HOST }}" ]; then
-            echo "Error: DEPLOY_HOST variable is not set"
-            exit 1
-          fi
-          if [ -z "${{ vars.DEPLOY_USER }}" ]; then
-            echo "Error: DEPLOY_USER variable is not set"
-            exit 1
-          fi
-          if [ -z "${{ vars.DEPLOY_PATH }}" ]; then
-            echo "Error: DEPLOY_PATH variable is not set"
-            exit 1
-          fi
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-
-          # Verify key file was created correctly
-          if [ ! -f ~/.ssh/deploy_key ]; then
-            echo "Error: Failed to create SSH key file"
-            exit 1
-          fi
-
-          # Test SSH connection with verbose output
+          
+          # Add host to known_hosts to avoid interactive prompt
           ssh-keyscan -H ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
-          # Test SSH connection (dry run)
-          echo "Testing SSH connection..."
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} "echo 'SSH connection successful'" || {
-            echo "Error: SSH connection test failed"
-            echo "Please verify:"
-            echo "1. DEPLOY_SSH_KEY contains the complete private key (including BEGIN/END lines)"
-            echo "2. Public key is added to ~/.ssh/authorized_keys on the server"
-            echo "3. Key permissions are correct (chmod 600)"
-            exit 1
-          }
-
-      - name: Deploy to DigitalOcean
+      - name: Deploy to Server
         run: |
+          # Upload tarball
           scp -i ~/.ssh/deploy_key deploy.tar.gz ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:/tmp/
+          
+          # Execute commands on server
           ssh -i ~/.ssh/deploy_key ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} << 'EOF'
-            set -e  # Exit on any error
-            DEPLOY_PATH="${{ vars.DEPLOY_PATH }}"
+            set -e
+
+            APP_DIR="${{ vars.DEPLOY_PATH }}"
+            TEMP_DIR=$(mktemp -d)
             
-            # Create temp directory in user's home (avoid /tmp permission issues)
-            TEMP_EXTRACT=$(mktemp -d -p ~)
+            echo "Deploying to $APP_DIR..."
+
+            # 1. Extract to temp location
+            tar -xzf /tmp/deploy.tar.gz -C "$TEMP_DIR"
             
-            # Extract to user-owned temp directory
-            tar -xzf /tmp/deploy.tar.gz -C "$TEMP_EXTRACT" || {
-              echo "Error: Failed to extract deployment package"
-              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
-              exit 1
-            }
-                        
-            cd "$DEPLOY_PATH"
+            # 2. Create destination if not exists
+            mkdir -p "$APP_DIR"
             
-            # Backup current deployment
-            if [ -d ".next" ]; then
-              mkdir -p backups
-              mv .next backups/.next.backup.$(date +%Y%m%d_%H%M%S) || true
+            # 3. Backup (Optional: Keep one previous version)
+            # If server.js exists, move current contents to backup
+            if [ -f "$APP_DIR/server.js" ]; then
+               rm -rf "$APP_DIR.bak"
+               cp -r "$APP_DIR" "$APP_DIR.bak"
             fi
+
+            # 4. Sync files (rsync is safer than cp for overwriting running apps, but cp works)
+            # We copy contents of temp dir into app dir
+            cp -r "$TEMP_DIR"/* "$APP_DIR/"
             
-            # Copy files from temp directory
-            cp -r "$TEMP_EXTRACT"/* . || {
-              echo "Error: Failed to copy deployment files"
-              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
-              exit 1
-            }
+            # Copy dotfiles (.env, etc)
+            cp -r "$TEMP_DIR"/.[!.]* "$APP_DIR/" 2>/dev/null || true
+
+            # 5. Cleanup
+            rm -rf "$TEMP_DIR" /tmp/deploy.tar.gz
+
+            # 6. PM2 Process Management
+            cd "$APP_DIR"
             
-            # Also copy hidden files (if any)
-            cp -r "$TEMP_EXTRACT"/.[!.]* . 2>/dev/null || true
-            
-            # Verify critical files after copying
-            echo "=== Verifying deployment files ==="
-            if [ ! -f ".next/BUILD_ID" ]; then
-              echo "Error: BUILD_ID missing after deployment"
-              echo "Contents of .next folder:"
-              ls -la .next/ || true
-              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
+            # Ensure PM2 is installed globally or use npx
+            if command -v pm2 &> /dev/null; then
+              # Check if process exists
+              if pm2 list | grep -q "gymdues-nextjs"; then
+                echo "Reloading existing application..."
+                pm2 reload gymdues-nextjs --update-env
+              else
+                echo "Starting new application..."
+                # Next.js standalone typically listens on 3000 by default. 
+                # PORT and HOSTNAME can be passed here if needed.
+                pm2 start server.js --name "gymdues-nextjs"
+              fi
+              
+              # Save PM2 list so it survives reboots
+              pm2 save
+            else
+              echo "Error: PM2 is not installed on the server."
               exit 1
             fi
-            if [ ! -d ".next/server" ]; then
-              echo "Error: server directory missing after deployment"
-              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
-              exit 1
-            fi
-            if [ ! -d ".next/static" ]; then
-              echo "Warning: static directory missing (may be optional)"
-            fi
-            echo "✓ Deployment files verified"
-            
-            # Cleanup temp files
-            rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
-            
-            # Ensure correct permissions
-            chmod -R u+w .
-            
-            # No need to install dependencies - standalone build includes everything!
-            # The standalone output already contains minimal node_modules with production dependencies
-            
-            # Restart PM2 using the standalone server.js
-            # Standalone build includes server.js in the root with all dependencies
-            pm2 restart gymdues-nextjs || pm2 start server.js --name "gymdues-nextjs" --cwd "$DEPLOY_PATH" || {
-              echo "Error: Failed to start/restart PM2 process"
-              exit 1
-            }
-            
-            # Verify PM2 process is running
-            pm2 list | grep -q "gymdues-nextjs.*online" || {
-              echo "Error: PM2 process is not running"
-              exit 1
-            }
-            
-            # Cleanup old backups (keep last 3)
-            if [ -d "backups" ]; then
-              ls -dt backups/.next.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf || true
-            fi
-            
-            echo "Deployment completed successfully"
+
+            echo "Deployment Successful!"
           EOF
 
-      - name: Cleanup
+      - name: Cleanup SSH Key
         if: always()
-        run: |
-          rm -f deploy.tar.gz
-          rm -f ~/.ssh/deploy_key
+        run: rm -f ~/.ssh/deploy_key
