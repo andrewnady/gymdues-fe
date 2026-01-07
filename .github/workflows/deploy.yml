@@ -55,14 +55,13 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir -p deploy
-          cp -r .next deploy/
+          # Copy standalone build (includes minimal node_modules and server.js)
+          cp -r .next/standalone/* deploy/
+          # Copy public folder (standalone doesn't include it)
           cp -r public deploy/ 2>/dev/null || true
-          cp package.json deploy/
-          cp pnpm-lock.yaml deploy/
-          cp server.js deploy/ 2>/dev/null || true
-          cp next.config.ts deploy/ 2>/dev/null || true
-          cp next.config.js deploy/ 2>/dev/null || true
-          cp tsconfig.json deploy/ 2>/dev/null || true
+          # Copy .next/static for static assets
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/ 2>/dev/null || true
           # Copy env file if it exists
           if [ -f .env.production ]; then
             cp .env.production deploy/.env
@@ -174,21 +173,12 @@ jobs:
             # Ensure correct permissions
             chmod -R u+w .
             
-            # Install only production dependencies
-            if command -v pnpm &> /dev/null; then
-              pnpm install --prod --frozen-lockfile || pnpm install --prod || {
-                echo "Error: Failed to install dependencies"
-                exit 1
-              }
-            else
-              npm install --production || {
-                echo "Error: Failed to install dependencies"
-                exit 1
-              }
-            fi
+            # No need to install dependencies - standalone build includes everything!
+            # The standalone output already contains minimal node_modules with production dependencies
             
-            # Restart PM2
-            pm2 restart gymdues-nextjs || pm2 start npm --name "gymdues-nextjs" -- start || {
+            # Restart PM2 using the standalone server.js
+            # Standalone build includes server.js in the root with all dependencies
+            pm2 restart gymdues-nextjs || pm2 start server.js --name "gymdues-nextjs" --cwd "$DEPLOY_PATH" || {
               echo "Error: Failed to start/restart PM2 process"
               exit 1
             }
