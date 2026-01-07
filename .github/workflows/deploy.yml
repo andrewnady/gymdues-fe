@@ -201,6 +201,28 @@ jobs:
               exit 1
             }
             
+            # Also copy hidden files (if any)
+            cp -r "$TEMP_EXTRACT"/.[!.]* . 2>/dev/null || true
+            
+            # Verify critical files after copying
+            echo "=== Verifying deployment files ==="
+            if [ ! -f ".next/BUILD_ID" ]; then
+              echo "Error: BUILD_ID missing after deployment"
+              echo "Contents of .next folder:"
+              ls -la .next/ || true
+              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
+              exit 1
+            fi
+            if [ ! -d ".next/server" ]; then
+              echo "Error: server directory missing after deployment"
+              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
+              exit 1
+            fi
+            if [ ! -d ".next/static" ]; then
+              echo "Warning: static directory missing (may be optional)"
+            fi
+            echo "✓ Deployment files verified"
+            
             # Cleanup temp files
             rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
             
