@@ -25,9 +25,11 @@ cat ~/.ssh/github_actions_deploy
 
 ## Step 2: Add GitHub Secrets
 
+⚠️ **IMPORTANT**: All secrets must be set before the workflow can run. The workflow will fail if any secret is missing.
+
 Go to your GitHub repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
 
-Add the following secrets:
+Add the following secrets (all are required):
 
 ### Required Secrets
 

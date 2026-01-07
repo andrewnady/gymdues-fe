@@ -74,15 +74,31 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
+          if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
+            echo "Error: DEPLOY_SSH_KEY secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ vars.DEPLOY_HOST }}" ]; then
+            echo "Error: DEPLOY_HOST variable is not set"
+            exit 1
+          fi
+          if [ -z "${{ vars.DEPLOY_USER }}" ]; then
+            echo "Error: DEPLOY_USER variable is not set"
+            exit 1
+          fi
+          if [ -z "${{ vars.DEPLOY_PATH }}" ]; then
+            echo "Error: DEPLOY_PATH variable is not set"
+            exit 1
+          fi
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to DigitalOcean
         run: |
-          scp -i ~/.ssh/deploy_key deploy.tar.gz ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/
-          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
-            cd ${{ secrets.DEPLOY_PATH }}
+          scp -i ~/.ssh/deploy_key deploy.tar.gz ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:/tmp/
+          ssh -i ~/.ssh/deploy_key ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} << 'EOF'
+            cd ${{ vars.DEPLOY_PATH }}
             
             # Backup current deployment
             if [ -d ".next" ]; then
