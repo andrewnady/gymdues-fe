@@ -279,8 +279,8 @@ export async function getGymBySlug(slug: string): Promise<Gym | null> {
           return normalizeGym(gym)
         } catch (normalizeError) {
           console.error('Error normalizing gym data:', normalizeError)
-          // Return the gym as-is if normalization fails
-          return gym as Gym
+          // Return null if normalization fails since we can't guarantee data structure
+          return null
         }
       }
 
