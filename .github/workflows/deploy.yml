@@ -55,13 +55,15 @@ jobs:
       - name: Create deployment package
         run: |
           mkdir -p deploy
-          # Copy standalone build (includes minimal node_modules and server.js)
+          # Copy standalone build (includes minimal node_modules, server.js, and .next folder)
           cp -r .next/standalone/* deploy/
           # Copy public folder (standalone doesn't include it)
           cp -r public deploy/ 2>/dev/null || true
-          # Copy .next/static for static assets
-          mkdir -p deploy/.next
-          cp -r .next/static deploy/.next/ 2>/dev/null || true
+          # Copy .next/static into the existing .next folder from standalone
+          # The standalone build already has a .next folder, we just need to add static assets
+          if [ -d ".next/static" ]; then
+            cp -r .next/static deploy/.next/ 2>/dev/null || true
+          fi
           # Copy env file if it exists
           if [ -f .env.production ]; then
             cp .env.production deploy/.env
