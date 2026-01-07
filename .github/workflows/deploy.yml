@@ -147,11 +147,7 @@ jobs:
               rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
               exit 1
             }
-            
-            # Ensure deployment directory exists and is owned by deploy user
-            sudo mkdir -p "$DEPLOY_PATH"
-            sudo chown -R $USER:$USER "$DEPLOY_PATH"
-            
+                        
             cd "$DEPLOY_PATH"
             
             # Backup current deployment
