@@ -134,10 +134,10 @@ jobs:
             
             # 3. Backup (Optional: Keep one previous version)
             # If server.js exists, move current contents to backup
-            if [ -f "$APP_DIR/server.js" ]; then
-               rm -rf "$APP_DIR.bak"
-               cp -r "$APP_DIR" "$APP_DIR.bak"
-            fi
+            # if [ -f "$APP_DIR/server.js" ]; then
+            #    rm -rf "$APP_DIR.bak"
+            #    cp -r "$APP_DIR" "$APP_DIR.bak"
+            # fi
 
             # 4. Sync files (rsync is safer than cp for overwriting running apps, but cp works)
             # We copy contents of temp dir into app dir
