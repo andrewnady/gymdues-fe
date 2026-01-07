@@ -136,33 +136,75 @@ jobs:
         run: |
           scp -i ~/.ssh/deploy_key deploy.tar.gz ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}:/tmp/
           ssh -i ~/.ssh/deploy_key ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} << 'EOF'
-            cd ${{ vars.DEPLOY_PATH }}
+            set -e  # Exit on any error
+            DEPLOY_PATH="${{ vars.DEPLOY_PATH }}"
+            
+            # Create temp directory in user's home (avoid /tmp permission issues)
+            TEMP_EXTRACT=$(mktemp -d -p ~)
+            
+            # Extract to user-owned temp directory
+            tar -xzf /tmp/deploy.tar.gz -C "$TEMP_EXTRACT" || {
+              echo "Error: Failed to extract deployment package"
+              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
+              exit 1
+            }
+            
+            # Ensure deployment directory exists and is owned by deploy user
+            sudo mkdir -p "$DEPLOY_PATH"
+            sudo chown -R $USER:$USER "$DEPLOY_PATH"
+            
+            cd "$DEPLOY_PATH"
             
             # Backup current deployment
             if [ -d ".next" ]; then
               mkdir -p backups
-              mv .next backups/.next.backup.$(date +%Y%m%d_%H%M%S)
+              mv .next backups/.next.backup.$(date +%Y%m%d_%H%M%S) || true
             fi
             
-            # Extract new deployment
-            tar -xzf /tmp/deploy.tar.gz -C /tmp
-            cp -r /tmp/deploy/* .
-            rm -rf /tmp/deploy /tmp/deploy.tar.gz
+            # Copy files from temp directory
+            cp -r "$TEMP_EXTRACT"/* . || {
+              echo "Error: Failed to copy deployment files"
+              rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
+              exit 1
+            }
+            
+            # Cleanup temp files
+            rm -rf "$TEMP_EXTRACT" /tmp/deploy.tar.gz
+            
+            # Ensure correct permissions
+            chmod -R u+w .
             
             # Install only production dependencies
             if command -v pnpm &> /dev/null; then
-              pnpm install --prod --frozen-lockfile || pnpm install --prod
+              pnpm install --prod --frozen-lockfile || pnpm install --prod || {
+                echo "Error: Failed to install dependencies"
+                exit 1
+              }
             else
-              npm install --production
+              npm install --production || {
+                echo "Error: Failed to install dependencies"
+                exit 1
+              }
             fi
             
             # Restart PM2
-            pm2 restart gymdues-nextjs || pm2 start npm --name "gymdues-nextjs" -- start
+            pm2 restart gymdues-nextjs || pm2 start npm --name "gymdues-nextjs" -- start || {
+              echo "Error: Failed to start/restart PM2 process"
+              exit 1
+            }
+            
+            # Verify PM2 process is running
+            pm2 list | grep -q "gymdues-nextjs.*online" || {
+              echo "Error: PM2 process is not running"
+              exit 1
+            }
             
             # Cleanup old backups (keep last 3)
             if [ -d "backups" ]; then
-              ls -dt backups/.next.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf
+              ls -dt backups/.next.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf || true
             fi
+            
+            echo "Deployment completed successfully"
           EOF
 
       - name: Cleanup
