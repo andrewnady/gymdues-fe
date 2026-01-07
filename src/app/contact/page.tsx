@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Mail, Phone, MapPin, Send } from 'lucide-react'
+import { Send } from 'lucide-react'
 import { ReadMoreText } from '@/components/read-more-text'
 
 export const metadata: Metadata = {

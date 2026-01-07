@@ -43,7 +43,7 @@ Add the following secrets:
    - Value: The private key content from Step 1 (entire output of `cat ~/.ssh/github_actions_deploy`)
    - Description: Private SSH key for authentication
 
-4. **DEPLOY_PATH_NEXTJS**
+4. **DEPLOY_PATH**
    - Value: Path to your Next.js app on the server (e.g., `/var/www/gymdues-next-js`)
    - Description: Deployment path on the droplet
 
