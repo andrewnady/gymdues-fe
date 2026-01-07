@@ -13,15 +13,36 @@ This guide will help you set up automated deployments to your DigitalOcean dropl
 SSH into your DigitalOcean droplet and run:
 
 ```bash
-# Generate SSH key for GitHub Actions
-ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions_deploy
+# Generate SSH key for GitHub Actions (press Enter to accept defaults, no passphrase)
+ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions_deploy -N ""
+
+# Set correct permissions
+chmod 600 ~/.ssh/github_actions_deploy
+chmod 644 ~/.ssh/github_actions_deploy.pub
+
+# Ensure .ssh directory has correct permissions
+chmod 700 ~/.ssh
 
 # Add public key to authorized_keys
 cat ~/.ssh/github_actions_deploy.pub >> ~/.ssh/authorized_keys
 
-# Display private key (copy this for GitHub Secrets)
+# Set correct permissions for authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# Verify the public key was added
+echo "Public key added to authorized_keys:"
+tail -1 ~/.ssh/authorized_keys
+
+# Display private key (copy the ENTIRE output including BEGIN/END lines)
+echo "=== PRIVATE KEY (copy everything below) ==="
 cat ~/.ssh/github_actions_deploy
+echo "=== END OF PRIVATE KEY ==="
 ```
+
+**Important**: When copying the private key to GitHub Secrets:
+- Copy the ENTIRE key including `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----`
+- Make sure there are no extra spaces or line breaks
+- The key should be on multiple lines
 
 ## Step 2: Add GitHub Secrets
 
@@ -41,9 +62,17 @@ Add the following secrets (all are required):
    - Value: SSH username (usually `root` or `deploy`)
    - Description: SSH user for deployment
 
-3. **DEPLOY_SSH_KEY**
-   - Value: The private key content from Step 1 (entire output of `cat ~/.ssh/github_actions_deploy`)
+3. **DEPLOY_SSH_KEY** (Secret)
+   - Value: The COMPLETE private key from Step 1 (must include BEGIN and END lines)
+   - Format should look like:
+     ```
+     -----BEGIN OPENSSH PRIVATE KEY-----
+     b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAlwAAAAdzc2gtcn
+     ... (multiple lines) ...
+     -----END OPENSSH PRIVATE KEY-----
+     ```
    - Description: Private SSH key for authentication
+   - ⚠️ Make sure to copy the ENTIRE key, including all lines
 
 4. **DEPLOY_PATH**
    - Value: Path to your Next.js app on the server (e.g., `/var/www/gymdues-next-js`)
@@ -82,10 +111,43 @@ pm2 save
 
 ## Troubleshooting
 
-### Deployment fails with SSH connection error
-- Verify `DEPLOY_HOST` and `DEPLOY_USER` are correct
-- Check SSH key is properly formatted in secrets
-- Ensure droplet firewall allows SSH (port 22)
+### Deployment fails with SSH connection error (Permission denied)
+
+**Common causes and fixes:**
+
+1. **Public key not in authorized_keys**
+   ```bash
+   # On your droplet, verify the public key is there
+   cat ~/.ssh/authorized_keys | grep github-actions
+   
+   # If missing, add it:
+   cat ~/.ssh/github_actions_deploy.pub >> ~/.ssh/authorized_keys
+   chmod 600 ~/.ssh/authorized_keys
+   ```
+
+2. **Wrong private key format in GitHub Secrets**
+   - The key must include BEGIN and END lines
+   - No extra spaces or characters
+   - Copy the ENTIRE output from `cat ~/.ssh/github_actions_deploy`
+
+3. **File permissions incorrect**
+   ```bash
+   # On your droplet, fix permissions:
+   chmod 700 ~/.ssh
+   chmod 600 ~/.ssh/github_actions_deploy
+   chmod 644 ~/.ssh/github_actions_deploy.pub
+   chmod 600 ~/.ssh/authorized_keys
+   ```
+
+4. **Test SSH connection manually**
+   ```bash
+   # From your local machine, test the connection:
+   ssh -i ~/.ssh/github_actions_deploy deploy@164.92.68.66
+   ```
+
+5. **Verify DEPLOY_USER has correct permissions**
+   - Ensure the user can write to the deployment path
+   - Check: `ls -la /var/www/gymdues-next-js`
 
 ### PM2 restart fails
 - SSH into droplet and check PM2 status: `pm2 list`

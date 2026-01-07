@@ -92,7 +92,26 @@ jobs:
           fi
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          
+          # Verify key file was created correctly
+          if [ ! -f ~/.ssh/deploy_key ]; then
+            echo "Error: Failed to create SSH key file"
+            exit 1
+          fi
+          
+          # Test SSH connection with verbose output
           ssh-keyscan -H ${{ vars.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          
+          # Test SSH connection (dry run)
+          echo "Testing SSH connection..."
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} "echo 'SSH connection successful'" || {
+            echo "Error: SSH connection test failed"
+            echo "Please verify:"
+            echo "1. DEPLOY_SSH_KEY contains the complete private key (including BEGIN/END lines)"
+            echo "2. Public key is added to ~/.ssh/authorized_keys on the server"
+            echo "3. Key permissions are correct (chmod 600)"
+            exit 1
+          }
 
       - name: Deploy to DigitalOcean
         run: |
