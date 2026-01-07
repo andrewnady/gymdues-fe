@@ -40,7 +40,7 @@ fi
 # Step 3: Set production environment and build the application
 echo -e "${YELLOW}📦 Step 3: Building application in PRODUCTION mode...${NC}"
 export NODE_ENV=production
-export NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net
+export NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
 
 if command -v pnpm &> /dev/null; then
     pnpm build:production || pnpm build
@@ -65,7 +65,7 @@ if [ ! -f ".env" ]; then
         cat > .env << EOF
 NODE_ENV=production
 PORT=3000
-NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net
+NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
 HOSTNAME=localhost
 EOF
         echo -e "${GREEN}✅ Created .env file with production values${NC}"
@@ -73,12 +73,12 @@ EOF
 else
     echo -e "${YELLOW}⚠️  .env file already exists${NC}"
     # Update API URL if it's not set correctly
-    if ! grep -q "NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net" .env; then
+    if ! grep -q "NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com" .env; then
         echo -e "${YELLOW}⚠️  Updating NEXT_PUBLIC_API_BASE_URL in .env to production URL${NC}"
         # Remove old API URL line if exists
         sed -i.bak '/NEXT_PUBLIC_API_BASE_URL/d' .env
         # Add production API URL
-        echo "NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net" >> .env
+        echo "NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com" >> .env
         rm -f .env.bak
     fi
     # Ensure NODE_ENV is set to production
@@ -149,7 +149,7 @@ cPanel Configuration:
 
 2. Set Environment Variables:
    - NODE_ENV=production
-   - NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.staging-apps.net
+   - NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
    - HOSTNAME=localhost
    - PORT (cPanel will set this automatically)
 
@@ -163,7 +163,7 @@ cPanel Configuration:
 Important Notes:
 ----------------
 - Build was created with NODE_ENV=production
-- API URL is set to: https://cms.gymdues.staging-apps.net
+- API URL is set to: https://cms.staging.gymdues.com
 - Ensure .env file is configured with production values
 - Verify API URL in NEXT_PUBLIC_API_BASE_URL matches production
 - Check that all required Node.js modules are installed
