@@ -45,11 +45,6 @@ export function Footer() {
             <h3 className='font-semibold mb-4'>Resources</h3>
             <ul className='space-y-2 text-sm'>
               <li>
-                <Link href='/how-it-works' className='text-muted-foreground hover:text-primary'>
-                  How It Works
-                </Link>
-              </li>
-              <li>
                 <Link href='/privacy-policy' className='text-muted-foreground hover:text-primary'>
                   Privacy Policy
                 </Link>
@@ -62,9 +57,13 @@ export function Footer() {
             </ul>
           </div>
           <div className='md:col-span-2'>
-            <h3 className='text-2xl font-bold mb-2 text-foreground'>Subscribe Gymdues Newsletter</h3>
+            <h3 className='text-2xl font-bold mb-2 text-foreground'>
+              Subscribe Gymdues Newsletter
+            </h3>
             <p className='text-sm text-muted-foreground mb-4'>
-              Get gym pricing updates, deals, and new guides straight to your inbox—covering <strong>la fitness prices</strong>, <strong>anytime fitness prices</strong>, <strong>24 hour fitness prices</strong>, and more.
+              Get gym pricing updates, deals, and new guides straight to your inbox—covering{' '}
+              <strong>la fitness prices</strong>, <strong>anytime fitness prices</strong>,{' '}
+              <strong>24 hour fitness prices</strong>, and more.
             </p>
             <NewsletterSubscription variant='footer' />
           </div>

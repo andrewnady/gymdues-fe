@@ -33,7 +33,7 @@ export default function AboutPage() {
 
           <Card className='mb-8'>
             <CardHeader>
-              <CardTitle>Our Mission</CardTitle>
+              <CardTitle>Gymdues Mission</CardTitle>
             </CardHeader>
             <CardContent>
               <p className='text-muted-foreground leading-relaxed mb-4'>
@@ -57,7 +57,7 @@ export default function AboutPage() {
                 <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4'>
                   <Target className='h-6 w-6 text-primary' />
                 </div>
-                <CardTitle>Our Vision</CardTitle>
+                <CardTitle>Gymdues Vision</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className='text-muted-foreground'>
@@ -72,7 +72,7 @@ export default function AboutPage() {
                 <div className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4'>
                   <Heart className='h-6 w-6 text-primary' />
                 </div>
-                <CardTitle>Our Values</CardTitle>
+                <CardTitle>Gymdues Values</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className='text-muted-foreground'>
@@ -85,7 +85,7 @@ export default function AboutPage() {
 
           <Card className='mb-8'>
             <CardHeader>
-              <CardTitle>What We Offer</CardTitle>
+              <CardTitle>What Gymdues Offers</CardTitle>
               <CardDescription>Everything you need to find your perfect gym</CardDescription>
             </CardHeader>
             <CardContent>
@@ -140,7 +140,7 @@ export default function AboutPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Our Founder</CardTitle>
+              <CardTitle>Gymdues Founder</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='space-y-4'>
