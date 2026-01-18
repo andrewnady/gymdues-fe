@@ -44,12 +44,19 @@ export function GymSearchInput() {
   // Update URL hash with search parameter
   const updateSearch = useDebouncedCallback((value: string) => {
     const params = parseHashParams()
+    const previousSearch = params.search || ''
+    const newSearch = value.trim()
     
-    if (value.trim()) {
-      params.search = value.trim()
+    if (newSearch) {
+      params.search = newSearch
+      // Always reset to page 1 when search changes (different from previous)
+      if (previousSearch !== newSearch) {
+        delete params.page
+      }
     } else {
       delete params.search
-      delete params.page // Reset page when clearing search
+      // Reset page when clearing search
+      delete params.page
     }
 
     const hashString = buildHashString(params)
@@ -57,7 +64,7 @@ export function GymSearchInput() {
     window.history.replaceState(null, '', `/gyms${hashString}`)
     
     // Trigger a custom event to notify the page component
-    window.dispatchEvent(new CustomEvent('hashchange'))
+    window.dispatchEvent(new Event('hashchange'))
   }, 300)
 
   // Handle input change
@@ -75,7 +82,6 @@ export function GymSearchInput() {
     }
 
     // Listen to both native hashchange and custom hashchange events
-    window.addEventListener('hashchange', handleHashChange)
     window.addEventListener('hashchange', handleHashChange)
     
     return () => {

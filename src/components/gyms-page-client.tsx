@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useState, useCallback } from 'react'
 import { getPaginatedGyms } from '@/lib/gyms-api'
 import { GymCard } from '@/components/gym-card'
 import { Button } from '@/components/ui/button'
@@ -49,8 +48,8 @@ export function GymsPageClient() {
 
   const perPage = 12
 
-  // Load gyms based on hash parameters
-  const loadGyms = async () => {
+  // Load gyms based on hash parameters - memoized to prevent stale closures
+  const loadGyms = useCallback(async () => {
     const params = parseHashParams()
     const search = params.search || ''
     const stateParam = params.state || ''
@@ -89,30 +88,28 @@ export function GymsPageClient() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [perPage])
 
   // Initial load
   useEffect(() => {
     loadGyms()
-  }, [])
+  }, [loadGyms])
 
-  // Listen for hash changes
+  // Listen for hash changes (both native and custom events)
   useEffect(() => {
     const handleHashChange = () => {
       loadGyms()
     }
 
     window.addEventListener('hashchange', handleHashChange)
-    // Also listen for custom hashchange event from search input
-    window.addEventListener('hashchange', handleHashChange)
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange)
     }
-  }, [])
+  }, [loadGyms])
 
-  // Build page URL with hash
-  const buildPageUrl = (page: number) => {
+  // Build page URL with hash and navigate
+  const navigateToPage = useCallback((page: number) => {
     const params: Record<string, string> = {}
 
     if (searchTerm) {
@@ -132,8 +129,11 @@ export function GymsPageClient() {
     }
 
     const hashString = buildHashString(params)
-    return `/gyms${hashString}`
-  }
+    // Update hash using replaceState to avoid adding to history, then trigger event
+    window.history.replaceState(null, '', `/gyms${hashString}`)
+    // Manually trigger hashchange for immediate update
+    window.dispatchEvent(new Event('hashchange'))
+  }, [searchTerm, state, city, trending])
 
   if (loading) {
     return (
@@ -178,8 +178,13 @@ export function GymsPageClient() {
           </p>
 
           <div className='flex items-center gap-2'>
-            <Button variant='outline' size='sm' disabled={currentPage === 1}>
-              <Link href={buildPageUrl(currentPage - 1)}>Previous</Link>
+            <Button 
+              variant='outline' 
+              size='sm' 
+              disabled={currentPage === 1}
+              onClick={() => navigateToPage(currentPage - 1)}
+            >
+              Previous
             </Button>
 
             <span className='text-sm text-muted-foreground'>
@@ -187,8 +192,13 @@ export function GymsPageClient() {
               <span className='font-medium'>{totalPages}</span>
             </span>
 
-            <Button variant='outline' size='sm' disabled={currentPage === totalPages}>
-              <Link href={buildPageUrl(currentPage + 1)}>Next</Link>
+            <Button 
+              variant='outline' 
+              size='sm' 
+              disabled={currentPage === totalPages}
+              onClick={() => navigateToPage(currentPage + 1)}
+            >
+              Next
             </Button>
           </div>
         </div>
