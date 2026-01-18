@@ -19,7 +19,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Star, MapPin } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
 import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
@@ -149,12 +149,12 @@ export default async function GymDetailPage({ params }: PageProps) {
                     </span>
                     <span className='text-sm opacity-90'>({getReviewCount(gym)} reviews)</span>
                   </div>
-                  <div className='flex items-center gap-1'>
+                  {/* <div className='flex items-center gap-1'>
                     <MapPin className='h-5 w-5' />
                     <span>
                       {gym.city}, {gym.state}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 

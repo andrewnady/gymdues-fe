@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
-import { getTrendingGyms, getAllGyms, getStatesWithCounts } from '@/lib/gyms-api'
+import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
 import { BlogPost } from '@/types/blog'
-import { Gym, ReviewWithGym, StateWithCount } from '@/types/gym'
+import { Gym, ReviewWithGym } from '@/types/gym'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { HeroSection } from '@/components/hero-section'
 import { WhyChooseSection } from '@/components/why-choose-section'
-import { ListingByStateSection } from '@/components/listing-by-state-section'
 import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
@@ -19,13 +18,6 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  let states: StateWithCount[] = []
-  try {
-    states = await getStatesWithCounts()
-  } catch (error) {
-    console.error('Failed to load states:', error)
-    // Fallback to empty array if API fails
-  }
 
   let trendingGyms: Gym[] = []
   try {
@@ -77,7 +69,7 @@ export default async function Home() {
     <div className='min-h-screen'>
       <HeroSection popularGyms={popularGyms} />
       <WhyChooseSection />
-      <ListingByStateSection states={states} />
+      {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
