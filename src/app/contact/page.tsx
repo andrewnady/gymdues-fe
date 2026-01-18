@@ -1,17 +1,48 @@
-import type { Metadata } from 'next'
+'use client'
+
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Send } from 'lucide-react'
 import { ReadMoreText } from '@/components/read-more-text'
-
-export const metadata: Metadata = {
-  title: 'Contact Gymdues | Questions, Updates & Partnerships',
-  description:
-    'Questions or found outdated pricing? Contact us to request updates, suggest a gym, or discuss partnerships and data use.',
-}
+import { submitContactForm } from '@/lib/contact-api'
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
+    setSuccess(false)
+
+    try {
+      await submitContactForm(formData)
+      setSuccess(true)
+      setFormData({ name: '', email: '', subject: '', message: '' })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit form. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target
+    setFormData((prev) => ({ ...prev, [id]: value }))
+  }
+
   return (
     <div className='min-h-screen py-12'>
       <div className='container mx-auto px-4'>
@@ -38,24 +69,43 @@ export default function ContactPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form className='space-y-4'>
+                <form onSubmit={handleSubmit} className='space-y-4'>
                   <div className='space-y-2'>
                     <label htmlFor='name' className='text-sm font-medium'>
                       Name
                     </label>
-                    <Input id='name' placeholder='Your name' required />
+                    <Input
+                      id='name'
+                      placeholder='Your name'
+                      required
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className='space-y-2'>
                     <label htmlFor='email' className='text-sm font-medium'>
                       Email
                     </label>
-                    <Input id='email' type='email' placeholder='your.email@example.com' required />
+                    <Input
+                      id='email'
+                      type='email'
+                      placeholder='your.email@example.com'
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className='space-y-2'>
                     <label htmlFor='subject' className='text-sm font-medium'>
                       Subject
                     </label>
-                    <Input id='subject' placeholder="What's this about?" required />
+                    <Input
+                      id='subject'
+                      placeholder="What's this about?"
+                      required
+                      value={formData.subject}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className='space-y-2'>
                     <label htmlFor='message' className='text-sm font-medium'>
@@ -66,11 +116,26 @@ export default function ContactPage() {
                       className='flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                       placeholder='Your message...'
                       required
+                      value={formData.message}
+                      onChange={handleChange}
                     />
                   </div>
-                  <Button type='submit' className='w-full'>
+                  
+                  {error && (
+                    <div className='p-3 text-sm text-destructive bg-destructive/10 rounded-md'>
+                      {error}
+                    </div>
+                  )}
+                  
+                  {success && (
+                    <div className='p-3 text-sm text-green-600 bg-green-50 dark:bg-green-900/20 rounded-md'>
+                      Thank you! Your message has been sent successfully. We&apos;ll get back to you soon.
+                    </div>
+                  )}
+
+                  <Button type='submit' className='w-full' disabled={isSubmitting}>
                     <Send className='mr-2 h-4 w-4' />
-                    Send Message
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
                   </Button>
                 </form>
               </CardContent>
