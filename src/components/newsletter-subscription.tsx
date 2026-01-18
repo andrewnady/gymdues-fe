@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, Check } from 'lucide-react';
+import { subscribeNewsletter } from '@/lib/newsletter-api';
 
 interface NewsletterSubscriptionProps {
   variant?: 'default' | 'compact' | 'footer';
@@ -16,21 +17,28 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    setIsSubscribed(false);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await subscribeNewsletter({ email });
+      setIsSubscribed(true);
+      setEmail('');
 
-    setIsSubscribed(true);
-    setIsLoading(false);
-    setEmail('');
-
-    // Reset success message after 5 seconds
-    setTimeout(() => {
-      setIsSubscribed(false);
-    }, 5000);
+      // Reset success message after 5 seconds
+      setTimeout(() => {
+        setIsSubscribed(false);
+      }, 5000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to subscribe. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (variant === 'compact') {
@@ -59,6 +67,11 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
             )}
           </Button>
         </form>
+        {error && (
+          <p className="text-sm text-destructive mt-2">
+            {error}
+          </p>
+        )}
         {isSubscribed && (
           <p className="text-sm text-green-600 dark:text-green-400 mt-2">
             Thank you for subscribing! Check your email for confirmation.
@@ -98,6 +111,11 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
             </Button>
           </div>
         </form>
+        {error && (
+          <p className="text-sm text-destructive mt-2">
+            {error}
+          </p>
+        )}
         {isSubscribed && (
           <p className="text-sm text-green-600 dark:text-green-400 mt-2">
             Thank you for subscribing! Check your email for confirmation.
@@ -154,6 +172,11 @@ export function NewsletterSubscription({ variant = 'default', className }: Newsl
               </div>
             </div>
           </form>
+          {error && (
+            <p className="text-sm text-destructive mt-3">
+              {error}
+            </p>
+          )}
           {isSubscribed && (
             <p className="text-sm text-green-600 dark:text-green-400 mt-3">
               Thank you for subscribing! Check your email for confirmation.

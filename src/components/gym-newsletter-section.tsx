@@ -5,27 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Check } from 'lucide-react';
+import { subscribeNewsletter } from '@/lib/newsletter-api';
 
 export function GymNewsletterSection() {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    setIsSubscribed(false);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await subscribeNewsletter({ email });
+      setIsSubscribed(true);
+      setEmail('');
 
-    setIsSubscribed(true);
-    setIsLoading(false);
-    setEmail('');
-
-    // Reset success message after 5 seconds
-    setTimeout(() => {
-      setIsSubscribed(false);
-    }, 5000);
+      // Reset success message after 5 seconds
+      setTimeout(() => {
+        setIsSubscribed(false);
+      }, 5000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to subscribe. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -65,6 +72,11 @@ export function GymNewsletterSection() {
               )}
             </Button>
           </div>
+          {error && (
+            <p className="text-sm text-destructive mb-3 text-center">
+              {error}
+            </p>
+          )}
           {isSubscribed && (
             <p className="text-sm text-green-600 dark:text-green-400 mb-3 text-center">
               Thank you for subscribing! Check your email for confirmation.
