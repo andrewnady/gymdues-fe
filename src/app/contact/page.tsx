@@ -8,6 +8,8 @@ import { Send } from 'lucide-react'
 import { ReadMoreText } from '@/components/read-more-text'
 import { submitContactForm } from '@/lib/contact-api'
 
+// Note: Since this is a client component, robots meta tag is handled via X-Robots-Tag HTTP header
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',

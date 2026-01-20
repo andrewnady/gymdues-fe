@@ -1,0 +1,24 @@
+# robots.txt for GymDues
+# https://gymdues.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /backend/
+
+# Allow important pages
+Allow: /
+Allow: /gyms/
+Allow: /blog/
+Allow: /about/
+Allow: /contact/
+Allow: /privacy-policy/
+Allow: /terms-of-service/
+
+# Sitemap location
+Sitemap: https://gymdues.com/sitemap.xml
+

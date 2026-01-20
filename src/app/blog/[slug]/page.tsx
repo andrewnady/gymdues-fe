@@ -7,9 +7,96 @@ import { Separator } from '@/components/ui/separator';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { GymCard } from '@/components/gym-card';
 import { BlogCommentsSection } from '@/components/blog-comments-section';
+import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getBlogPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: 'Post Not Found - GymDues',
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
+  const postUrl = `${siteUrl}/blog/${slug}/`;
+  const featuredImage = post.featured_images?.length > 0 
+    ? (post.featured_images[0].path.startsWith('http') 
+        ? post.featured_images[0].path 
+        : `${siteUrl}${post.featured_images[0].path}`)
+    : `${siteUrl}/images/bg-header.jpg`;
+
+  const metadata: Metadata = {
+    title: post.title,
+    description: post.excerpt || post.summary,
+    alternates: {
+      canonical: postUrl,
+      languages: {
+        'en-US': postUrl,
+        'x-default': postUrl,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt || post.summary,
+      url: postUrl,
+      siteName: 'GymDues',
+      images: [
+        {
+          url: featuredImage,
+          width: 1200,
+          height: 630,
+          alt: post.featured_images?.length > 0 ? post.featured_images[0].alt : post.title,
+        },
+      ],
+      locale: 'en_US',
+      type: 'article',
+      publishedTime: post.published_at,
+      modifiedTime: post.updated_at || post.published_at,
+      authors: [post.author.name],
+      ...(post.categories && post.categories.length > 0 && {
+        tags: post.categories.map(cat => cat.name),
+      }),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt || post.summary,
+      images: [featuredImage],
+      creator: '@gymdues',
+      site: '@gymdues',
+    },
+  };
+
+  // Add published and updated date meta tags
+  const otherTags: Record<string, string> = {};
+  if (post.published_at) {
+    otherTags['article:published_time'] = new Date(post.published_at).toISOString();
+  }
+  if (post.updated_at && post.updated_at !== post.published_at) {
+    otherTags['article:modified_time'] = new Date(post.updated_at).toISOString();
+  }
+  if (Object.keys(otherTags).length > 0) {
+    metadata.other = otherTags;
+  }
+
+  return metadata;
 }
 
 export async function generateStaticParams() {
@@ -34,8 +121,100 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const featuredGyms = await getTrendingGyms(3);
 
+  // Get site URL from environment or default to production
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
+  const postUrl = `${siteUrl}/blog/${slug}/`;
+  const featuredImage = post.featured_images?.length > 0 
+    ? post.featured_images[0].path.startsWith('http') 
+      ? post.featured_images[0].path 
+      : `${siteUrl}${post.featured_images[0].path}`
+    : `${siteUrl}/images/bg-header.jpg`;
+
+  // Article Schema (Schema.org)
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.excerpt || post.summary,
+    image: featuredImage,
+    datePublished: post.published_at,
+    dateModified: post.updated_at || post.published_at,
+    author: {
+      '@type': 'Person',
+      name: post.author.name,
+      ...(post.author.avatar && {
+        image: post.author.avatar.startsWith('http') 
+          ? post.author.avatar 
+          : `${siteUrl}${post.author.avatar}`,
+      }),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'GymDues',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteUrl}/images/logo.svg`,
+      },
+    },
+    // Main Entity Of Page - The canonical URL of the article page
+    mainEntityOfPage: postUrl,
+    articleSection: post.categories?.map(cat => cat.name).join(', ') || 'Fitness',
+    keywords: post.categories?.map(cat => cat.name).join(', ') || 'gym, fitness, membership',
+    ...(post.updated_at && post.updated_at !== post.published_at && {
+      dateModified: post.updated_at,
+    }),
+  };
+
+  // BlogPosting Schema (Schema.org)
+  const blogPostingSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt || post.summary,
+    image: featuredImage,
+    datePublished: post.published_at,
+    dateModified: post.updated_at || post.published_at,
+    author: {
+      '@type': 'Person',
+      name: post.author.name,
+      ...(post.author.avatar && {
+        image: post.author.avatar.startsWith('http') 
+          ? post.author.avatar 
+          : `${siteUrl}${post.author.avatar}`,
+      }),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'GymDues',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteUrl}/images/logo.svg`,
+      },
+    },
+    // Main Entity Of Page - The canonical URL of the article page
+    mainEntityOfPage: postUrl,
+    articleSection: post.categories?.map(cat => cat.name).join(', ') || 'Fitness',
+    keywords: post.categories?.map(cat => cat.name).join(', ') || 'gym, fitness, membership',
+    ...(post.categories && post.categories.length > 0 && {
+      articleSection: post.categories.map(cat => cat.name),
+    }),
+  };
+
   return (
     <div className="min-h-screen">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(blogPostingSchema),
+        }}
+      />
       {/* Header Section */}
       <div className="bg-muted py-8">
         <div className="container mx-auto px-4">

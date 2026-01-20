@@ -24,6 +24,7 @@ import { faqCategories } from '@/data/faqs'
 import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { ReadMoreText } from '@/components/read-more-text'
+import type { Metadata } from 'next'
 
 /**
  * Formats a time string to AM/PM format without leading zeros
@@ -105,6 +106,89 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+  let gym
+
+  try {
+    gym = await getGymBySlug(slug)
+  } catch {
+    return {
+      title: 'Gym Not Found - GymDues',
+    }
+  }
+
+  if (!gym) {
+    return {
+      title: 'Gym Not Found - GymDues',
+    }
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+  const gymUrl = `${siteUrl}/gyms/${slug}/`
+  const gymImage = gym.gallery?.[0]?.path
+    ? (gym.gallery[0].path.startsWith('http')
+      ? gym.gallery[0].path
+      : `${siteUrl}${gym.gallery[0].path}`)
+    : `${siteUrl}/images/bg-header.jpg`
+
+  const title = `${gym.name}: Memberships, Fees, Classes, and Facilities | GymDues`
+  const description = gym.description
+    ? `${gym.description.substring(0, 155)}...`
+    : `Find ${gym.name} membership prices, plans, reviews, and facilities. Compare costs and join the gym that fits your lifestyle.`
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: gymUrl,
+      languages: {
+        'en-US': gymUrl,
+        'x-default': gymUrl,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: gymUrl,
+      siteName: 'GymDues',
+      images: [
+        {
+          url: gymImage,
+          width: 1200,
+          height: 630,
+          alt: `${gym.name} - Gym Membership Information`,
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [gymImage],
+      creator: '@gymdues',
+      site: '@gymdues',
+    },
+    other: {
+      'article:published_time': new Date().toISOString(),
+      'article:modified_time': new Date().toISOString(),
+    },
+  }
+}
+
 export default async function GymDetailPage({ params }: PageProps) {
   const { slug } = await params
   let gym
@@ -128,8 +212,132 @@ export default async function GymDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  // Get site URL from environment or default to production
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+  const gymUrl = `${siteUrl}/gyms/${slug}/`
+  const gymImage = gym.gallery?.[0]?.path
+    ? (gym.gallery[0].path.startsWith('http')
+      ? gym.gallery[0].path
+      : `${siteUrl}${gym.gallery[0].path}`)
+    : `${siteUrl}/images/bg-header.jpg`
+
+  // Product Schema (Schema.org)
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${gym.name} Membership`,
+    description: gym.description,
+    image: gymImage,
+    brand: {
+      '@type': 'Brand',
+      name: gym.name,
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: parseFloat(gym.rating.toString()).toFixed(1),
+      reviewCount: getReviewCount(gym),
+      bestRating: 5,
+      worstRating: 1,
+    },
+    offers: gym.pricing?.map((plan) => ({
+      '@type': 'Offer',
+      name: plan.tier_name,
+      price: typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price,
+        priceCurrency: 'USD',
+        billingDuration: plan.frequency,
+      },
+    })) || [],
+    ...(gym.address && {
+      areaServed: {
+        '@type': 'City',
+        name: `${gym.city}, ${gym.state}`,
+      },
+    }),
+  }
+
+  // FAQ Schema (Schema.org)
+  const faqSchema = gym.faqs && gym.faqs.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: gym.faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question.replace(/<[^>]*>/g, ''), // Strip HTML tags
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer.replace(/<[^>]*>/g, ''), // Strip HTML tags
+      },
+    })),
+  } : null
+
+  // LocalBusiness Schema (additional schema for gym)
+  const localBusinessSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: gym.name,
+    description: gym.description,
+    image: gymImage,
+    url: gym.website || gymUrl,
+    telephone: gym.phone,
+    email: gym.email,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: gym.address,
+      addressLocality: gym.city,
+      addressRegion: gym.state,
+      postalCode: gym.zipCode,
+      addressCountry: 'US',
+    },
+    ...(gym.hours && gym.hours.length > 0 && {
+      openingHoursSpecification: gym.hours.map((hour) => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: `https://schema.org/${hour.day.charAt(0).toUpperCase() + hour.day.slice(1)}`,
+        opens: hour.from,
+        closes: hour.to,
+      })),
+    }),
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: parseFloat(gym.rating.toString()).toFixed(1),
+      reviewCount: getReviewCount(gym),
+      bestRating: 5,
+      worstRating: 1,
+    },
+    ...(gym.amenities && gym.amenities.length > 0 && {
+      amenityFeature: gym.amenities.map((amenity) => ({
+        '@type': 'LocationFeatureSpecification',
+        name: amenity,
+      })),
+    }),
+  }
+
   return (
     <div className='min-h-screen'>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productSchema),
+        }}
+      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(faqSchema),
+          }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessSchema),
+        }}
+      />
       {/* Hero Section */}
       <div className='relative h-64 md:h-96 w-full bg-muted'>
         <GymHeroImage src={gym.gallery?.[0]?.path} alt={gym.name} />
@@ -236,11 +444,10 @@ export default async function GymDetailPage({ params }: PageProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rate
+                              className={`h-4 w-4 ${i < review.rate
                                   ? 'fill-yellow-400 text-yellow-400'
                                   : 'text-muted-foreground'
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>
@@ -332,9 +539,8 @@ export default async function GymDetailPage({ params }: PageProps) {
                       <CarouselItem key={plan.id} className='basis-full md:basis-1/2 lg:basis-1/3'>
                         <div className='relative flex h-full'>
                           <div
-                            className={`relative p-6 pl-10 flex flex-col h-full w-full ${
-                              index < (gym.pricing?.length || 0) - 1 ? 'border-r border-border' : ''
-                            }`}
+                            className={`relative p-6 pl-10 flex flex-col h-full w-full ${index < (gym.pricing?.length || 0) - 1 ? 'border-r border-border' : ''
+                              }`}
                           >
                             {plan.is_popular && (
                               <div className='absolute -top-3 left-1/2 transform -translate-x-1/2'>

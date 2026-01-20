@@ -6,10 +6,56 @@ import { Search } from 'lucide-react'
 import { BlogPost } from '@/types/blog'
 import { ReadMoreText } from '@/components/read-more-text'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
 export const metadata: Metadata = {
   title: 'Gym Pricing Guides & Membership Tips | Gymdues Blog',
   description:
     'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips—updated regularly for the USA and worldwide.',
+  alternates: {
+    canonical: `${siteUrl}/blog/`,
+    languages: {
+      'en-US': `${siteUrl}/blog/`,
+      'x-default': `${siteUrl}/blog/`,
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    title: 'Gym Pricing Guides & Membership Tips | Gymdues Blog',
+    description:
+      'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips—updated regularly for the USA and worldwide.',
+    url: `${siteUrl}/blog/`,
+    siteName: 'GymDues',
+    images: [
+      {
+        url: `${siteUrl}/images/bg-header.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'GymDues Blog - Gym Pricing Guides & Membership Tips',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gym Pricing Guides & Membership Tips | Gymdues Blog',
+    description:
+      'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips—updated regularly for the USA and worldwide.',
+    images: [`${siteUrl}/images/bg-header.jpg`],
+    creator: '@gymdues',
+    site: '@gymdues',
+  },
 }
 
 export default async function BlogPage() {

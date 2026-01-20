@@ -4,15 +4,55 @@ import { GymsPageClient } from '@/components/gyms-page-client'
 import { GymSearchInput } from '@/components/gym-search-input'
 import { ReadMoreText } from '@/components/read-more-text'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
 export const metadata: Metadata = {
   title: 'Gyms & Membership Prices by Brand & City | Gymdues',
   description:
     'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
+  alternates: {
+    canonical: `${siteUrl}/gyms/`,
+    languages: {
+      'en-US': `${siteUrl}/gyms/`,
+      'x-default': `${siteUrl}/gyms/`,
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: 'Gyms & Membership Prices by Brand & City | Gymdues',
     description:
       'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
+    url: `${siteUrl}/gyms/`,
+    siteName: 'GymDues',
     type: 'website',
+    images: [
+      {
+        url: `${siteUrl}/images/bg-header.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'Gyms & Membership Prices by Brand & City | Gymdues',
+      },
+    ],
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gyms & Membership Prices by Brand & City | Gymdues',
+    description:
+      'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
+    images: [`${siteUrl}/images/bg-header.jpg`],
+    creator: '@gymdues',
+    site: '@gymdues',
   },
 }
 

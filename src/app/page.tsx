@@ -11,10 +11,56 @@ import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
 export const metadata: Metadata = {
   title: 'Gym Membership Costs & Prices (2026) | Gymdues',
   description:
     'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
+  alternates: {
+    canonical: `${siteUrl}/`,
+    languages: {
+      'en-US': `${siteUrl}/`,
+      'x-default': `${siteUrl}/`,
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    title: 'Gym Membership Costs & Prices (2026) | Gymdues',
+    description:
+      'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
+    url: `${siteUrl}/`,
+    siteName: 'GymDues',
+    type: 'website',
+    images: [
+      {
+        url: `${siteUrl}/images/bg-header.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'Gym Membership Costs & Prices (2026) | Gymdues',
+      },
+    ],
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Gym Membership Costs & Prices (2026) | Gymdues',
+    description:
+      'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
+    images: [`${siteUrl}/images/bg-header.jpg`],
+    creator: '@gymdues',
+    site: '@gymdues',
+  },
 }
 
 export default async function Home() {
