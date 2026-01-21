@@ -39,6 +39,9 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
   return {
     ...gym,
     reviewCount: Number(reviewCount) || 0,
+    // Preserve date fields if they exist
+    created_at: gym.created_at ? String(gym.created_at) : undefined,
+    updated_at: gym.updated_at ? String(gym.updated_at) : undefined,
   } as Gym
 }
 

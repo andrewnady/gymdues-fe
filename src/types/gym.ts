@@ -65,6 +65,8 @@ export interface Gym {
   hours: OperatingHours[]
   amenities?: string[]
   tags?: string[]
+  created_at?: string
+  updated_at?: string
 }
 
 export interface ReviewWithGym {

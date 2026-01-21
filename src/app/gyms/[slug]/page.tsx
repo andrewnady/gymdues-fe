@@ -182,10 +182,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       creator: '@gymdues',
       site: '@gymdues',
     },
-    other: {
-      'article:published_time': new Date().toISOString(),
-      'article:modified_time': new Date().toISOString(),
-    },
   }
 }
 
@@ -221,44 +217,66 @@ export default async function GymDetailPage({ params }: PageProps) {
       : `${siteUrl}${gym.gallery[0].path}`)
     : `${siteUrl}/images/bg-header.jpg`
 
-  // Product Schema (Schema.org)
-  const productSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: `${gym.name} Membership`,
-    description: gym.description,
-    image: gymImage,
-    brand: {
-      '@type': 'Brand',
-      name: gym.name,
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: parseFloat(gym.rating.toString()).toFixed(1),
-      reviewCount: getReviewCount(gym),
-      bestRating: 5,
-      worstRating: 1,
-    },
-    offers: gym.pricing?.map((plan) => ({
+  // Get dates for structured data - format as ISO strings
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return new Date().toISOString()
+    try {
+      return new Date(dateStr).toISOString()
+    } catch {
+      return new Date().toISOString()
+    }
+  }
+
+  const publishedDateForSchema = formatDate(gym.created_at)
+  const modifiedDateForSchema = formatDate(gym.updated_at) || publishedDateForSchema
+
+  // Offer Schemas (Schema.org) - One for each membership plan
+  const offerSchemas = gym.pricing?.map((plan) => {
+    const price = typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price
+    return {
+      '@context': 'https://schema.org',
       '@type': 'Offer',
-      name: plan.tier_name,
-      price: typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price,
+      name: `${gym.name} - ${plan.tier_name}`,
+      description: plan.description || `${plan.tier_name} membership plan`,
+      price: price,
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       priceSpecification: {
         '@type': 'UnitPriceSpecification',
-        price: typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price,
+        price: price,
         priceCurrency: 'USD',
-        billingDuration: plan.frequency,
+        unitText: plan.frequency.toLowerCase(),
       },
-    })) || [],
-    ...(gym.address && {
-      areaServed: {
-        '@type': 'City',
-        name: `${gym.city}, ${gym.state}`,
+      seller: {
+        '@type': 'ExerciseGym',
+        name: gym.name,
+        url: gym.website || gymUrl,
       },
-    }),
-  }
+    }
+  }) || []
+
+  // Review Schemas (Schema.org)
+  const reviewSchemas = gym.reviews?.map((review) => {
+    // Format date for review
+    const reviewDate = review.reviewed_at
+      ? new Date(review.reviewed_at).toISOString().split('T')[0] // Get YYYY-MM-DD format
+      : new Date().toISOString().split('T')[0]
+
+    // Strip HTML tags from review text
+    const reviewBody = review.text?.replace(/<[^>]*>/g, '').trim() || ''
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Review',
+      author: review.reviewer || 'Anonymous',
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: String(review.rate || 0),
+      },
+      datePublished: reviewDate,
+      reviewBody: reviewBody,
+    }
+  }) || []
 
   // FAQ Schema (Schema.org)
   const faqSchema = gym.faqs && gym.faqs.length > 0 ? {
@@ -274,13 +292,15 @@ export default async function GymDetailPage({ params }: PageProps) {
     })),
   } : null
 
-  // LocalBusiness Schema (additional schema for gym)
-  const localBusinessSchema = {
+  // ExerciseGym Schema (additional schema for gym)
+  const exerciseGymSchema = {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': 'ExerciseGym',
     name: gym.name,
     description: gym.description,
     image: gymImage,
+    datePublished: publishedDateForSchema,
+    dateModified: modifiedDateForSchema,
     url: gym.website || gymUrl,
     telephone: gym.phone,
     email: gym.email,
@@ -300,9 +320,12 @@ export default async function GymDetailPage({ params }: PageProps) {
         closes: hour.to,
       })),
     }),
+    ...(reviewSchemas.length > 0 && {
+      review: reviewSchemas,
+    }),
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: parseFloat(gym.rating.toString()).toFixed(1),
+      ratingValue: parseFloat(gym.rating?.toString()).toFixed(1),
       reviewCount: getReviewCount(gym),
       bestRating: 5,
       worstRating: 1,
@@ -318,12 +341,27 @@ export default async function GymDetailPage({ params }: PageProps) {
   return (
     <div className='min-h-screen'>
       {/* JSON-LD Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productSchema),
-        }}
-      />
+      {/* Offer Schemas for each membership plan */}
+      {offerSchemas.map((offer, index) => (
+        <script
+          key={`offer-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(offer),
+          }}
+        />
+      ))}
+      {/* Review Schemas */}
+      {reviewSchemas.map((review, index) => (
+        <script
+          key={`review-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(review),
+          }}
+        />
+      ))}
+      {/* FAQ Schema */}
       {faqSchema && (
         <script
           type="application/ld+json"
@@ -332,10 +370,11 @@ export default async function GymDetailPage({ params }: PageProps) {
           }}
         />
       )}
+      {/* ExerciseGym Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(localBusinessSchema),
+          __html: JSON.stringify(exerciseGymSchema),
         }}
       />
       {/* Hero Section */}
@@ -353,7 +392,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                   <div className='flex items-center gap-1'>
                     <Star className='h-5 w-5 fill-yellow-400 text-yellow-400' />
                     <span className='font-semibold'>
-                      {parseFloat(gym.rating.toString()).toFixed(1) || 0}
+                      {parseFloat(gym.rating?.toString()).toFixed(1) || 0}
                     </span>
                     <span className='text-sm opacity-90'>({getReviewCount(gym)} reviews)</span>
                   </div>
@@ -445,8 +484,8 @@ export default async function GymDetailPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`h-4 w-4 ${i < review.rate
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-muted-foreground'
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-muted-foreground'
                                 }`}
                             />
                           ))}
