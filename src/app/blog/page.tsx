@@ -13,10 +13,10 @@ export const metadata: Metadata = {
   description:
     'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips—updated regularly for the USA and worldwide.',
   alternates: {
-    canonical: `${siteUrl}/blog/`,
+    canonical: new URL('/blog/', siteUrl).toString(),
     languages: {
-      'en-US': `${siteUrl}/blog/`,
-      'x-default': `${siteUrl}/blog/`,
+      'en-US': new URL('/blog/', siteUrl).toString(),
+      'x-default': new URL('/blog/', siteUrl).toString(),
     },
   },
   robots: {

@@ -15,10 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
       title: page?.meta_title || page?.title || 'Privacy Policy - GymDues',
       description: page?.meta_description || 'Privacy Policy for GymDues',
       alternates: {
-        canonical: `${siteUrl}/privacy-policy/`,
+        canonical: new URL('/privacy-policy/', siteUrl).toString(),
         languages: {
-          'en-US': `${siteUrl}/privacy-policy/`,
-          'x-default': `${siteUrl}/privacy-policy/`,
+          'en-US': new URL('/privacy-policy/', siteUrl).toString(),
+          'x-default': new URL('/privacy-policy/', siteUrl).toString(),
         },
       },
       robots: {
@@ -76,10 +76,10 @@ export async function generateMetadata(): Promise<Metadata> {
       title: 'Privacy Policy - GymDues',
       description: 'Privacy Policy for GymDues',
       alternates: {
-        canonical: `${siteUrl}/privacy-policy/`,
+        canonical: new URL('/privacy-policy/', siteUrl).toString(),
         languages: {
-          'en-US': `${siteUrl}/privacy-policy/`,
-          'x-default': `${siteUrl}/privacy-policy/`,
+          'en-US': new URL('/privacy-policy/', siteUrl).toString(),
+          'x-default': new URL('/privacy-policy/', siteUrl).toString(),
         },
       },
     }

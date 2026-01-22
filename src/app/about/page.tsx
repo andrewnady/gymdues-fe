@@ -12,10 +12,10 @@ export const metadata: Metadata = {
   description:
     'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
   alternates: {
-    canonical: `${siteUrl}/about/`,
+    canonical: new URL('/about/', siteUrl).toString(),
     languages: {
-      'en-US': `${siteUrl}/about/`,
-      'x-default': `${siteUrl}/about/`,
+      'en-US': new URL('/about/', siteUrl).toString(),
+      'x-default': new URL('/about/', siteUrl).toString(),
     },
   },
   robots: {

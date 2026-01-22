@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
-  const postUrl = `${siteUrl}/blog/${slug}`;
+  const postUrl = new URL(`/blog/${slug}`, siteUrl).toString();
   const featuredImage = post.featured_images?.length > 0 
     ? (post.featured_images[0].path.startsWith('http') 
         ? post.featured_images[0].path 
@@ -123,7 +123,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
-  const postUrl = `${siteUrl}/blog/${slug}`;
+  const postUrl = new URL(`/blog/${slug}`, siteUrl).toString();
   const featuredImage = post.featured_images?.length > 0 
     ? post.featured_images[0].path.startsWith('http') 
       ? post.featured_images[0].path 

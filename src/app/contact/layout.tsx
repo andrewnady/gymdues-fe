@@ -7,10 +7,10 @@ export const metadata: Metadata = {
   description:
     'Have a question, found outdated pricing, or want to suggest a gym we should add? Contact GymDues anytime—we\'re happy to help.',
   alternates: {
-    canonical: `${siteUrl}/contact/`,
+    canonical: new URL('/contact/', siteUrl).toString(),
     languages: {
-      'en-US': `${siteUrl}/contact/`,
-      'x-default': `${siteUrl}/contact/`,
+      'en-US': new URL('/contact/', siteUrl).toString(),
+      'x-default': new URL('/contact/', siteUrl).toString(),
     },
   },
   robots: {

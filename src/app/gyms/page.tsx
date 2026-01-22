@@ -11,10 +11,10 @@ export const metadata: Metadata = {
   description:
     'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
   alternates: {
-    canonical: `${siteUrl}/gyms/`,
+    canonical: new URL('/gyms/', siteUrl).toString(),
     languages: {
-      'en-US': `${siteUrl}/gyms/`,
-      'x-default': `${siteUrl}/gyms/`,
+      'en-US': new URL('/gyms/', siteUrl).toString(),
+      'x-default': new URL('/gyms/', siteUrl).toString(),
     },
   },
   robots: {

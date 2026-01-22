@@ -18,10 +18,10 @@ export const metadata: Metadata = {
   description:
     'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
   alternates: {
-    canonical: `${siteUrl}/`,
+    canonical: new URL('/', siteUrl).toString(),
     languages: {
-      'en-US': `${siteUrl}/`,
-      'x-default': `${siteUrl}/`,
+      'en-US': new URL('/', siteUrl).toString(),
+      'x-default': new URL('/', siteUrl).toString(),
     },
   },
   robots: {

@@ -15,10 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
       title: page?.meta_title || page?.title || 'Terms of Service - GymDues',
       description: page?.meta_description || 'Terms of Service for GymDues',
       alternates: {
-        canonical: `${siteUrl}/terms-of-service/`,
+        canonical: new URL('/terms-of-service/', siteUrl).toString(),
         languages: {
-          'en-US': `${siteUrl}/terms-of-service/`,
-          'x-default': `${siteUrl}/terms-of-service/`,
+          'en-US': new URL('/terms-of-service/', siteUrl).toString(),
+          'x-default': new URL('/terms-of-service/', siteUrl).toString(),
         },
       },
       robots: {
@@ -76,10 +76,10 @@ export async function generateMetadata(): Promise<Metadata> {
       title: 'Terms of Service - GymDues',
       description: 'Terms of Service for GymDues',
       alternates: {
-        canonical: `${siteUrl}/terms-of-service/`,
+        canonical: new URL('/terms-of-service/', siteUrl).toString(),
         languages: {
-          'en-US': `${siteUrl}/terms-of-service/`,
-          'x-default': `${siteUrl}/terms-of-service/`,
+          'en-US': new URL('/terms-of-service/', siteUrl).toString(),
+          'x-default': new URL('/terms-of-service/', siteUrl).toString(),
         },
       },
     }

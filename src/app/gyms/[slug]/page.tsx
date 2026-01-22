@@ -125,7 +125,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
-  const gymUrl = `${siteUrl}/gyms/${slug}`
+  const gymUrl = new URL(`/gyms/${slug}`, siteUrl).toString()
   const gymImage = gym.gallery?.[0]?.path
     ? (gym.gallery[0].path.startsWith('http')
       ? gym.gallery[0].path
@@ -210,7 +210,7 @@ export default async function GymDetailPage({ params }: PageProps) {
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
-  const gymUrl = `${siteUrl}/gyms/${slug}`
+  const gymUrl = new URL(`/gyms/${slug}`, siteUrl).toString()
   const gymImage = gym.gallery?.[0]?.path
     ? (gym.gallery[0].path.startsWith('http')
       ? gym.gallery[0].path
