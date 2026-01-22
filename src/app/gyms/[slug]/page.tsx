@@ -125,7 +125,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
-  const gymUrl = `${siteUrl}/gyms/${slug}/`
+  const gymUrl = `${siteUrl}/gyms/${slug}`
   const gymImage = gym.gallery?.[0]?.path
     ? (gym.gallery[0].path.startsWith('http')
       ? gym.gallery[0].path
@@ -210,7 +210,7 @@ export default async function GymDetailPage({ params }: PageProps) {
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
-  const gymUrl = `${siteUrl}/gyms/${slug}/`
+  const gymUrl = `${siteUrl}/gyms/${slug}`
   const gymImage = gym.gallery?.[0]?.path
     ? (gym.gallery[0].path.startsWith('http')
       ? gym.gallery[0].path
@@ -484,9 +484,9 @@ export default async function GymDetailPage({ params }: PageProps) {
                             <Star
                               key={i}
                               className={`h-4 w-4 ${i < review.rate
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-muted-foreground'
-                                }`}
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-muted-foreground'
+                              }`}
                             />
                           ))}
                         </div>
@@ -579,7 +579,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                         <div className='relative flex h-full'>
                           <div
                             className={`relative p-6 pl-10 flex flex-col h-full w-full ${index < (gym.pricing?.length || 0) - 1 ? 'border-r border-border' : ''
-                              }`}
+                            }`}
                           >
                             {plan.is_popular && (
                               <div className='absolute -top-3 left-1/2 transform -translate-x-1/2'>
