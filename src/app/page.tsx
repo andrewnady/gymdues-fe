@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
 import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
@@ -15,11 +14,8 @@ import { BlogSection } from '@/components/blog-section'
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Get the current pathname from headers
-  const headersList = await headers()
-  const pathname = headersList.get('x-pathname') || '/'
-  // Use the pathname as-is to match the current URL (preserve trailing slash)
-  const canonicalUrl = new URL(pathname, siteUrl).toString()
+  // Homepage always uses root path with trailing slash
+  const canonicalUrl = new URL('/', siteUrl).toString()
 
   return {
     title: 'Gym Membership Costs & Prices (2026) | Gymdues',
