@@ -1,5 +1,6 @@
 import { getStaticPageBySlug } from '@/lib/static-pages-api'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 
 // Force dynamic rendering to avoid build-time API calls
@@ -9,16 +10,22 @@ export const revalidate = 60
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 export async function generateMetadata(): Promise<Metadata> {
+  // Get the current pathname from headers
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || '/privacy-policy'
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const canonicalUrl = new URL(pathname, siteUrl).toString()
+
   try {
     const page = await getStaticPageBySlug('privacy-policy')
     const metadata: Metadata = {
       title: page?.meta_title || page?.title || 'Privacy Policy - GymDues',
       description: page?.meta_description || 'Privacy Policy for GymDues',
       alternates: {
-        canonical: new URL('/privacy-policy/', siteUrl).toString(),
+        canonical: canonicalUrl,
         languages: {
-          'en-US': new URL('/privacy-policy/', siteUrl).toString(),
-          'x-default': new URL('/privacy-policy/', siteUrl).toString(),
+          'en-US': canonicalUrl,
+          'x-default': canonicalUrl,
         },
       },
       robots: {
@@ -76,10 +83,10 @@ export async function generateMetadata(): Promise<Metadata> {
       title: 'Privacy Policy - GymDues',
       description: 'Privacy Policy for GymDues',
       alternates: {
-        canonical: new URL('/privacy-policy/', siteUrl).toString(),
+        canonical: canonicalUrl,
         languages: {
-          'en-US': new URL('/privacy-policy/', siteUrl).toString(),
-          'x-default': new URL('/privacy-policy/', siteUrl).toString(),
+          'en-US': canonicalUrl,
+          'x-default': canonicalUrl,
         },
       },
     }

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { getGymBySlug } from '@/lib/gyms-api'
 import { getReviewCount } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
@@ -124,8 +125,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
+  // Get the current pathname from headers to match the requested URL
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || `/gyms/${slug}`
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
-  const gymUrl = new URL(`/gyms/${slug}`, siteUrl).toString()
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const gymUrl = new URL(pathname, siteUrl).toString()
   const gymImage = gym.gallery?.[0]?.path
     ? (gym.gallery[0].path.startsWith('http')
       ? gym.gallery[0].path

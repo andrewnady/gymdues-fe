@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Target, Users, Award, Heart } from 'lucide-react'
 import Link from 'next/link'
@@ -7,17 +8,24 @@ import { ReadMoreText } from '@/components/read-more-text'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-export const metadata: Metadata = {
-  title: 'About Gymdues | How We Track Gym Membership Prices',
-  description:
-    'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
-  alternates: {
-    canonical: new URL('/about/', siteUrl).toString(),
-    languages: {
-      'en-US': new URL('/about/', siteUrl).toString(),
-      'x-default': new URL('/about/', siteUrl).toString(),
+export async function generateMetadata(): Promise<Metadata> {
+  // Get the current pathname from headers
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || '/about'
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const canonicalUrl = new URL(pathname, siteUrl).toString()
+
+  return {
+    title: 'About Gymdues | How We Track Gym Membership Prices',
+    description:
+      'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        'en-US': canonicalUrl,
+        'x-default': canonicalUrl,
+      },
     },
-  },
   robots: {
     index: true,
     follow: true,
@@ -55,6 +63,7 @@ export const metadata: Metadata = {
     creator: '@gymdues',
     site: '@gymdues',
   },
+  }
 }
 
 export default function AboutPage() {

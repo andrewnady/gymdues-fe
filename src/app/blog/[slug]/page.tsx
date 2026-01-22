@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/blog-api';
@@ -23,8 +24,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  // Get the current pathname from headers to match the requested URL
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || `/blog/${slug}`
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
-  const postUrl = new URL(`/blog/${slug}`, siteUrl).toString();
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const postUrl = new URL(pathname, siteUrl).toString();
   const featuredImage = post.featured_images?.length > 0 
     ? (post.featured_images[0].path.startsWith('http') 
         ? post.featured_images[0].path 

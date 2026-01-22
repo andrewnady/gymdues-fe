@@ -1,22 +1,30 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { GymsPageClient } from '@/components/gyms-page-client'
 import { GymSearchInput } from '@/components/gym-search-input'
 import { ReadMoreText } from '@/components/read-more-text'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-export const metadata: Metadata = {
-  title: 'Gyms & Membership Prices by Brand & City | Gymdues',
-  description:
-    'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
-  alternates: {
-    canonical: new URL('/gyms/', siteUrl).toString(),
-    languages: {
-      'en-US': new URL('/gyms/', siteUrl).toString(),
-      'x-default': new URL('/gyms/', siteUrl).toString(),
+export async function generateMetadata(): Promise<Metadata> {
+  // Get the current pathname from headers
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || '/gyms'
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const canonicalUrl = new URL(pathname, siteUrl).toString()
+
+  return {
+    title: 'Gyms & Membership Prices by Brand & City | Gymdues',
+    description:
+      'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        'en-US': canonicalUrl,
+        'x-default': canonicalUrl,
+      },
     },
-  },
   robots: {
     index: true,
     follow: true,
@@ -54,6 +62,7 @@ export const metadata: Metadata = {
     creator: '@gymdues',
     site: '@gymdues',
   },
+  }
 }
 
 export default function GymsPage() {

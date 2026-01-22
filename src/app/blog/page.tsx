@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { getAllBlogPosts } from '@/lib/blog-api'
 import { BlogCard } from '@/components/blog-card'
 import { Input } from '@/components/ui/input'
@@ -8,17 +9,24 @@ import { ReadMoreText } from '@/components/read-more-text'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-export const metadata: Metadata = {
-  title: 'Gym Pricing Guides & Membership Tips | Gymdues Blog',
-  description:
-    'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips—updated regularly for the USA and worldwide.',
-  alternates: {
-    canonical: new URL('/blog/', siteUrl).toString(),
-    languages: {
-      'en-US': new URL('/blog/', siteUrl).toString(),
-      'x-default': new URL('/blog/', siteUrl).toString(),
+export async function generateMetadata(): Promise<Metadata> {
+  // Get the current pathname from headers
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || '/blog'
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const canonicalUrl = new URL(pathname, siteUrl).toString()
+
+  return {
+    title: 'Gym Pricing Guides & Membership Tips | Gymdues Blog',
+    description:
+      'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips—updated regularly for the USA and worldwide.',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        'en-US': canonicalUrl,
+        'x-default': canonicalUrl,
+      },
     },
-  },
   robots: {
     index: true,
     follow: true,
@@ -56,6 +64,7 @@ export const metadata: Metadata = {
     creator: '@gymdues',
     site: '@gymdues',
   },
+  }
 }
 
 export default async function BlogPage() {

@@ -5,29 +5,22 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
   
-  // Get the pathname
+  // Get the pathname as requested (preserve trailing slash if present)
   const pathname = request.nextUrl.pathname
   
-  // Build canonical URL
-  // For dynamic routes (gyms/[slug], blog/[slug]), remove trailing slash
-  // For static routes, ensure trailing slash (except root)
+  // Build canonical URL to match the exact requested URL
+  // Use the pathname as-is to preserve trailing slashes
   let canonicalUrl = `${siteUrl}${pathname}`
   
-  // Check if it's a dynamic route (gyms/[slug] or blog/[slug])
-  const isDynamicRoute = pathname.match(/^\/(gyms|blog)\/[^/]+/)
-  
+  // Only normalize root path (ensure it's just /)
   if (pathname === '/') {
-    // Root path - no trailing slash
     canonicalUrl = `${siteUrl}/`
-  } else if (isDynamicRoute) {
-    // Dynamic route - remove trailing slash if present
-    canonicalUrl = `${siteUrl}${pathname.replace(/\/$/, '')}`
-  } else {
-    // Static route - ensure trailing slash
-    canonicalUrl = `${siteUrl}${pathname.endsWith('/') ? pathname : `${pathname}/`}`
   }
   
-  // Add canonical HTTP header
+  // Add pathname to headers so generateMetadata can access it
+  response.headers.set('x-pathname', pathname)
+  
+  // Add canonical HTTP header - matches the current requested URL
   response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
   
   // Add X-Robots-Tag header

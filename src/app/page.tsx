@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
@@ -13,17 +14,24 @@ import { BlogSection } from '@/components/blog-section'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-export const metadata: Metadata = {
-  title: 'Gym Membership Costs & Prices (2026) | Gymdues',
-  description:
-    'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
-  alternates: {
-    canonical: new URL('/', siteUrl).toString(),
-    languages: {
-      'en-US': new URL('/', siteUrl).toString(),
-      'x-default': new URL('/', siteUrl).toString(),
+export async function generateMetadata(): Promise<Metadata> {
+  // Get the current pathname from headers
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || '/'
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const canonicalUrl = new URL(pathname, siteUrl).toString()
+
+  return {
+    title: 'Gym Membership Costs & Prices (2026) | Gymdues',
+    description:
+      'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        'en-US': canonicalUrl,
+        'x-default': canonicalUrl,
+      },
     },
-  },
   robots: {
     index: true,
     follow: true,
@@ -61,6 +69,7 @@ export const metadata: Metadata = {
     creator: '@gymdues',
     site: '@gymdues',
   },
+  }
 }
 
 export default async function Home() {

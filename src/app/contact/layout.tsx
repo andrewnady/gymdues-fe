@@ -1,18 +1,26 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-export const metadata: Metadata = {
-  title: 'Contact Gymdues | Questions, Feedback & Support',
-  description:
-    'Have a question, found outdated pricing, or want to suggest a gym we should add? Contact GymDues anytime—we\'re happy to help.',
-  alternates: {
-    canonical: new URL('/contact/', siteUrl).toString(),
-    languages: {
-      'en-US': new URL('/contact/', siteUrl).toString(),
-      'x-default': new URL('/contact/', siteUrl).toString(),
+export async function generateMetadata(): Promise<Metadata> {
+  // Get the current pathname from headers
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || '/contact'
+  // Use the pathname as-is to match the current URL (preserve trailing slash)
+  const canonicalUrl = new URL(pathname, siteUrl).toString()
+
+  return {
+    title: 'Contact Gymdues | Questions, Feedback & Support',
+    description:
+      'Have a question, found outdated pricing, or want to suggest a gym we should add? Contact GymDues anytime—we\'re happy to help.',
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        'en-US': canonicalUrl,
+        'x-default': canonicalUrl,
+      },
     },
-  },
   robots: {
     index: true,
     follow: true,
@@ -50,6 +58,7 @@ export const metadata: Metadata = {
     creator: '@gymdues',
     site: '@gymdues',
   },
+  }
 }
 
 export default function ContactLayout({
