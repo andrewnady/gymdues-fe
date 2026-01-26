@@ -5,7 +5,6 @@ import { getReviewCount } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import {
   Carousel,
   CarouselContent,
@@ -20,11 +19,12 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Star } from 'lucide-react'
+import { MapPin, Star } from 'lucide-react'
 import { faqCategories } from '@/data/faqs'
 import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { ReadMoreText } from '@/components/read-more-text'
+import { GymReviewsPaginated } from '@/components/gym-reviews-paginated'
 import type { Metadata } from 'next'
 
 /**
@@ -66,42 +66,6 @@ function formatTimeToAmPm(timeString: string): string {
   return time
 }
 
-/**
- * Formats a date string to standard US DateTime format
- * Example: "December 3, 2025 at 7:04 PM" or "Dec 3, 2025, 7:04 PM"
- */
-function formatUSDateTime(dateString: string): string {
-  if (!dateString) return ''
-
-  try {
-    const date = new Date(dateString)
-
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return dateString
-    }
-
-    // Format to US DateTime: "Month Day, Year at Hour:Minute AM/PM"
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'America/New_York', // US Eastern Time
-    }
-
-    const formatted = date.toLocaleString('en-US', options)
-
-    // Replace comma before time with "at" for better readability
-    // "December 3, 2025, 7:04 PM" -> "December 3, 2025 at 7:04 PM"
-    return formatted.replace(/, (\d{1,2}:\d{2} (?:AM|PM))$/, ' at $1')
-  } catch {
-    // If parsing fails, return original
-    return dateString
-  }
-}
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -263,9 +227,7 @@ export default async function GymDetailPage({ params }: PageProps) {
   // Review Schemas (Schema.org)
   const reviewSchemas = gym.reviews?.map((review) => {
     // Format date for review
-    const reviewDate = review.reviewed_at
-      ? new Date(review.reviewed_at).toISOString().split('T')[0] // Get YYYY-MM-DD format
-      : new Date().toISOString().split('T')[0]
+    const reviewDate = review.reviewed_at ?? new Date().toISOString().split('T')[0]
 
     // Strip HTML tags from review text
     const reviewBody = review.text?.replace(/<[^>]*>/g, '').trim() || ''
@@ -401,12 +363,12 @@ export default async function GymDetailPage({ params }: PageProps) {
                     </span>
                     <span className='text-sm opacity-90'>({getReviewCount(gym)} reviews)</span>
                   </div>
-                  {/* <div className='flex items-center gap-1'>
+                  <div className='flex items-center gap-1'>
                     <MapPin className='h-5 w-5' />
                     <span>
                       {gym.city}, {gym.state}
                     </span>
-                  </div> */}
+                  </div>
                 </div>
               </div>
 
@@ -478,36 +440,10 @@ export default async function GymDetailPage({ params }: PageProps) {
               <CardDescription>{getReviewCount(gym)} total reviews</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className='space-y-4'>
-                {gym.reviews?.map((review) => (
-                  <div key={review.id} className='space-y-2'>
-                    <div className='flex items-center justify-between'>
-                      <div>
-                        <p className='font-semibold'>{review.reviewer}</p>
-                        <div className='flex items-center gap-1'>
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${i < review.rate
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-muted-foreground'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <span className='text-sm text-muted-foreground'>
-                        {formatUSDateTime(review.reviewed_at)}
-                      </span>
-                    </div>
-                    <div
-                      dangerouslySetInnerHTML={{ __html: review.text }}
-                      className='text-muted-foreground'
-                    />
-                    <Separator />
-                  </div>
-                ))}
-              </div>
+              <GymReviewsPaginated
+                reviews={gym.reviews || []}
+                gymName={gym.name}
+              />
             </CardContent>
           </Card>
 
@@ -550,7 +486,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         )}
 
         {/* Membership Plans - Full Width */}
-        <section className='py-20 bg-background'>
+        <section className={`py-20 bg-background ${gym.pricing?.length === 0 ? 'hidden' : ''}`}>
           <div className='container mx-auto px-4'>
             <div className='mb-12 text-center'>
               <h2 className='text-3xl md:text-4xl font-bold mb-2'>
@@ -584,7 +520,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                         <div className='relative flex h-full'>
                           <div
                             className={`relative p-6 pl-10 flex flex-col h-full w-full ${index < (gym.pricing?.length || 0) - 1 ? 'border-r border-border' : ''
-                            }`}
+                              }`}
                           >
                             {plan.is_popular && (
                               <div className='absolute -top-3 left-1/2 transform -translate-x-1/2'>

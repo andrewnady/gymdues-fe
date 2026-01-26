@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Star } from 'lucide-react'
+import { MapPin, Star } from 'lucide-react'
 import { getReviewCount, getPlaceholderImage } from '@/lib/utils'
 
 function stripHtmlTags(html: string): string {
@@ -61,12 +61,12 @@ export function GymCard({ gym }: GymCardProps) {
               </div>
               <div className='flex-1 min-w-0'>
                 <CardTitle className='text-xl'>{gym.name}</CardTitle>
-                {/* <div className='flex items-center gap-2 text-sm text-muted-foreground mb-2'>
+                <div className='flex items-center gap-2 text-sm text-muted-foreground mb-2'>
                   <MapPin className='h-4 w-4 flex-shrink-0' />
                   <span>
                     {gym.city}, {gym.state}
                   </span>
-                </div> */}
+                </div>
               </div>
             </div>
             <div className='flex items-center gap-1 flex-shrink-0'>
