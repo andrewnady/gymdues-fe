@@ -59,8 +59,8 @@ export function Navigation() {
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${navBackground}`}>
-      <div className='container mx-auto px-4'>
-        <div className='flex h-16 items-center justify-between'>
+      <div className='container mx-auto'>
+        <div className='flex h-16 items-center justify-between px-4'>
           <Link href='/' className='flex items-center'>
             <Image
               src='/images/logo.svg'

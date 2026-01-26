@@ -25,6 +25,7 @@ import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { ReadMoreText } from '@/components/read-more-text'
 import { GymReviewsPaginated } from '@/components/gym-reviews-paginated'
+import { Breadcrumb } from '@/components/breadcrumb'
 import type { Metadata } from 'next'
 
 /**
@@ -305,8 +306,34 @@ export default async function GymDetailPage({ params }: PageProps) {
     }),
   }
 
+  // Breadcrumb Schema (JSON-LD)
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Gyms',
+        item: `${siteUrl}/gyms`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: gym.name,
+        item: gymUrl,
+      },
+    ],
+  }
+
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-screen relative'>
       {/* JSON-LD Structured Data */}
       {/* Offer Schemas for each membership plan */}
       {offerSchemas.map((offer, index) => (
@@ -350,8 +377,26 @@ export default async function GymDetailPage({ params }: PageProps) {
         <div className='absolute inset-0 bg-black/40' />
         <div className='absolute bottom-0 left-0 right-0 p-8 text-white'>
           <div className='container mx-auto'>
-            <div className='flex flex-col md:flex-row md:items-end md:justify-between gap-6'>
+            <div className='flex flex-col md:flex-row md:items-end md:justify-between gap-6 px-4'>
               <div>
+                {/* Breadcrumb Schema */}
+                <script
+                  type="application/ld+json"
+                  dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(breadcrumbSchema),
+                  }}
+                />
+                {/* Breadcrumb Navigation */}
+                <div className='container mx-auto py-2'>
+                  <Breadcrumb
+                    className='!text-background'
+                    items={[
+                      { label: 'Home', href: '/' },
+                      { label: 'Gyms', href: '/gyms' },
+                      { label: gym.name, href: `/gyms/${slug}` },
+                    ]}
+                  />
+                </div>
                 <h1 className='text-4xl md:text-5xl font-bold mb-2'>
                   {gym.name}: Memberships, Fees, Classes, and Facilities
                 </h1>

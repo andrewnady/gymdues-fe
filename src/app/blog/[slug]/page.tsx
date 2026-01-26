@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Image from 'next/image';
-import Link from 'next/link';
 import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/blog-api';
 import { getTrendingGyms } from '@/lib/gyms-api';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, ArrowLeft } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { GymCard } from '@/components/gym-card';
 import { BlogCommentsSection } from '@/components/blog-comments-section';
+import { Breadcrumb } from '@/components/breadcrumb';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -30,10 +30,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
   // Use the pathname as-is to match the current URL (preserve trailing slash)
   const postUrl = new URL(pathname, siteUrl).toString();
-  const featuredImage = post.featured_images?.length > 0 
-    ? (post.featured_images[0].path.startsWith('http') 
-        ? post.featured_images[0].path 
-        : `${siteUrl}${post.featured_images[0].path}`)
+  const featuredImage = post.featured_images?.length > 0
+    ? (post.featured_images[0].path.startsWith('http')
+      ? post.featured_images[0].path
+      : `${siteUrl}${post.featured_images[0].path}`)
     : `${siteUrl}/images/bg-header.jpg`;
 
   const metadata: Metadata = {
@@ -129,9 +129,9 @@ export default async function BlogPostPage({ params }: PageProps) {
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
   const postUrl = new URL(`/blog/${slug}`, siteUrl).toString();
-  const featuredImage = post.featured_images?.length > 0 
-    ? post.featured_images[0].path.startsWith('http') 
-      ? post.featured_images[0].path 
+  const featuredImage = post.featured_images?.length > 0
+    ? post.featured_images[0].path.startsWith('http')
+      ? post.featured_images[0].path
       : `${siteUrl}${post.featured_images[0].path}`
     : `${siteUrl}/images/bg-header.jpg`;
 
@@ -148,8 +148,8 @@ export default async function BlogPostPage({ params }: PageProps) {
       '@type': 'Person',
       name: post.author.name,
       ...(post.author.avatar && {
-        image: post.author.avatar.startsWith('http') 
-          ? post.author.avatar 
+        image: post.author.avatar.startsWith('http')
+          ? post.author.avatar
           : `${siteUrl}${post.author.avatar}`,
       }),
     },
@@ -183,8 +183,8 @@ export default async function BlogPostPage({ params }: PageProps) {
       '@type': 'Person',
       name: post.author.name,
       ...(post.author.avatar && {
-        image: post.author.avatar.startsWith('http') 
-          ? post.author.avatar 
+        image: post.author.avatar.startsWith('http')
+          ? post.author.avatar
           : `${siteUrl}${post.author.avatar}`,
       }),
     },
@@ -205,6 +205,32 @@ export default async function BlogPostPage({ params }: PageProps) {
     }),
   };
 
+  // Breadcrumb Schema (JSON-LD)
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: `${siteUrl}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: postUrl,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
@@ -222,14 +248,24 @@ export default async function BlogPostPage({ params }: PageProps) {
       />
       {/* Header Section */}
       <div className="bg-muted py-8">
+        {/* Breadcrumb Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbSchema),
+          }}
+        />
+        {/* Breadcrumb Navigation */}
         <div className="container mx-auto px-4">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-4"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Blog
-          </Link>
+          <div className="container mx-auto  py-2">
+            <Breadcrumb
+              items={[
+                { label: 'Home', href: '/' },
+                { label: 'Blog', href: '/blog' },
+                { label: post.title, href: `/blog/${slug}` },
+              ]}
+            />
+          </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
