@@ -19,6 +19,59 @@ const geistMono = Geist_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
+// Organization Schema (JSON-LD)
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Gymdues',
+  alternateName: 'Gymdues LLC',
+  slogan: 'Find the best gym near you compare memberships, prices, and reviews in minutes.',
+  legalName: 'Gymdues LLC',
+  email: 'support@gymdues.com',
+  description: 'Gymdues for finding the best gym near you compare memberships, prices, and reviews in minutes.',
+  founder: {
+    '@type': 'Person',
+    name: 'Admir Salcinovic',
+    birthDate: '06/05/1986',
+    email: 'admir@gymdues.com',
+    givenName: 'Admir',
+    hasOccupation: 'Owner',
+    gender: 'Male',
+    height: "5'10",
+    weight: '160',
+    jobTitle: 'CEO',
+    knowsAbout: 'Gyms data, Pricing data, web development and technology',
+    nationality: 'United States',
+  },
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '2383 Mulliston Lane Lawrenceville GA 30043',
+    addressLocality: 'Atlanta',
+    addressRegion: 'GA',
+    postalCode: '30043',
+    addressCountry: 'USA',
+  },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: '404-457-0305',
+    contactType: 'Customer Support',
+    contactOption: 'TollFree',
+    areaServed: 'US',
+    availableLanguage: ['English'],
+  },
+  url: 'https://gymdues.com',
+  logo: {
+    '@type': 'ImageObject',
+    '@id': 'https://gymdues.com/',
+    inLanguage: 'en-US',
+    url: 'https://gymdues.com/images/logo.svg',
+    contentUrl: 'https://gymdues.com/images/logo.svg',
+    width: 200,
+    height: 38,
+    caption: 'Gymdues',
+  },
+}
+
 export const metadata: Metadata = {
   title: 'GymDues - Find Your Perfect Gym',
   description: 'Discover the best fitness centers near you. Compare plans, read reviews, and join the gym that fits your lifestyle.',
@@ -71,6 +124,13 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Organization Schema (JSON-LD) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
         <Theme>
           <CounterStoreProvider>
             <div className="flex flex-col min-h-screen">
