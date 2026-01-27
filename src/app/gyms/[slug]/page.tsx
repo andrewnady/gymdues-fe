@@ -577,7 +577,6 @@ export default async function GymDetailPage({ params }: PageProps) {
                             )}
                             <div className='mb-4'>
                               <div className='text-4xl font-bold mb-2'>
-                                $
                                 {typeof plan.price === 'number'
                                   ? plan.price.toFixed(2)
                                   : plan.price}
