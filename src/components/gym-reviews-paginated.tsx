@@ -109,7 +109,9 @@ export function GymReviewsPaginated({
                 {formatUSDateTime(review.reviewed_at)}
               </span>
             </div>
-            <ReadMoreText className='text-muted-foreground'>{review.text}</ReadMoreText>
+            <ReadMoreText>
+              <div className='text-muted-foreground' dangerouslySetInnerHTML={{ __html: review.text }} />
+            </ReadMoreText>
             <Separator />
           </div>
         ))}
