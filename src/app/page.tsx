@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getTrendingGyms, getAllGyms } from '@/lib/gyms-api'
+import { getTrendingGyms, getLatestGyms, getAllGyms } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
 import { BlogPost } from '@/types/blog'
@@ -73,9 +73,17 @@ export default async function Home() {
   let trendingGyms: Gym[] = []
   try {
     trendingGyms = await getTrendingGyms(3)
+    if (trendingGyms.length === 0) {
+      trendingGyms = await getLatestGyms(10)
+    }
   } catch (error) {
     console.error('Failed to load trending gyms:', error)
-    // Fallback to empty array if API fails
+    // Fallback to latest 10 gyms if API fails
+    try {
+      trendingGyms = await getLatestGyms(10)
+    } catch {
+      // Keep empty array
+    }
   }
 
   let popularGyms: Gym[] = []

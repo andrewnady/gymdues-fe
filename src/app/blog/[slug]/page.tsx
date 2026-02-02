@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/blog-api';
-import { getTrendingGyms } from '@/lib/gyms-api';
+import { getTrendingGyms, getLatestGyms } from '@/lib/gyms-api';
 import { Separator } from '@/components/ui/separator';
 import { Calendar } from 'lucide-react';
 import { GymCard } from '@/components/gym-card';
@@ -124,7 +124,10 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
-  const featuredGyms = await getTrendingGyms(3);
+  let featuredGyms = await getTrendingGyms(3);
+  if (featuredGyms.length === 0) {
+    featuredGyms = await getLatestGyms(10);
+  }
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';

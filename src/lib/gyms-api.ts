@@ -361,6 +361,20 @@ export async function getTrendingGyms(limit?: number): Promise<Gym[]> {
 }
 
 /**
+ * Fetches latest gyms from the API (first page, no trending filter).
+ * Used as fallback when trending gyms return empty.
+ */
+export async function getLatestGyms(limit: number): Promise<Gym[]> {
+  try {
+    const { gyms } = await getPaginatedGyms({ perPage: limit, page: 1 })
+    return gyms
+  } catch (error) {
+    console.error('Error fetching latest gyms:', error)
+    throw error
+  }
+}
+
+/**
  * Fetches a single gym by ID from the API
  */
 export async function getGymById(id: string): Promise<Gym | null> {
