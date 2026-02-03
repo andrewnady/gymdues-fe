@@ -1,8 +1,17 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Gym } from '@/types/gym'
 import { GymCard } from '@/components/gym-card'
 import { ReadMoreText } from '@/components/read-more-text'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 
 interface TrendingGymsSectionProps {
   gyms: Gym[]
@@ -40,11 +49,26 @@ export function TrendingGymsSection({ gyms }: TrendingGymsSectionProps) {
           </Link>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {gyms.map((gym) => (
-            <GymCard key={gym.id} gym={gym} />
-          ))}
-        </div>
+        <Carousel
+          opts={{
+            align: 'start',
+            loop: true,
+          }}
+          className='w-full'
+        >
+          <CarouselContent className='-ml-4 md:-ml-6'>
+            {gyms.map((gym) => (
+              <CarouselItem
+                key={gym.id}
+                className='pl-4 md:pl-6 basis-full md:basis-1/2 lg:basis-1/3'
+              >
+                <GymCard gym={gym} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className='hidden md:flex -left-4' />
+          <CarouselNext className='hidden md:flex -right-4' />
+        </Carousel>
       </div>
     </section>
   )
