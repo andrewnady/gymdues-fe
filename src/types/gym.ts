@@ -48,6 +48,18 @@ export interface GymAddress {
   is_primary?: boolean
 }
 
+/** Primary address object returned with each gym from the list API (has lat/lng for map) */
+export interface GymPrimaryAddress {
+  id?: number | string
+  latitude?: number
+  longitude?: number
+  full_address?: string | null
+  street?: string | null
+  city?: string | null
+  state?: string | null
+  postal_code?: string | null
+}
+
 export interface AddressesPaginationMeta {
   current_page: number
   from: number | null
@@ -86,7 +98,8 @@ export interface Gym {
     alt: string
   }[]
   featureImage: string
-  address: string
+  /** Can be string (legacy) or primary address object from list API (with lat/lng) */
+  address: string | GymPrimaryAddress
   city: string
   state: string
   zipCode: string

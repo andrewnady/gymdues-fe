@@ -503,36 +503,56 @@ export async function getGymById(id: string): Promise<Gym | null> {
 }
 
 /**
- * Gets states with gym counts from the API
+ * Gets states with gym counts from the database (GET /api/v1/gyms/states).
+ * Use for state filter autocomplete.
+ */
+export async function getStates(): Promise<StateWithCount[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/gyms/states`, {
+      next: { revalidate: 300 },
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch states: ${response.status} ${response.statusText}`)
+    }
+    const data = (await response.json()) as { state: string; stateName: string; count: number }[]
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Error fetching states:', error)
+    return []
+  }
+}
+
+/**
+ * Gets states with gym counts (legacy: fetches all gyms and derives states).
+ * Prefer getStates() which uses the database endpoint.
  */
 export async function getStatesWithCounts(): Promise<StateWithCount[]> {
   try {
+    const states = await getStates()
+    if (states.length > 0) return states
     const gyms = await getAllGyms()
     const stateMap = new Map<string, number>()
-    
     gyms.forEach((gym) => {
       if (gym.state) {
         const count = stateMap.get(gym.state) || 0
         stateMap.set(gym.state, count + 1)
       }
     })
-
     const stateNames: Record<string, string> = {
-      'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
-      'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
-      'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-      'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
-      'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-      'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
-      'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
-      'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
-      'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia',
+      AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas',
+      CA: 'California', CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware',
+      FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho',
+      IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas',
+      KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+      MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+      MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada',
+      NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York',
+      NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma',
+      OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
+      SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah',
+      VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia',
+      WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia',
     }
-
     return Array.from(stateMap.entries())
       .map(([state, count]) => ({
         state,

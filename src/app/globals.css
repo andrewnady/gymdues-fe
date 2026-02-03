@@ -105,3 +105,12 @@ body {
     @apply font-semibold text-foreground;
   }
 }
+
+/* Selected gym marker on discovery map: white pin, scale 1.2 */
+.gym-marker-selected {
+  transform: scale(1.2);
+  z-index: 1000 !important;
+}
+.gym-marker-selected img {
+  filter: brightness(0) invert(1);
+}

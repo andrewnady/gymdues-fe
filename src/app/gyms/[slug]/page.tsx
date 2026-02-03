@@ -238,7 +238,10 @@ export default async function GymDetailPage({ params, searchParams }: PageProps)
     email: gym.email,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: gym.address,
+      streetAddress:
+        typeof gym.address === 'string'
+          ? gym.address
+          : (gym.address?.full_address ?? gym.address?.street ?? gym.city ?? ''),
       addressLocality: gym.city,
       addressRegion: gym.state,
       postalCode: gym.zipCode,

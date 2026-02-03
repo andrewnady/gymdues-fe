@@ -23,9 +23,13 @@ function stripHtmlTags(html: string): string {
 
 interface GymCardProps {
   gym: Gym
+  /** When true, card click selects (calls onSelect); Details button is the only link to gym page. Default false = whole card links to gym. */
+  selectMode?: boolean
+  /** Called when card is clicked in selectMode (not when Details is clicked). */
+  onSelect?: () => void
 }
 
-export function GymCard({ gym }: GymCardProps) {
+export function GymCard({ gym, selectMode, onSelect }: GymCardProps) {
   const [imageError, setImageError] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
@@ -33,8 +37,7 @@ export function GymCard({ gym }: GymCardProps) {
     gym.gallery?.[0]?.path && !imageError ? gym.gallery[0].path : getPlaceholderImage('gym')
   const logoSrc = gym.logo?.path && !logoError ? gym.logo.path : getPlaceholderImage('logo')
 
-  return (
-    <Link href={`/gyms/${gym.slug}`} className='block'>
+  const cardContent = (
       <Card className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col'>
         <div className='relative h-48 w-full bg-muted'>
           <Image
@@ -97,9 +100,24 @@ export function GymCard({ gym }: GymCardProps) {
           )}
         </CardContent>
         <CardFooter>
-          <Button className='w-full'>{gym.name} Details</Button>
+          {selectMode ? (
+            <Link href={`/gyms/${gym.slug}`} className='block' onClick={(e) => e.stopPropagation()}>
+              <Button className='w-full'>{gym.name} Details</Button>
+            </Link>
+          ) : (
+            <Button className='w-full'>{gym.name} Details</Button>
+          )}
         </CardFooter>
       </Card>
-    </Link>
   )
+
+  if (selectMode) {
+    return (
+      <div role='button' tabIndex={0} onClick={onSelect} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect?.() } }}>
+        {cardContent}
+      </div>
+    )
+  }
+
+  return <Link href={`/gyms/${gym.slug}`} className='block'>{cardContent}</Link>
 }
