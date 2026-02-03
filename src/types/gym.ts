@@ -36,6 +36,42 @@ export interface GymFAQ {
   category?: string
 }
 
+export interface GymAddress {
+  id: number | string
+  latitude: number
+  longitude: number
+  full_address?: string | null
+  city?: string | null
+  state?: string | null
+  street?: string | null
+  postal_code?: string | null
+  is_primary?: boolean
+}
+
+export interface AddressesPaginationMeta {
+  current_page: number
+  from: number | null
+  last_page: number
+  per_page: number
+  to: number | null
+  total: number
+  next_page_url?: string | null
+  prev_page_url?: string | null
+}
+
+export interface AddressesPaginatedResponse {
+  data: GymAddress[]
+  meta: AddressesPaginationMeta
+}
+
+/** Single address with location-specific reviews, hours, and pricing (from GET /addresses/{id}) */
+export interface AddressDetail {
+  id: number | string
+  hours: OperatingHours[]
+  reviews: Review[]
+  pricing: Plan[]
+}
+
 export interface Gym {
   id: string
   slug: string
@@ -67,6 +103,7 @@ export interface Gym {
   tags?: string[]
   created_at?: string
   updated_at?: string
+  addresses_count?: number
 }
 
 export interface ReviewWithGym {

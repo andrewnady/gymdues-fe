@@ -1,4 +1,11 @@
-import { Gym, StateWithCount } from '@/types/gym'
+import {
+  Gym,
+  GymAddress,
+  AddressDetail,
+  StateWithCount,
+  AddressesPaginatedResponse,
+  AddressesPaginationMeta,
+} from '@/types/gym'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
 
@@ -36,9 +43,15 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
     reviewCount = Array.isArray(gym.reviews) ? gym.reviews.length : 0
   }
 
+  const addressesCount =
+    gym.addresses_count !== undefined && gym.addresses_count !== null
+      ? Number(gym.addresses_count)
+      : undefined
+
   return {
     ...gym,
     reviewCount: Number(reviewCount) || 0,
+    addresses_count: addressesCount,
     // Preserve date fields if they exist
     created_at: gym.created_at ? String(gym.created_at) : undefined,
     updated_at: gym.updated_at ? String(gym.updated_at) : undefined,
@@ -244,9 +257,13 @@ export async function getPaginatedGyms(options: {
 
 /**
  * Fetches a single gym by slug from the API
- * Falls back to fetching all gyms and filtering by slug if the slug endpoint doesn't exist
+ * Optionally pass addressId to get reviews, hours, and pricing for that location.
+ * Falls back to fetching all gyms and filtering by slug if the slug endpoint doesn't exist.
  */
-export async function getGymBySlug(slug: string): Promise<Gym | null> {
+export async function getGymBySlug(
+  slug: string,
+  addressId?: string | null
+): Promise<Gym | null> {
   if (!slug || typeof slug !== 'string') {
     console.error('Invalid slug provided:', slug)
     return null
@@ -255,8 +272,11 @@ export async function getGymBySlug(slug: string): Promise<Gym | null> {
   try {
     // Try the slug endpoint first
     try {
-      const url = `${API_BASE_URL}/api/v1/gyms/${encodeURIComponent(slug)}`
-      const response = await fetch(url, {
+      const url = new URL(`${API_BASE_URL}/api/v1/gyms/${encodeURIComponent(slug)}`)
+      if (addressId != null && String(addressId).trim()) {
+        url.searchParams.set('address_id', String(addressId).trim())
+      }
+      const response = await fetch(url.toString(), {
         next: { revalidate: 60 },
       })
 
@@ -314,6 +334,78 @@ export async function getGymBySlug(slug: string): Promise<Gym | null> {
     console.error('Error fetching gym by slug:', error)
     // Re-throw to let the page component handle it
     throw error
+  }
+}
+
+/**
+ * Fetches paginated addresses for a gym (default 5 per page).
+ * Used for the locations map/list when a gym has multiple addresses.
+ */
+export async function getAddressesByGymId(
+  gymId: string,
+  options?: { page?: number; per_page?: number }
+): Promise<AddressesPaginatedResponse> {
+  const page = options?.page ?? 1
+  const perPage = options?.per_page ?? 5
+  const url = new URL(`${API_BASE_URL}/api/v1/gyms/${encodeURIComponent(gymId)}/addresses`)
+  url.searchParams.set('page', String(page))
+  url.searchParams.set('per_page', String(perPage))
+
+  const response = await fetch(url.toString(), {
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch addresses: ${response.status} ${response.statusText}`)
+  }
+
+  const res = (await response.json()) as {
+    data: GymAddress[]
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+    from: number | null
+    to: number | null
+    next_page_url?: string | null
+    prev_page_url?: string | null
+  }
+
+  const meta: AddressesPaginationMeta = {
+    current_page: res.current_page,
+    last_page: res.last_page,
+    per_page: res.per_page,
+    total: res.total,
+    from: res.from ?? null,
+    to: res.to ?? null,
+    next_page_url: res.next_page_url ?? null,
+    prev_page_url: res.prev_page_url ?? null,
+  }
+
+  return {
+    data: Array.isArray(res.data) ? (res.data as GymAddress[]) : [],
+    meta,
+  }
+}
+
+/**
+ * Fetches a single address by ID with location-specific reviews, hours, and pricing.
+ * Used when a location is selected in the gym locations map to update the page sections.
+ */
+export async function getAddress(addressId: string): Promise<AddressDetail | null> {
+  if (!addressId || !String(addressId).trim()) return null
+  const url = `${API_BASE_URL}/api/v1/addresses/${encodeURIComponent(String(addressId).trim())}`
+  const response = await fetch(url, { cache: 'no-store' })
+  if (!response.ok) {
+    if (response.status === 404) return null
+    throw new Error(`Failed to fetch address: ${response.status} ${response.statusText}`)
+  }
+  const data = (await response.json()) as Record<string, unknown>
+  return {
+    id: data.id as number | string,
+    hours: (Array.isArray(data.hours) ? data.hours : []) as AddressDetail['hours'],
+    reviews: (Array.isArray(data.reviews) ? data.reviews : []) as AddressDetail['reviews'],
+    pricing: (Array.isArray(data.pricing) ? data.pricing : []) as AddressDetail['pricing'],
   }
 }
 
