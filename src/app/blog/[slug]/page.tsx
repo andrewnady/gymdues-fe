@@ -293,7 +293,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             <div className="relative h-64 md:h-96 w-full bg-muted rounded-lg overflow-hidden">
               <Image
                 src={post.featured_images?.length > 0 ? post.featured_images[0].path : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=600&fit=crop&q=80'}
-                alt={post.featured_images?.length > 0 ? post.featured_images[0].alt : post.title}
+                alt={post.title}
                 fill
                 className="object-cover"
                 priority
