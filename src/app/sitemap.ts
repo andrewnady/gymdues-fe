@@ -3,15 +3,27 @@ import { getAllBlogPosts } from '@/lib/blog-api'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-/** Skip external API calls during CI/build so the build completes without waiting on the CMS */
-const SKIP_SITEMAP_APIS = process.env.CI === 'true'
-
 /** Static pages only (home, gyms index, blog index, about, contact, legal) */
 const STATIC_PAGES: MetadataRoute.Sitemap = [
   { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-  { url: `${BASE_URL}/gyms`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-  { url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-  { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+  {
+    url: `${BASE_URL}/gyms`,
+    lastModified: new Date(),
+    changeFrequency: 'daily',
+    priority: 0.9,
+  },
+  {
+    url: `${BASE_URL}/blog`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  },
+  {
+    url: `${BASE_URL}/about`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  },
   {
     url: `${BASE_URL}/contact`,
     lastModified: new Date(),
@@ -46,15 +58,6 @@ export default async function sitemap(props: {
   }
 
   if (id === 'blog') {
-    const blogIndexEntry: MetadataRoute.Sitemap[number] = {
-      url: `${BASE_URL}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    }
-    if (SKIP_SITEMAP_APIS) {
-      return [blogIndexEntry]
-    }
     try {
       const blogPosts = await getAllBlogPosts()
       const postEntries = blogPosts.map((post) => ({
@@ -63,9 +66,9 @@ export default async function sitemap(props: {
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       }))
-      return [blogIndexEntry, ...postEntries]
+      return postEntries
     } catch {
-      return [blogIndexEntry]
+      return []
     }
   }
 
