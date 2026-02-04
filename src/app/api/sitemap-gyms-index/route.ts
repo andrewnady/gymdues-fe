@@ -10,7 +10,11 @@ const GYMS_PER_SITEMAP = 500
 export async function GET() {
   let count = 1
   try {
-    const { meta } = await getPaginatedGyms({ page: 1, perPage: GYMS_PER_SITEMAP })
+    const { meta } = await getPaginatedGyms({
+      page: 1,
+      perPage: GYMS_PER_SITEMAP,
+      fields: 'sitemap',
+    })
     count = Math.ceil(meta.total / GYMS_PER_SITEMAP)
   } catch {
     count = 1

@@ -122,8 +122,15 @@ export async function getAllGyms(
 }
 
 /**
+ * Minimal gym shape for sitemap (when options.fields === 'sitemap').
+ * API returns only id, slug, updated_at to reduce payload.
+ */
+export type GymSitemapEntry = Pick<Gym, 'slug' | 'updated_at'>
+
+/**
  * Fetches paginated gyms from the API (Laravel-style paginator)
  * and returns both the gyms and pagination metadata.
+ * Use fields: 'sitemap' to request only id, slug, updated_at (for sitemap generation).
  */
 export async function getPaginatedGyms(options: {
   search?: string
@@ -132,8 +139,10 @@ export async function getPaginatedGyms(options: {
   trending?: boolean
   page?: number
   perPage?: number
+  /** Request minimal fields (id, slug, updated_at) for sitemap generation */
+  fields?: 'sitemap'
 }): Promise<PaginatedGymsResponse> {
-  const { search, state, city, trending, page, perPage } = options
+  const { search, state, city, trending, page, perPage, fields } = options
 
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
@@ -156,6 +165,9 @@ export async function getPaginatedGyms(options: {
     if (perPage && perPage > 0) {
       // Laravel-style per-page parameter
       url.searchParams.append('per_page', perPage.toString())
+    }
+    if (fields === 'sitemap') {
+      url.searchParams.append('fields', 'sitemap')
     }
 
     const response = await fetch(url.toString(), {

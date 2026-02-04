@@ -17,7 +17,11 @@ export async function GET(
   const index = Number(match[1])
   const page = index + 1
   try {
-    const { gyms } = await getPaginatedGyms({ page, perPage: GYMS_PER_SITEMAP })
+    const { gyms } = await getPaginatedGyms({
+      page,
+      perPage: GYMS_PER_SITEMAP,
+      fields: 'sitemap',
+    })
     const urlset = gyms
       .map(
         (gym) => `  <url>
