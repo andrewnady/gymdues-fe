@@ -5,6 +5,9 @@ import { getAllBlogPosts } from '@/lib/blog-api'
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 const GYMS_PER_SITEMAP = 500
 
+/** Skip external API calls during CI/build so the build completes without waiting on the CMS */
+const SKIP_SITEMAP_APIS = process.env.CI === 'true'
+
 /** Static pages to include in the main sitemap slice */
 const STATIC_PAGES: MetadataRoute.Sitemap = [
   { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
@@ -17,6 +20,9 @@ const STATIC_PAGES: MetadataRoute.Sitemap = [
 ]
 
 export async function generateSitemaps() {
+  if (SKIP_SITEMAP_APIS) {
+    return [{ id: 'static' }]
+  }
   try {
     const { meta } = await getPaginatedGyms({ page: 1, perPage: GYMS_PER_SITEMAP })
     const totalGyms = meta.total
@@ -39,6 +45,9 @@ export default async function sitemap(
   const id = await props.id
 
   if (id === 'static') {
+    if (SKIP_SITEMAP_APIS) {
+      return STATIC_PAGES
+    }
     let blogUrls: MetadataRoute.Sitemap = []
     try {
       const blogPosts = await getAllBlogPosts()
@@ -54,6 +63,9 @@ export default async function sitemap(
     return [...STATIC_PAGES, ...blogUrls]
   }
 
+  if (SKIP_SITEMAP_APIS) {
+    return []
+  }
   const sliceIndex = Number(id)
   const page = sliceIndex + 1
   try {
