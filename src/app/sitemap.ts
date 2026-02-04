@@ -46,19 +46,26 @@ export default async function sitemap(props: {
   }
 
   if (id === 'blog') {
+    const blogIndexEntry: MetadataRoute.Sitemap[number] = {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }
     if (SKIP_SITEMAP_APIS) {
-      return []
+      return [blogIndexEntry]
     }
     try {
       const blogPosts = await getAllBlogPosts()
-      return blogPosts.map((post) => ({
+      const postEntries = blogPosts.map((post) => ({
         url: `${BASE_URL}/blog/${post.slug}`,
         lastModified: post.updated_at ? new Date(post.updated_at) : new Date(post.published_at),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       }))
+      return [blogIndexEntry, ...postEntries]
     } catch {
-      return []
+      return [blogIndexEntry]
     }
   }
 
