@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
   // Allow trailing slashes in URLs
   trailingSlash: true,
 
+  // Serve sitemap index at /sitemap.xml (Next.js generateSitemaps does not create an index)
+  async rewrites() {
+    return [
+      { source: '/sitemap.xml', destination: '/api/sitemap-index' },
+      { source: '/sitemap.xml/', destination: '/api/sitemap-index' },
+    ]
+  },
+
   // Optimize images
   images: {
     formats: ['image/avif', 'image/webp'],
