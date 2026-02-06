@@ -153,3 +153,12 @@ export interface StateWithCount {
   stateName: string
   count: number
 }
+
+/** Location option for autocomplete (city+state or postal_code) with count */
+export interface LocationWithCount {
+  label: string
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  count: number
+}

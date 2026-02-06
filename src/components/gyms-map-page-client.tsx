@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { getPaginatedGyms, getStates, getAddressesByLocation } from '@/lib/gyms-api'
-import type { Gym, StateWithCount, GymWithAddressesGroup } from '@/types/gym'
+import { getPaginatedGyms, getAddressesByLocation, getLocations } from '@/lib/gyms-api'
+import type { Gym, GymWithAddressesGroup, LocationWithCount } from '@/types/gym'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GymCard } from '@/components/gym-card'
@@ -15,111 +15,223 @@ const GymsDiscoveryMap = dynamic(
   { ssr: false }
 )
 
-/** Fetch all gyms for the selected state/search in one request (no pagination) */
 const PER_PAGE_ALL = 500
-const DEFAULT_STATE = 'New York'
-const DEFAULT_STATE_LABEL = 'New York (New York)'
 
-function parseHash(): { state: string; search: string } {
-  if (typeof window === 'undefined') return { state: DEFAULT_STATE, search: '' }
+/**
+ * Parse location value (e.g. "Denver, CO 80202" or "Denver, CO") into { city?, state?, postal_code? }.
+ * Format: "City, State Zipcode" — zip is last token if all digits; otherwise "City, State" only.
+ */
+function parseLocationValue(value: string): { city?: string; state?: string; postal_code?: string } {
+  const v = value?.trim() ?? ''
+  if (!v) return {}
+  if (/^\d+$/.test(v)) return { postal_code: v }
+  const parts = v.split(/\s+/)
+  const last = parts[parts.length - 1]
+  if (last && /^\d+$/.test(last)) {
+    const postal_code = last
+    const cityState = parts.slice(0, -1).join(' ')
+    const comma = cityState.lastIndexOf(',')
+    if (comma > 0) {
+      return {
+        city: cityState.slice(0, comma).trim(),
+        state: cityState.slice(comma + 1).trim(),
+        postal_code,
+      }
+    }
+  }
+  const comma = v.lastIndexOf(',')
+  if (comma > 0) {
+    return { city: v.slice(0, comma).trim(), state: v.slice(comma + 1).trim() }
+  }
+  return { city: v }
+}
+
+/** Build display label: "City, State Zipcode" (all three when available) */
+function locationLabel(loc: LocationWithCount): string {
+  const parts = [loc.city, loc.state].filter(Boolean)
+  const cityState = parts.join(', ')
+  if (loc.postal_code) return cityState ? `${cityState} ${loc.postal_code}` : loc.postal_code
+  return cityState
+}
+
+/** Value to store in URL and show in input (same as label now that we have all three) */
+function stringifyLocation(loc: LocationWithCount): string {
+  return locationLabel(loc)
+}
+
+function parseHash(): { location: string; name: string } {
+  if (typeof window === 'undefined') return { location: '', name: '' }
   const hash = window.location.hash.slice(1)
   const params = new URLSearchParams(hash)
   return {
-    state: params.get('state')?.trim() || DEFAULT_STATE,
-    search: params.get('search')?.trim() || '',
+    location: params.get('location')?.trim() || '',
+    name: params.get('name')?.trim() || '',
   }
 }
 
-function buildHash(params: { state?: string; search?: string }): string {
+function buildHash(params: { location?: string; name?: string }): string {
   const current = parseHash()
-  const state = params.state !== undefined ? params.state : current.state
-  const search = params.search !== undefined ? params.search : current.search
+  const location = params.location !== undefined ? params.location : current.location
+  const name = params.name !== undefined ? params.name : current.name
   const p = new URLSearchParams()
-  if (state) p.set('state', state)
-  if (search) p.set('search', search)
+  if (location) p.set('location', location)
+  if (name) p.set('name', name)
   const s = p.toString()
   return s ? `#${s}` : ''
 }
 
 export function GymsMapPageClient() {
-  const [hashParams, setHashParams] = useState({ state: DEFAULT_STATE, search: '' })
+  const [hashParams, setHashParams] = useState({ location: '', name: '' })
+  const [defaultLocation, setDefaultLocation] = useState<LocationWithCount | null>(null)
   const [gyms, setGyms] = useState<Gym[]>([])
   const [totalGyms, setTotalGyms] = useState(0)
   const [locationGroups, setLocationGroups] = useState<GymWithAddressesGroup[] | null>(null)
   const [loading, setLoading] = useState(true)
-  const [states, setStates] = useState<StateWithCount[]>([])
-  const [stateInput, setStateInput] = useState(DEFAULT_STATE_LABEL)
-  const [stateDropdownOpen, setStateDropdownOpen] = useState(false)
-  const [gymName, setGymName] = useState('')
+  const [locationInput, setLocationInput] = useState('')
+  const [locationOptions, setLocationOptions] = useState<LocationWithCount[]>([])
+  const [locationOpen, setLocationOpen] = useState(false)
+  const [locationLoading, setLocationLoading] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [nameOptions, setNameOptions] = useState<Gym[]>([])
+  const [nameOpen, setNameOpen] = useState(false)
+  const [nameLoading, setNameLoading] = useState(false)
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null)
   const listItemRefs = useRef<Record<string, HTMLElement | null>>({})
-  const stateInputRef = useRef<HTMLDivElement>(null)
+  const locationRef = useRef<HTMLDivElement>(null)
+  const nameRef = useRef<HTMLDivElement>(null)
+  const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nameDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const state = hashParams.state
-  const search = hashParams.search
+  const location = hashParams.location
+  const name = hashParams.name
 
-  const updateUrl = useCallback((updates: { state?: string; search?: string }) => {
+  const updateUrl = useCallback((updates: { location?: string; name?: string }) => {
     const newHash = buildHash(updates)
     window.history.replaceState(null, '', `/gyms${newHash}`)
     setHashParams(parseHash())
   }, [])
 
+  // Load default location (first = most gyms) when no location in URL
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const hash = window.location.hash.slice(1)
-    const parsed = parseHash()
-    if (!hash) {
-      window.history.replaceState(null, '', `/gyms#state=${DEFAULT_STATE}`)
-      setHashParams({ state: DEFAULT_STATE, search: '' })
-    } else {
-      setHashParams(parsed)
-    }
+    getLocations()
+      .then((list) => {
+        if (list.length > 0) {
+          setDefaultLocation(list[0])
+          const current = parseHash()
+          if (!current.location) {
+            const value = stringifyLocation(list[0])
+            updateUrl({ location: value, name: current.name })
+            setLocationInput(value)
+          }
+        }
+      })
+      .catch(() => {})
+  }, [updateUrl])
+
+  // Sync inputs from hash
+  useEffect(() => {
+    const p = parseHash()
+    setLocationInput(p.location)
+    setNameInput(p.name)
   }, [])
 
   useEffect(() => {
-    const handleHashChange = () => setHashParams(parseHash())
+    const handleHashChange = () => {
+      setHashParams(parseHash())
+      const p = parseHash()
+      setLocationInput(p.location)
+      setNameInput(p.name)
+    }
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
+  // Location autocomplete (with empty query = top locations when open)
   useEffect(() => {
-    getStates().then(setStates)
-  }, [])
-
-  useEffect(() => {
-    const el = stateInputRef.current
-    if (!el) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (!el.contains(e.target as Node)) setStateDropdownOpen(false)
+    if (locationDebounce.current) clearTimeout(locationDebounce.current)
+    const q = locationInput.trim()
+    setLocationLoading(true)
+    locationDebounce.current = setTimeout(() => {
+      getLocations(q || undefined)
+        .then(setLocationOptions)
+        .finally(() => {
+          setLocationLoading(false)
+          locationDebounce.current = null
+        })
+    }, q ? 250 : 0)
+    return () => {
+      if (locationDebounce.current) clearTimeout(locationDebounce.current)
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [locationInput])
+
+  // Name autocomplete (gym name search)
+  useEffect(() => {
+    if (nameDebounce.current) clearTimeout(nameDebounce.current)
+    const q = nameInput.trim()
+    if (!q) {
+      setNameOptions([])
+      setNameLoading(false)
+      return
+    }
+    setNameLoading(true)
+    nameDebounce.current = setTimeout(() => {
+      fetch(`/api/gyms/search?q=${encodeURIComponent(q)}`)
+        .then((r) => r.json())
+        .then((data) => setNameOptions(Array.isArray(data) ? data.slice(0, 8) : []))
+        .catch(() => setNameOptions([]))
+        .finally(() => {
+          setNameLoading(false)
+          nameDebounce.current = null
+        })
+    }, 250)
+    return () => {
+      if (nameDebounce.current) clearTimeout(nameDebounce.current)
+    }
+  }, [nameInput])
+
+  // Click outside for dropdowns
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (locationRef.current && !locationRef.current.contains(e.target as Node)) setLocationOpen(false)
+      if (nameRef.current && !nameRef.current.contains(e.target as Node)) setNameOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  // Resolve effective location: from hash or default
+  const effectiveLocation = location || (defaultLocation ? stringifyLocation(defaultLocation) : '')
+  const parsed = parseLocationValue(effectiveLocation)
+
+  // Load gyms and addresses by location
   useEffect(() => {
+    if (!effectiveLocation.trim()) {
+      setGyms([])
+      setTotalGyms(0)
+      setLocationGroups(null)
+      setLoading(false)
+      return
+    }
     setLoading(true)
-    const searchTrim = search?.trim() ?? ''
-    const promises: [Promise<{ gyms: Gym[]; meta: { total: number } }>, Promise<{ data: GymWithAddressesGroup[] }>?] = [
+    const promises: [Promise<{ gyms: Gym[]; meta: { total: number } }>, Promise<{ data: GymWithAddressesGroup[] }>] = [
       getPaginatedGyms({
-        state: state || undefined,
-        search: search || undefined,
+        city: parsed.city,
+        state: parsed.state,
+        search: name?.trim() || undefined,
         page: 1,
         perPage: PER_PAGE_ALL,
       }),
+      getAddressesByLocation({
+        city: parsed.city,
+        postal_code: parsed.postal_code,
+      }),
     ]
-    if (searchTrim) {
-      promises.push(getAddressesByLocation({ search: searchTrim }))
-    }
     Promise.all(promises)
       .then(([gymsRes, locationRes]) => {
         setGyms(gymsRes.gyms)
         setTotalGyms(gymsRes.meta.total)
-        if (locationRes && locationRes.data.length > 0) {
-          setLocationGroups(locationRes.data)
-        } else {
-          setLocationGroups(null)
-        }
+        setLocationGroups(locationRes.data.length > 0 ? locationRes.data : null)
       })
       .catch(() => {
         setGyms([])
@@ -127,47 +239,36 @@ export function GymsMapPageClient() {
         setLocationGroups(null)
       })
       .finally(() => setLoading(false))
-  }, [state, search])
-
-  useEffect(() => {
-    const s = states.find((x) => x.state === state)
-    if (s) setStateInput(`${s.stateName} (${s.state})`)
-    else if (state) setStateInput(state)
-  }, [state, states])
-
-  const stateFilter = stateInput.trim().toLowerCase()
-  const stateOptions = stateFilter
-    ? states.filter(
-      (s) =>
-        s.state.toLowerCase().includes(stateFilter) ||
-        s.stateName.toLowerCase().includes(stateFilter)
-    )
-    : states
-
-  const handleSelectState = useCallback(
-    (s: StateWithCount) => {
-      setStateInput(`${s.stateName} (${s.state})`)
-      setStateDropdownOpen(false)
-      updateUrl({ state: s.state, search: gymName.trim() || undefined })
-    },
-    [updateUrl, gymName]
-  )
+  }, [effectiveLocation, name, parsed.city, parsed.state, parsed.postal_code])
 
   const handleSearch = useCallback(() => {
-    const match = states.find(
-      (s) =>
-        s.state.toLowerCase() === stateInput.trim().toLowerCase() ||
-        s.stateName.toLowerCase() === stateInput.trim().toLowerCase() ||
-        `${s.stateName} (${s.state})`.toLowerCase() === stateInput.trim().toLowerCase()
-    )
-    if (match) {
-      updateUrl({ state: match.state, search: gymName.trim() || undefined })
-    } else if (stateOptions.length > 0) {
-      handleSelectState(stateOptions[0])
-    } else {
-      updateUrl({ search: gymName.trim() || undefined })
-    }
-  }, [stateInput, gymName, states, stateOptions, updateUrl, handleSelectState])
+    const locValue = locationInput.trim() || effectiveLocation
+    updateUrl({
+      location: locValue,
+      name: nameInput.trim() || undefined,
+    })
+    setLocationOpen(false)
+    setNameOpen(false)
+  }, [locationInput, nameInput, effectiveLocation, updateUrl])
+
+  const handleSelectLocation = useCallback(
+    (loc: LocationWithCount) => {
+      const value = stringifyLocation(loc)
+      setLocationInput(value)
+      updateUrl({ location: value, name: hashParams.name })
+      setLocationOpen(false)
+    },
+    [updateUrl, hashParams.name]
+  )
+
+  const handleSelectName = useCallback(
+    (gym: Gym) => {
+      setNameInput(gym.name)
+      updateUrl({ location: hashParams.location, name: gym.name })
+      setNameOpen(false)
+    },
+    [updateUrl, hashParams.location]
+  )
 
   const handleGymSelect = useCallback((gymId: string) => {
     setSelectedGymId(gymId)
@@ -189,66 +290,92 @@ export function GymsMapPageClient() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[500px]">
-      {/* Filter bar */}
       <div className="flex flex-wrap items-end gap-3 p-4 border-b bg-card rounded-t-lg">
-        <div className="flex-1 min-w-[200px]" ref={stateInputRef}>
+        <div className="flex-1 min-w-[200px]" ref={locationRef}>
           <label className="text-xs font-medium text-muted-foreground block mb-1">
-            State <span className="text-destructive">*</span>
+            City or Zipcode <span className="text-destructive">*</span>
           </label>
           <div className="relative">
             <Input
-              className="pr-8"
-              placeholder="e.g. New York (NY)"
-              value={stateInput}
+              placeholder="e.g. Denver, CO or 80202"
+              value={locationInput}
               onChange={(e) => {
-                setStateInput(e.target.value)
-                setStateDropdownOpen(true)
+                setLocationInput(e.target.value)
+                setLocationOpen(true)
               }}
-              onFocus={() => setStateDropdownOpen(true)}
+              onFocus={() => setLocationOpen(true)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSearch()
-                if (e.key === 'Escape') setStateDropdownOpen(false)
+                if (e.key === 'Escape') setLocationOpen(false)
               }}
               aria-autocomplete="list"
-              aria-expanded={stateDropdownOpen}
-              aria-controls="state-autocomplete-list"
-              role="combobox"
+              aria-expanded={locationOpen}
+              className="pr-8"
             />
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            {stateDropdownOpen && stateOptions.length > 0 && (
+            {locationOpen && (locationOptions.length > 0 || locationLoading) && (
               <ul
-                id="state-autocomplete-list"
                 className="absolute z-50 w-full mt-1 py-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
                 role="listbox"
               >
-                {stateOptions.slice(0, 20).map((s) => (
+                {locationLoading && (
+                  <li className="px-3 py-2 text-sm text-muted-foreground">Loading…</li>
+                )}
+                {!locationLoading && locationOptions.map((loc) => (
                   <li
-                    key={s.state}
+                    key={[loc.city, loc.state, loc.postal_code].filter(Boolean).join('-')}
                     role="option"
                     className="px-3 py-2 text-sm cursor-pointer hover:bg-muted focus:bg-muted focus:outline-none"
-                    onClick={() => handleSelectState(s)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        handleSelectState(s)
-                      }
-                    }}
+                    onClick={() => handleSelectLocation(loc)}
                   >
-                    {s.stateName} ({s.state}) — {s.count} gyms
+                    {loc.label} — {loc.count} gyms
                   </li>
                 ))}
               </ul>
             )}
           </div>
         </div>
-        <div className="flex-1 min-w-[140px]">
+        <div className="flex-1 min-w-[200px]" ref={nameRef}>
           <label className="text-xs font-medium text-muted-foreground block mb-1">Gym name</label>
-          <Input
-            placeholder="Gym name"
-            value={gymName}
-            onChange={(e) => setGymName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          />
+          <div className="relative">
+            <Input
+              placeholder="Optional: filter by gym name"
+              value={nameInput}
+              onChange={(e) => {
+                setNameInput(e.target.value)
+                setNameOpen(true)
+              }}
+              onFocus={() => setNameOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch()
+                if (e.key === 'Escape') setNameOpen(false)
+              }}
+              aria-autocomplete="list"
+              aria-expanded={nameOpen}
+              className="pr-8"
+            />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            {nameOpen && (nameOptions.length > 0 || nameLoading) && (
+              <ul
+                className="absolute z-50 w-full mt-1 py-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+                role="listbox"
+              >
+                {nameLoading && (
+                  <li className="px-3 py-2 text-sm text-muted-foreground">Loading…</li>
+                )}
+                {!nameLoading && nameOptions.map((gym) => (
+                  <li
+                    key={gym.id}
+                    role="option"
+                    className="px-3 py-2 text-sm cursor-pointer hover:bg-muted focus:bg-muted focus:outline-none"
+                    onClick={() => handleSelectName(gym)}
+                  >
+                    {gym.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
         <Button onClick={handleSearch} className="shrink-0">
           <Search className="h-4 w-4 mr-2" />
@@ -256,9 +383,7 @@ export function GymsMapPageClient() {
         </Button>
       </div>
 
-      {/* Main: list + map */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-0 border border-t-0 rounded-b-lg overflow-hidden">
-        {/* Left: scrollable gym cards or locations grouped by gym */}
         <div className="flex flex-col min-h-0 border-r bg-background overflow-hidden">
           <div className="p-3 border-b bg-muted/50 font-medium shrink-0">
             {loading
@@ -275,9 +400,14 @@ export function GymsMapPageClient() {
                 ))}
               </div>
             )}
-            {!loading && !showLocationView && gyms.length === 0 && (
+            {!loading && !effectiveLocation && (
               <p className="text-muted-foreground text-sm py-4 text-center">
-                No gyms found. Try adjusting your search or filters.
+                Select a city or zipcode to see gyms.
+              </p>
+            )}
+            {!loading && effectiveLocation && !showLocationView && gyms.length === 0 && (
+              <p className="text-muted-foreground text-sm py-4 text-center">
+                No gyms found. Try a different location or gym name.
               </p>
             )}
             {!loading && showLocationView && locationGroups && (
@@ -296,9 +426,7 @@ export function GymsMapPageClient() {
                         return (
                           <li
                             key={key}
-                            ref={(el) => {
-                              listItemRefs.current[key] = el
-                            }}
+                            ref={(el) => { listItemRefs.current[key] = el }}
                           >
                             <Link
                               href={`/gyms/${group.gym.slug}?address_id=${addr.id}`}
@@ -328,9 +456,7 @@ export function GymsMapPageClient() {
                   return (
                     <div
                       key={gym.id}
-                      ref={(el) => {
-                        listItemRefs.current[String(gym.id)] = el
-                      }}
+                      ref={(el) => { listItemRefs.current[String(gym.id)] = el }}
                       className={isSelected ? 'ring-2 ring-primary ring-offset-2 rounded-lg' : undefined}
                     >
                       <GymCard
@@ -346,7 +472,6 @@ export function GymsMapPageClient() {
           </div>
         </div>
 
-        {/* Right: map */}
         <div className="lg:col-span-2 min-h-[300px] lg:min-h-0 flex flex-col bg-muted/30">
           {loading ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">

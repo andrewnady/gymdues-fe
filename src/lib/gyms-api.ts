@@ -7,6 +7,7 @@ import {
   AddressesPaginationMeta,
   AddressesByLocationResponse,
   GymWithAddressesGroup,
+  LocationWithCount,
 } from '@/types/gym'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
@@ -429,6 +430,23 @@ export async function getAddressesByLocation(options?: {
   return {
     data: Array.isArray(data.data) ? data.data : [],
   }
+}
+
+/**
+ * Fetches locations (city+state and postal_code) with counts for autocomplete.
+ * Sorted by count desc. Optional q filters by label.
+ */
+export async function getLocations(q?: string): Promise<LocationWithCount[]> {
+  const url = new URL(`${API_BASE_URL}/api/v1/gyms/locations`)
+  if (q && q.trim()) {
+    url.searchParams.set('q', q.trim())
+  }
+  const response = await fetch(url.toString(), { cache: 'no-store' })
+  if (!response.ok) {
+    throw new Error(`Failed to fetch locations: ${response.status} ${response.statusText}`)
+  }
+  const data = (await response.json()) as LocationWithCount[]
+  return Array.isArray(data) ? data : []
 }
 
 /**
