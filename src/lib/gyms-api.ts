@@ -5,6 +5,8 @@ import {
   StateWithCount,
   AddressesPaginatedResponse,
   AddressesPaginationMeta,
+  AddressesByLocationResponse,
+  GymWithAddressesGroup,
 } from '@/types/gym'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
@@ -397,6 +399,35 @@ export async function getAddressesByGymId(
   return {
     data: Array.isArray(res.data) ? (res.data as GymAddress[]) : [],
     meta,
+  }
+}
+
+/**
+ * Fetches addresses filtered by city and/or postal_code (or search), grouped by gym.
+ * Used when filtering gyms by location so the map/list show only locations in that area.
+ */
+export async function getAddressesByLocation(options?: {
+  city?: string
+  postal_code?: string
+  search?: string
+}): Promise<AddressesByLocationResponse> {
+  const url = new URL(`${API_BASE_URL}/api/v1/gyms/addresses-by-location`)
+  if (options?.city?.trim()) {
+    url.searchParams.set('city', options.city.trim())
+  }
+  if (options?.postal_code?.trim()) {
+    url.searchParams.set('postal_code', options.postal_code.trim())
+  }
+  if (options?.search?.trim()) {
+    url.searchParams.set('search', options.search.trim())
+  }
+  const response = await fetch(url.toString(), { cache: 'no-store' })
+  if (!response.ok) {
+    throw new Error(`Failed to fetch addresses by location: ${response.status} ${response.statusText}`)
+  }
+  const data = (await response.json()) as { data: GymWithAddressesGroup[] }
+  return {
+    data: Array.isArray(data.data) ? data.data : [],
   }
 }
 

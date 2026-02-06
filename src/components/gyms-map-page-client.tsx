@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { getPaginatedGyms, getStates } from '@/lib/gyms-api'
-import type { Gym, StateWithCount } from '@/types/gym'
+import { getPaginatedGyms, getStates, getAddressesByLocation } from '@/lib/gyms-api'
+import type { Gym, StateWithCount, GymWithAddressesGroup } from '@/types/gym'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GymCard } from '@/components/gym-card'
@@ -44,13 +45,15 @@ export function GymsMapPageClient() {
   const [hashParams, setHashParams] = useState({ state: DEFAULT_STATE, search: '' })
   const [gyms, setGyms] = useState<Gym[]>([])
   const [totalGyms, setTotalGyms] = useState(0)
+  const [locationGroups, setLocationGroups] = useState<GymWithAddressesGroup[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [states, setStates] = useState<StateWithCount[]>([])
   const [stateInput, setStateInput] = useState(DEFAULT_STATE_LABEL)
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false)
   const [gymName, setGymName] = useState('')
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
-  const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null)
+  const listItemRefs = useRef<Record<string, HTMLElement | null>>({})
   const stateInputRef = useRef<HTMLDivElement>(null)
 
   const state = hashParams.state
@@ -96,19 +99,32 @@ export function GymsMapPageClient() {
 
   useEffect(() => {
     setLoading(true)
-    getPaginatedGyms({
-      state: state || undefined,
-      search: search || undefined,
-      page: 1,
-      perPage: PER_PAGE_ALL,
-    })
-      .then(({ gyms: g, meta: m }) => {
-        setGyms(g)
-        setTotalGyms(m.total)
+    const searchTrim = search?.trim() ?? ''
+    const promises: [Promise<{ gyms: Gym[]; meta: { total: number } }>, Promise<{ data: GymWithAddressesGroup[] }>?] = [
+      getPaginatedGyms({
+        state: state || undefined,
+        search: search || undefined,
+        page: 1,
+        perPage: PER_PAGE_ALL,
+      }),
+    ]
+    if (searchTrim) {
+      promises.push(getAddressesByLocation({ search: searchTrim }))
+    }
+    Promise.all(promises)
+      .then(([gymsRes, locationRes]) => {
+        setGyms(gymsRes.gyms)
+        setTotalGyms(gymsRes.meta.total)
+        if (locationRes && locationRes.data.length > 0) {
+          setLocationGroups(locationRes.data)
+        } else {
+          setLocationGroups(null)
+        }
       })
       .catch(() => {
         setGyms([])
         setTotalGyms(0)
+        setLocationGroups(null)
       })
       .finally(() => setLoading(false))
   }, [state, search])
@@ -155,9 +171,21 @@ export function GymsMapPageClient() {
 
   const handleGymSelect = useCallback((gymId: string) => {
     setSelectedGymId(gymId)
+    setSelectedLocationKey(null)
     const el = listItemRefs.current[gymId]
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [])
+
+  const handleLocationSelect = useCallback((gymId: string, addressId: string) => {
+    const key = `${gymId}-${addressId}`
+    setSelectedLocationKey(key)
+    setSelectedGymId(null)
+    const el = listItemRefs.current[key]
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [])
+
+  const totalLocations = locationGroups?.reduce((n, g) => n + g.addresses.length, 0) ?? 0
+  const showLocationView = (locationGroups?.length ?? 0) > 0
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[500px]">
@@ -230,10 +258,14 @@ export function GymsMapPageClient() {
 
       {/* Main: list + map */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-0 border border-t-0 rounded-b-lg overflow-hidden">
-        {/* Left: scrollable gym cards */}
+        {/* Left: scrollable gym cards or locations grouped by gym */}
         <div className="flex flex-col min-h-0 border-r bg-background overflow-hidden">
           <div className="p-3 border-b bg-muted/50 font-medium shrink-0">
-            {loading ? 'Loading…' : `${totalGyms} gyms`}
+            {loading
+              ? 'Loading…'
+              : showLocationView
+                ? `${totalLocations} location${totalLocations !== 1 ? 's' : ''} in area`
+                : `${totalGyms} gyms`}
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             {loading && (
@@ -243,12 +275,53 @@ export function GymsMapPageClient() {
                 ))}
               </div>
             )}
-            {!loading && gyms.length === 0 && (
+            {!loading && !showLocationView && gyms.length === 0 && (
               <p className="text-muted-foreground text-sm py-4 text-center">
                 No gyms found. Try adjusting your search or filters.
               </p>
             )}
-            {!loading && gyms.length > 0 && (
+            {!loading && showLocationView && locationGroups && (
+              <div className="space-y-6">
+                {locationGroups.map((group) => (
+                  <div key={group.gym.id}>
+                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">{group.gym.name}</h3>
+                    <ul className="space-y-2">
+                      {group.addresses.map((addr) => {
+                        const key = `${group.gym.id}-${addr.id}`
+                        const isSelected = selectedLocationKey === key
+                        const label =
+                          addr.full_address ||
+                          [addr.street, addr.city, addr.state].filter(Boolean).join(', ') ||
+                          `Location #${addr.id}`
+                        return (
+                          <li
+                            key={key}
+                            ref={(el) => {
+                              listItemRefs.current[key] = el
+                            }}
+                          >
+                            <Link
+                              href={`/gyms/${group.gym.slug}?address_id=${addr.id}`}
+                              className={`block rounded-md border p-3 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${isSelected ? 'border-primary bg-primary/5' : 'border-border'}`}
+                              onClick={() => handleLocationSelect(String(group.gym.id), String(addr.id))}
+                            >
+                              <span className="font-medium text-sm">{label}</span>
+                              {addr.city && addr.state && (
+                                <span className="block text-xs text-muted-foreground mt-0.5">
+                                  {addr.city}, {addr.state}
+                                  {addr.postal_code ? ` ${addr.postal_code}` : ''}
+                                </span>
+                              )}
+                            </Link>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!loading && !showLocationView && gyms.length > 0 && (
               <div className="space-y-4">
                 {gyms.map((gym) => {
                   const isSelected = selectedGymId !== null && String(gym.id) === String(selectedGymId)
@@ -285,6 +358,9 @@ export function GymsMapPageClient() {
                 gyms={gyms}
                 selectedGymId={selectedGymId}
                 onGymSelect={handleGymSelect}
+                locationGroups={showLocationView ? locationGroups : null}
+                selectedLocationKey={selectedLocationKey}
+                onLocationSelect={handleLocationSelect}
               />
             </div>
           )}

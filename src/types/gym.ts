@@ -76,6 +76,16 @@ export interface AddressesPaginatedResponse {
   meta: AddressesPaginationMeta
 }
 
+/** Gym with its addresses (from GET /gyms/addresses-by-location), grouped by gym */
+export interface GymWithAddressesGroup {
+  gym: { id: number; name: string; slug: string }
+  addresses: GymAddress[]
+}
+
+export interface AddressesByLocationResponse {
+  data: GymWithAddressesGroup[]
+}
+
 /** Single address with location-specific reviews, hours, and pricing (from GET /addresses/{id}) */
 export interface AddressDetail {
   id: number | string

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import L from 'leaflet'
 import { RotateCcw } from 'lucide-react'
-import type { Gym, GymPrimaryAddress } from '@/types/gym'
+import type { Gym, GymPrimaryAddress, GymAddress, GymWithAddressesGroup } from '@/types/gym'
 import 'leaflet/dist/leaflet.css'
 
 const DEFAULT_ICON = L.icon({
@@ -28,22 +28,67 @@ function hasValidCoords(addr: string | GymPrimaryAddress | undefined): addr is G
   )
 }
 
+function addressHasValidCoords(addr: GymAddress): boolean {
+  const lat = Number(addr.latitude)
+  const lng = Number(addr.longitude)
+  return !Number.isNaN(lat) && !Number.isNaN(lng) && lat !== 0 && lng !== 0
+}
+
+/** Flatten location groups to (gym, address) pairs with valid coords */
+function flattenLocationGroups(groups: GymWithAddressesGroup[]): { gym: GymWithAddressesGroup['gym']; address: GymAddress }[] {
+  const out: { gym: GymWithAddressesGroup['gym']; address: GymAddress }[] = []
+  for (const g of groups) {
+    for (const addr of g.addresses) {
+      if (addressHasValidCoords(addr)) out.push({ gym: g.gym, address: addr })
+    }
+  }
+  return out
+}
+
 interface GymsDiscoveryMapProps {
   gyms: Gym[]
   selectedGymId: string | null
   onGymSelect?: (gymId: string) => void
+  /** When set, show one marker per address (locations in area) instead of per gym */
+  locationGroups?: GymWithAddressesGroup[] | null
+  /** Composite key "gymId-addressId" when in location mode */
+  selectedLocationKey?: string | null
+  onLocationSelect?: (gymId: string, addressId: string) => void
 }
 
-export function GymsDiscoveryMap({ gyms, selectedGymId, onGymSelect }: GymsDiscoveryMapProps) {
+export function GymsDiscoveryMap({
+  gyms,
+  selectedGymId,
+  onGymSelect,
+  locationGroups,
+  selectedLocationKey,
+  onLocationSelect,
+}: GymsDiscoveryMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const markersRef = useRef<L.Marker[]>([])
 
+  const locationPairs = useMemo(
+    () => (locationGroups && locationGroups.length > 0 ? flattenLocationGroups(locationGroups) : []),
+    [locationGroups]
+  )
+
   const gymsWithCoords = useMemo(() => {
+    if (locationPairs.length > 0) return []
     return gyms.filter((g) => hasValidCoords(g.address)) as (Gym & { address: GymPrimaryAddress })[]
-  }, [gyms])
+  }, [gyms, locationPairs.length])
 
   const center = useMemo((): [number, number] => {
+    if (locationPairs.length > 0) {
+      const selected = selectedLocationKey
+        ? locationPairs.find((p) => `${p.gym.id}-${p.address.id}` === selectedLocationKey)
+        : null
+      if (selected) {
+        return [Number(selected.address.latitude), Number(selected.address.longitude)]
+      }
+      const first = locationPairs[0]
+      return [Number(first.address.latitude), Number(first.address.longitude)]
+    }
     if (gymsWithCoords.length === 0) return [40.7128, -74.006]
     const selected = selectedGymId
       ? gymsWithCoords.find((g) => String(g.id) === String(selectedGymId))
@@ -53,13 +98,15 @@ export function GymsDiscoveryMap({ gyms, selectedGymId, onGymSelect }: GymsDisco
     }
     const first = gymsWithCoords[0]
     return [Number(first.address.latitude), Number(first.address.longitude)]
-  }, [gymsWithCoords, selectedGymId])
+  }, [gymsWithCoords, selectedGymId, locationPairs, selectedLocationKey])
+
+  const hasPoints = locationPairs.length > 0 || gymsWithCoords.length > 0
 
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
 
-    if (gymsWithCoords.length === 0) {
+    if (!hasPoints) {
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
@@ -94,11 +141,64 @@ export function GymsDiscoveryMap({ gyms, selectedGymId, onGymSelect }: GymsDisco
       mapRef.current = null
       markersRef.current = []
     }
-  }, [gymsWithCoords.length])
+  }, [hasPoints])
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || gymsWithCoords.length === 0) return
+    if (!map || !hasPoints) return
+
+    if (locationPairs.length > 0) {
+      const selected = selectedLocationKey
+        ? locationPairs.find((p) => `${p.gym.id}-${p.address.id}` === selectedLocationKey)
+        : null
+      if (selected) {
+        map.flyTo(
+          [Number(selected.address.latitude), Number(selected.address.longitude)],
+          15,
+          { duration: 0.6 }
+        )
+      } else {
+        const bounds = L.latLngBounds(
+          locationPairs.map((p) => [
+            Number(p.address.latitude),
+            Number(p.address.longitude),
+          ] as L.LatLngTuple)
+        )
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 })
+      }
+
+      markersRef.current.forEach((m) => m.remove())
+      markersRef.current = []
+      const markerKeys: string[] = []
+      locationPairs.forEach(({ gym, address }) => {
+        const lat = Number(address.latitude)
+        const lng = Number(address.longitude)
+        const marker = L.marker([lat, lng], { icon: DEFAULT_ICON })
+        const label = address.full_address || [address.street, address.city, address.state].filter(Boolean).join(', ') || gym.name
+        const popupHtml = `<a href="/gyms/${escapeHtml(gym.slug)}?address_id=${escapeHtml(String(address.id))}" class="font-medium hover:underline">${escapeHtml(gym.name)}</a><br/><span class="text-muted-foreground text-sm">${escapeHtml(label)}</span>`
+        marker.bindPopup(popupHtml)
+        const key = `${gym.id}-${address.id}`
+        if (onLocationSelect) {
+          marker.on('click', () => onLocationSelect(String(gym.id), String(address.id)))
+        }
+        marker.addTo(map)
+        markersRef.current.push(marker)
+        markerKeys.push(key)
+      })
+
+      const getMarkerEl = (m: L.Marker) => (m as L.Marker & { _icon?: HTMLElement })._icon?.parentElement
+      markersRef.current.forEach((marker, i) => {
+        const el = getMarkerEl(marker)
+        if (el) {
+          if (markerKeys[i] === selectedLocationKey) {
+            el.classList.add('gym-marker-selected')
+          } else {
+            el.classList.remove('gym-marker-selected')
+          }
+        }
+      })
+      return
+    }
 
     const selected = selectedGymId
       ? gymsWithCoords.find((g) => String(g.id) === String(selectedGymId))
@@ -139,7 +239,6 @@ export function GymsDiscoveryMap({ gyms, selectedGymId, onGymSelect }: GymsDisco
       markerGymIds.push(String(gym.id))
     })
 
-    // Apply selected style (white + scale 1.2) to the selected marker
     const getMarkerEl = (m: L.Marker) => (m as L.Marker & { _icon?: HTMLElement })._icon?.parentElement
     markersRef.current.forEach((marker, i) => {
       const el = getMarkerEl(marker)
@@ -151,24 +250,36 @@ export function GymsDiscoveryMap({ gyms, selectedGymId, onGymSelect }: GymsDisco
         }
       }
     })
-  }, [gymsWithCoords, selectedGymId, onGymSelect])
+  }, [hasPoints, gymsWithCoords, selectedGymId, onGymSelect, locationPairs, selectedLocationKey, onLocationSelect])
 
   const handleResetView = useCallback(() => {
     const map = mapRef.current
-    if (!map || gymsWithCoords.length === 0) return
-    const bounds = L.latLngBounds(
-      gymsWithCoords.map((g) => [
-        Number(g.address.latitude),
-        Number(g.address.longitude),
-      ] as L.LatLngTuple)
-    )
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 })
-  }, [gymsWithCoords])
+    if (!map || !hasPoints) return
+    if (locationPairs.length > 0) {
+      const bounds = L.latLngBounds(
+        locationPairs.map((p) => [
+          Number(p.address.latitude),
+          Number(p.address.longitude),
+        ] as L.LatLngTuple)
+      )
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 })
+    } else {
+      const bounds = L.latLngBounds(
+        gymsWithCoords.map((g) => [
+          Number(g.address.latitude),
+          Number(g.address.longitude),
+        ] as L.LatLngTuple)
+      )
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 })
+    }
+  }, [hasPoints, gymsWithCoords, locationPairs])
 
-  if (gymsWithCoords.length === 0) {
+  if (!hasPoints) {
     return (
       <div className="h-full min-h-[300px] flex items-center justify-center bg-muted rounded-md text-muted-foreground">
-        No map coordinates for these gyms
+        {locationPairs.length === 0 && gymsWithCoords.length === 0
+          ? 'No map coordinates for these gyms'
+          : 'No map coordinates'}
       </div>
     )
   }
