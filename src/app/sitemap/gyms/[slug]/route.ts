@@ -25,7 +25,7 @@ export async function GET(
     const urlset = gyms
       .map(
         (gym) => `  <url>
-    <loc>${BASE_URL}/gyms/${gym.slug}</loc>
+    <loc>${BASE_URL}/gyms/${gym.slug}/</loc>
     <lastmod>${(gym.updated_at ? new Date(gym.updated_at) : new Date()).toISOString().slice(0, 10)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

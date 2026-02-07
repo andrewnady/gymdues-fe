@@ -61,7 +61,7 @@ export default async function sitemap(props: {
     try {
       const blogPosts = await getAllBlogPosts()
       const postEntries = blogPosts.map((post) => ({
-        url: `${BASE_URL}/blog/${post.slug}`,
+        url: `${BASE_URL}/blog/${post.slug}/`,
         lastModified: post.updated_at ? new Date(post.updated_at) : new Date(post.published_at),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
