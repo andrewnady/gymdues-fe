@@ -37,7 +37,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                   itemProp="item"
                 >
                   <Home className="h-4 w-4" />
-                  <span className="sr-only">{item.label}</span>
+                  <span className="sr-only" itemProp="name">{item.label}</span>
                 </Link>
               ) : (
                 <>

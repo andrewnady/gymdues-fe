@@ -200,7 +200,15 @@ export default async function GymDetailPage({ params, searchParams }: PageProps)
     return {
       '@context': 'https://schema.org',
       '@type': 'Review',
-      author: review.reviewer || 'Anonymous',
+      itemReviewed: {
+        '@type': 'ExerciseGym',
+        name: gym.name,
+        url: gymUrl,
+      },
+      author: {
+        '@type': 'Person',
+        name: review.reviewer || 'Anonymous',
+      },
       reviewRating: {
         '@type': 'Rating',
         ratingValue: String(review.rate || 0),
@@ -257,14 +265,14 @@ export default async function GymDetailPage({ params, searchParams }: PageProps)
     }),
     ...(reviewSchemas.length > 0 && {
       review: reviewSchemas,
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: parseFloat(gym.rating?.toString()).toFixed(1),
+        reviewCount: getReviewCount(gym),
+        bestRating: 5,
+        worstRating: 1,
+      },
     }),
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: parseFloat(gym.rating?.toString()).toFixed(1),
-      reviewCount: getReviewCount(gym),
-      bestRating: 5,
-      worstRating: 1,
-    },
     ...(gym.amenities && gym.amenities.length > 0 && {
       amenityFeature: gym.amenities.map((amenity) => ({
         '@type': 'LocationFeatureSpecification',
