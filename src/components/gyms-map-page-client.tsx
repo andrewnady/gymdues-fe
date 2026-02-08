@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { getPaginatedGyms, getAddressesByLocation, getLocations } from '@/lib/gyms-api'
@@ -9,6 +8,7 @@ import type { Gym, GymWithAddressesGroup, LocationWithCount } from '@/types/gym'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GymCard } from '@/components/gym-card'
+import { GymCardCompact } from '@/components/gym-card-compact'
 import { Search } from 'lucide-react'
 
 const GymsDiscoveryMap = dynamic(
@@ -296,7 +296,6 @@ export function GymsMapPageClient() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [])
 
-  const totalLocations = locationGroups?.reduce((n, g) => n + g.addresses.length, 0) ?? 0
   const showLocationView = (locationGroups?.length ?? 0) > 0
 
   return (
@@ -400,7 +399,7 @@ export function GymsMapPageClient() {
             {loading
               ? 'Loading…'
               : showLocationView
-                ? `${totalLocations} location${totalLocations !== 1 ? 's' : ''} in area`
+                ? `${totalGyms} gyms in ${parsed.city || effectiveLocation}`
                 : `${totalGyms} gyms`}
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
@@ -424,38 +423,17 @@ export function GymsMapPageClient() {
             {!loading && showLocationView && locationGroups && (
               <div className="space-y-6">
                 {locationGroups.map((group) => (
-                  <div key={group.gym.id}>
-                    <h3 className="font-semibold text-sm text-muted-foreground mb-2">{group.gym.name}</h3>
-                    <ul className="space-y-2">
-                      {group.addresses.map((addr) => {
-                        const key = `${group.gym.id}-${addr.id}`
-                        const isSelected = selectedLocationKey === key
-                        const label =
-                          addr.full_address ||
-                          [addr.street, addr.city, addr.state].filter(Boolean).join(', ') ||
-                          `Location #${addr.id}`
-                        return (
-                          <li
-                            key={key}
-                            ref={(el) => { listItemRefs.current[key] = el }}
-                          >
-                            <Link
-                              href={`/gyms/${group.gym.slug}#location=${addr.id}`}
-                              className={`block rounded-md border p-3 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${isSelected ? 'border-primary bg-primary/5' : 'border-border'}`}
-                              onClick={() => handleLocationSelect(String(group.gym.id), String(addr.id))}
-                            >
-                              <span className="font-medium text-sm">{label}</span>
-                              {addr.city && addr.state && (
-                                <span className="block text-xs text-muted-foreground mt-0.5">
-                                  {addr.city}, {addr.state}
-                                  {addr.postal_code ? ` ${addr.postal_code}` : ''}
-                                </span>
-                              )}
-                            </Link>
-                          </li>
-                        )
-                      })}
-                    </ul>
+                  <div key={group.gym.id} className="space-y-3">
+                    <div
+                      ref={(el) => { listItemRefs.current[String(group.gym.id)] = el }}
+                      className={selectedGymId !== null && String(group.gym.id) === String(selectedGymId) ? 'ring-2 ring-primary ring-offset-2 rounded-lg' : undefined}
+                    >
+                      <GymCardCompact
+                        gym={group.gym}
+                        selectMode
+                        onSelect={() => handleGymSelect(String(group.gym.id))}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

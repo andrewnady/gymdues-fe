@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Star } from 'lucide-react'
-import { getReviewCount, getPlaceholderImage } from '@/lib/utils'
+import { getReviewCount, getPlaceholderImage, getGymHeroImagePath } from '@/lib/utils'
 
 function stripHtmlTags(html: string): string {
   return html.replace(/<[^>]*>/g, '').trim()
@@ -33,8 +33,8 @@ export function GymCard({ gym, selectMode, onSelect }: GymCardProps) {
   const [imageError, setImageError] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
-  const imageSrc =
-    gym.gallery?.[0]?.path && !imageError ? gym.gallery[0].path : getPlaceholderImage('gym')
+  const heroPath = getGymHeroImagePath(gym)
+  const imageSrc = heroPath && !imageError ? heroPath : getPlaceholderImage('gym')
   const logoSrc = gym.logo?.path && !logoError ? gym.logo.path : getPlaceholderImage('logo')
 
   const cardContent = (

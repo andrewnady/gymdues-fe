@@ -57,7 +57,7 @@ export function TrendingGymsSection({ gyms }: TrendingGymsSectionProps) {
           className='w-full'
         >
           <CarouselContent className='-ml-4 md:-ml-6'>
-            {gyms.map((gym) => (
+            {gyms.filter((gym) => gym.description?.length > 0).map((gym) => (
               <CarouselItem
                 key={gym.id}
                 className='pl-4 md:pl-6 basis-full md:basis-1/2 lg:basis-1/3'

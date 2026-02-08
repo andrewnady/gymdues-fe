@@ -76,9 +76,21 @@ export interface AddressesPaginatedResponse {
   meta: AddressesPaginationMeta
 }
 
+/** Gym summary in addresses-by-location (optional fields for compact card) */
+export interface GymSummaryInGroup {
+  id: number
+  name: string
+  slug: string
+  logo?: { path: string; alt?: string } | null
+  rating?: number
+  reviewCount?: number
+  city?: string | null
+  state?: string | null
+}
+
 /** Gym with its addresses (from GET /gyms/addresses-by-location), grouped by gym */
 export interface GymWithAddressesGroup {
-  gym: { id: number; name: string; slug: string }
+  gym: GymSummaryInGroup
   addresses: GymAddress[]
 }
 
