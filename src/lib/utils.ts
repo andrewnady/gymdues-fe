@@ -20,6 +20,34 @@ export function getReviewCount(gym: Gym | Record<string, unknown>): number {
 }
 
 /**
+ * Gets the best image path for a gym hero: featured_image first, then newest gallery image (first or last in array).
+ * Handles API shapes: featured_image as { path } or [{ path }], featureImage string, gallery[{ path }].
+ */
+export function getGymHeroImagePath(gym: Gym | Record<string, unknown>): string | undefined {
+  const g = gym as Record<string, unknown>
+  const fi = g.featured_image
+  if (fi != null) {
+    if (Array.isArray(fi) && fi.length > 0) {
+      const first = (fi[0] as Record<string, unknown>)?.path
+      if (typeof first === 'string' && first) return first
+    }
+    if (typeof fi === 'object' && fi !== null) {
+      const path = (fi as Record<string, unknown>).path
+      if (typeof path === 'string' && path) return path
+    }
+  }
+  if (typeof g.featureImage === 'string' && g.featureImage) return g.featureImage
+  const gal = g.gallery as { path?: string }[] | undefined
+  if (Array.isArray(gal) && gal.length > 0) {
+    const first = gal[0]?.path
+    if (first) return first
+    const last = gal[gal.length - 1]?.path
+    if (last) return last
+  }
+  return undefined
+}
+
+/**
  * Get placeholder image URL for gyms
  */
 export function getPlaceholderImage(type: 'gym' | 'logo' = 'gym'): string {

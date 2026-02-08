@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getGymBySlug } from '@/lib/gyms-api'
-import { getReviewCount } from '@/lib/utils'
+import { getReviewCount, getGymHeroImagePath } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -49,10 +49,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
   // Use the pathname as-is to match the current URL (preserve trailing slash)
   const gymUrl = new URL(pathname, siteUrl).toString()
-  const gymImage = gym.gallery?.[0]?.path
-    ? (gym.gallery[0].path.startsWith('http')
-      ? gym.gallery[0].path
-      : `${siteUrl}${gym.gallery[0].path}`)
+  const heroPath = getGymHeroImagePath(gym)
+  const gymImage = heroPath
+    ? (heroPath.startsWith('http') ? heroPath : `${siteUrl}${heroPath}`)
     : `${siteUrl}/images/bg-header.jpg`
 
   const title = `${gym.name}: Memberships, Fees, Classes, and Facilities | GymDues`
@@ -135,10 +134,9 @@ export default async function GymDetailPage({ params }: PageProps) {
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
   const gymUrl = new URL(`/gyms/${slug}`, siteUrl).toString()
-  const gymImage = gym.gallery?.[0]?.path
-    ? (gym.gallery[0].path.startsWith('http')
-      ? gym.gallery[0].path
-      : `${siteUrl}${gym.gallery[0].path}`)
+  const heroPath = getGymHeroImagePath(gym)
+  const gymImage = heroPath
+    ? (heroPath.startsWith('http') ? heroPath : `${siteUrl}${heroPath}`)
     : `${siteUrl}/images/bg-header.jpg`
 
   // Get dates for structured data - format as ISO strings
@@ -338,7 +336,7 @@ export default async function GymDetailPage({ params }: PageProps) {
       />
       {/* Hero Section */}
       <div className='relative h-64 md:h-96 w-full bg-muted'>
-        <GymHeroImage src={gym.gallery?.[0]?.path} alt={gym.name} />
+        <GymHeroImage src={heroPath} alt={gym.name} />
         <div className='absolute inset-0 bg-black/40' />
         <div className='absolute bottom-0 left-0 right-0 p-8 text-white'>
           <div className='container mx-auto'>
