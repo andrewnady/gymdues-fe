@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { getAddressesByGymId } from '@/lib/gyms-api'
 import type { GymAddress } from '@/types/gym'
@@ -22,7 +21,6 @@ interface GymLocationsMapProps {
 }
 
 export function GymLocationsMap({ slug, gymId, currentAddressId }: GymLocationsMapProps) {
-  const router = useRouter()
   const [data, setData] = useState<GymAddress[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -47,11 +45,12 @@ export function GymLocationsMap({ slug, gymId, currentAddressId }: GymLocationsM
 
   const handleAddressClick = useCallback(
     (addressId: number | string) => {
-      const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
-      params.set('address_id', String(addressId))
-      router.replace(`/gyms/${slug}?${params.toString()}`, { scroll: false })
+      if (typeof window === 'undefined') return
+      const hash = `#location=${encodeURIComponent(String(addressId))}`
+      window.history.replaceState(null, '', `/gyms/${slug}${hash}`)
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
     },
-    [router, slug]
+    [slug]
   )
 
   return (

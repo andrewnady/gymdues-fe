@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { getPaginatedGyms, getAddressesByLocation, getLocations } from '@/lib/gyms-api'
 import type { Gym, GymWithAddressesGroup, LocationWithCount } from '@/types/gym'
@@ -81,6 +82,8 @@ function buildHash(params: { location?: string; name?: string }): string {
 }
 
 export function GymsMapPageClient() {
+  const pathname = usePathname()
+  const router = useRouter()
   const [hashParams, setHashParams] = useState({ location: '', name: '' })
   const [defaultLocation, setDefaultLocation] = useState<LocationWithCount | null>(null)
   const [gyms, setGyms] = useState<Gym[]>([])
@@ -106,11 +109,19 @@ export function GymsMapPageClient() {
   const location = hashParams.location
   const name = hashParams.name
 
-  const updateUrl = useCallback((updates: { location?: string; name?: string }) => {
-    const newHash = buildHash(updates)
-    window.history.replaceState(null, '', `/gyms${newHash}`)
-    setHashParams(parseHash())
-  }, [])
+  const updateUrl = useCallback(
+    (updates: { location?: string; name?: string }) => {
+      const newHash = buildHash(updates)
+      const targetUrl = `/gyms${newHash}`
+      if (pathname !== '/gyms') {
+        router.push(targetUrl)
+      } else {
+        window.history.replaceState(null, '', targetUrl)
+        setHashParams(parseHash())
+      }
+    },
+    [pathname, router]
+  )
 
   // Load default location (first = most gyms) when no location in URL
   useEffect(() => {
@@ -429,7 +440,7 @@ export function GymsMapPageClient() {
                             ref={(el) => { listItemRefs.current[key] = el }}
                           >
                             <Link
-                              href={`/gyms/${group.gym.slug}?address_id=${addr.id}`}
+                              href={`/gyms/${group.gym.slug}#location=${addr.id}`}
                               className={`block rounded-md border p-3 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${isSelected ? 'border-primary bg-primary/5' : 'border-border'}`}
                               onClick={() => handleLocationSelect(String(group.gym.id), String(addr.id))}
                             >

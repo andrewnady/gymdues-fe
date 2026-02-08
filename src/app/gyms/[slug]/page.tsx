@@ -17,14 +17,12 @@ import { faqCategories } from '@/data/faqs'
 import { GymAboutSection } from '@/components/gym-about-section'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { ReadMoreText } from '@/components/read-more-text'
-import { GymAddressSections } from '@/components/gym-address-sections'
-import { GymLocationsMap } from '@/components/gym-locations-map'
+import { GymSlugAddressBlock } from '@/components/gym-slug-address-block'
 import { Breadcrumb } from '@/components/breadcrumb'
 import type { Metadata } from 'next'
 
 interface PageProps {
   params: Promise<{ slug: string }>
-  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -110,21 +108,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function GymDetailPage({ params, searchParams }: PageProps) {
+export default async function GymDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const resolvedSearchParams = await searchParams
-  const addressIdParam = resolvedSearchParams?.address_id
-  const addressId =
-    typeof addressIdParam === 'string'
-      ? addressIdParam
-      : Array.isArray(addressIdParam)
-        ? addressIdParam[0]
-        : undefined
 
   let gym
 
   try {
-    gym = await getGymBySlug(slug, addressId ?? undefined)
+    gym = await getGymBySlug(slug)
   } catch (error) {
     console.error('Failed to load gym:', error)
     // Log more details in development
@@ -451,17 +441,8 @@ export default async function GymDetailPage({ params, searchParams }: PageProps)
           </CardContent>
         </Card>
 
-        {/* Map Locations - when gym has multiple addresses */}
-        {(gym.addresses_count ?? 0) > 0 && (
-          <GymLocationsMap
-            slug={slug}
-            gymId={gym.id}
-            currentAddressId={addressId ?? null}
-          />
-        )}
-
-        {/* Reviews, Hours, and Memberships (fetch by address when a location is selected) */}
-        <GymAddressSections gym={gym} addressId={addressId} />
+        {/* Map and address sections: #location= (address id) is read from hash on the client */}
+        <GymSlugAddressBlock slug={slug} gym={gym} />
 
         {/* Amenities - Full Width */}
         {gym.amenities && gym.amenities.length > 0 && (

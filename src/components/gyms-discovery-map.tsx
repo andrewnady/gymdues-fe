@@ -175,7 +175,7 @@ export function GymsDiscoveryMap({
         const lng = Number(address.longitude)
         const marker = L.marker([lat, lng], { icon: DEFAULT_ICON })
         const label = address.full_address || [address.street, address.city, address.state].filter(Boolean).join(', ') || gym.name
-        const popupHtml = `<a href="/gyms/${escapeHtml(gym.slug)}?address_id=${escapeHtml(String(address.id))}" class="font-medium hover:underline">${escapeHtml(gym.name)}</a><br/><span class="text-muted-foreground text-sm">${escapeHtml(label)}</span>`
+        const popupHtml = `<a href="/gyms/${escapeHtml(gym.slug)}#location=${escapeHtml(String(address.id))}" class="font-medium hover:underline">${escapeHtml(gym.name)}</a><br/><span class="text-muted-foreground text-sm">${escapeHtml(label)}</span>`
         marker.bindPopup(popupHtml)
         const key = `${gym.id}-${address.id}`
         if (onLocationSelect) {

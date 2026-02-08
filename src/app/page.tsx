@@ -10,6 +10,7 @@ import { WhyChooseSection } from '@/components/why-choose-section'
 import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
+import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -126,6 +127,7 @@ export default async function Home() {
 
   return (
     <div className='min-h-screen'>
+      <RedirectGymsHash />
       <HeroSection popularGyms={popularGyms} />
       <WhyChooseSection />
       {/* <ListingByStateSection states={states} /> */}
