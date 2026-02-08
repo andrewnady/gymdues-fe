@@ -4,17 +4,10 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import L from 'leaflet'
 import { RotateCcw } from 'lucide-react'
 import type { Gym, GymPrimaryAddress, GymAddress, GymWithAddressesGroup } from '@/types/gym'
+import { MAP_MARKER_ICON_OPTIONS } from '@/lib/map-marker-icon'
 import 'leaflet/dist/leaflet.css'
 
-const DEFAULT_ICON = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-})
+const DEFAULT_ICON = L.icon(MAP_MARKER_ICON_OPTIONS)
 
 function hasValidCoords(addr: string | GymPrimaryAddress | undefined): addr is GymPrimaryAddress {
   if (!addr || typeof addr === 'string') return false
@@ -154,7 +147,7 @@ export function GymsDiscoveryMap({
       if (selected) {
         map.flyTo(
           [Number(selected.address.latitude), Number(selected.address.longitude)],
-          15,
+          18,
           { duration: 0.6 }
         )
       } else {
@@ -206,7 +199,7 @@ export function GymsDiscoveryMap({
     if (selected?.address) {
       map.flyTo(
         [Number(selected.address.latitude), Number(selected.address.longitude)],
-        15,
+        18,
         { duration: 0.6 }
       )
     } else {

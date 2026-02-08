@@ -18,6 +18,89 @@ const GymsDiscoveryMap = dynamic(
 
 const PER_PAGE_ALL = 500
 
+/** Renders location groups with compact cards; first visible card is active and map flies to it (zoom 15). */
+function LocationGroupsList({
+  locationGroups,
+  selectedGymId,
+  listItemRefs,
+  scrollContainerRef,
+  onGymSelect,
+  firstAddressKey,
+}: {
+  locationGroups: GymWithAddressesGroup[]
+  selectedGymId: string | null
+  listItemRefs: React.RefObject<Record<string, HTMLElement | null>>
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>
+  onGymSelect: (gymId: string, firstLocationKey?: string | null) => void
+  firstAddressKey: (g: GymWithAddressesGroup) => string | null
+}) {
+  const didSetInitial = useRef(false)
+  // When list first gets data, set first group active so map flies to first location (zoom 15)
+  useEffect(() => {
+    if (locationGroups.length === 0 || didSetInitial.current) return
+    didSetInitial.current = true
+    const first = locationGroups[0]
+    const key = firstAddressKey(first)
+    onGymSelect(String(first.gym.id), key ?? undefined)
+  }, [locationGroups, onGymSelect, firstAddressKey])
+
+  // IntersectionObserver: first *visible* card in the scroll area is active; fly map to that location
+  useEffect(() => {
+    const root = scrollContainerRef.current
+    if (!root || locationGroups.length === 0) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(
+          (e) => e.isIntersecting && e.intersectionRatio >= 0.5
+        )
+        if (visible.length === 0) return
+        // First visible = topmost in the list (smallest top relative to viewport)
+        const sorted = [...visible].sort(
+          (a, b) =>
+            (a.target as HTMLElement).getBoundingClientRect().top -
+            (b.target as HTMLElement).getBoundingClientRect().top
+        )
+        const firstVisible = sorted[0]
+        const gymId = (firstVisible.target as HTMLElement).getAttribute('data-gym-id')
+        if (!gymId) return
+        const group = locationGroups.find((g) => String(g.gym.id) === gymId)
+        if (group) {
+          const key = firstAddressKey(group)
+          onGymSelect(gymId, key ?? undefined)
+        }
+      },
+      { root, threshold: [0.5], rootMargin: '0px' }
+    )
+    locationGroups.forEach((group) => {
+      const el = listItemRefs.current[String(group.gym.id)]
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [locationGroups, listItemRefs, scrollContainerRef, onGymSelect, firstAddressKey])
+
+  return (
+    <div className="space-y-6">
+      {locationGroups.map((group) => {
+        const firstKey = firstAddressKey(group)
+        return (
+          <div
+            key={group.gym.id}
+            data-gym-id={String(group.gym.id)}
+            ref={(el) => { listItemRefs.current[String(group.gym.id)] = el }}
+            className={selectedGymId !== null && String(group.gym.id) === String(selectedGymId) ? 'ring-2 ring-primary ring-offset-2 rounded-lg' : undefined}
+          >
+            <GymCardCompact
+              gym={group.gym}
+              selectMode
+              onSelect={() => onGymSelect(String(group.gym.id), firstKey ?? undefined)}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /**
  * Parse location value (e.g. "Denver, CO 80202" or "Denver, CO") into { city?, state?, postal_code? }.
  * Format: "City, State Zipcode" — zip is last token if all digits; otherwise "City, State" only.
@@ -70,6 +153,7 @@ function parseHash(): { location: string; name: string } {
   }
 }
 
+
 function buildHash(params: { location?: string; name?: string }): string {
   const current = parseHash()
   const location = params.location !== undefined ? params.location : current.location
@@ -101,6 +185,7 @@ export function GymsMapPageClient() {
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null)
   const listItemRefs = useRef<Record<string, HTMLElement | null>>({})
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const locationRef = useRef<HTMLDivElement>(null)
   const nameRef = useRef<HTMLDivElement>(null)
   const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -281,9 +366,10 @@ export function GymsMapPageClient() {
     [updateUrl, hashParams.location]
   )
 
-  const handleGymSelect = useCallback((gymId: string) => {
+  /** When firstLocationKey is set (location view), map flies to that address */
+  const handleGymSelect = useCallback((gymId: string, firstLocationKey?: string | null) => {
     setSelectedGymId(gymId)
-    setSelectedLocationKey(null)
+    setSelectedLocationKey(firstLocationKey ?? null)
     const el = listItemRefs.current[gymId]
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [])
@@ -297,6 +383,13 @@ export function GymsMapPageClient() {
   }, [])
 
   const showLocationView = (locationGroups?.length ?? 0) > 0
+
+  const firstAddressKey = useCallback((group: GymWithAddressesGroup): string | null => {
+    const first = group.addresses.find(
+      (a) => a?.latitude != null && a?.longitude != null && Number(a.latitude) !== 0 && Number(a.longitude) !== 0
+    ) ?? group.addresses[0]
+    return first ? `${group.gym.id}-${first.id}` : null
+  }, [])
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] min-h-[500px]">
@@ -402,7 +495,7 @@ export function GymsMapPageClient() {
                 ? `${totalGyms} gyms in ${parsed.city || effectiveLocation}`
                 : `${totalGyms} gyms`}
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">
+          <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4">
             {loading && (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
@@ -421,22 +514,14 @@ export function GymsMapPageClient() {
               </p>
             )}
             {!loading && showLocationView && locationGroups && (
-              <div className="space-y-6">
-                {locationGroups.map((group) => (
-                  <div key={group.gym.id} className="space-y-3">
-                    <div
-                      ref={(el) => { listItemRefs.current[String(group.gym.id)] = el }}
-                      className={selectedGymId !== null && String(group.gym.id) === String(selectedGymId) ? 'ring-2 ring-primary ring-offset-2 rounded-lg' : undefined}
-                    >
-                      <GymCardCompact
-                        gym={group.gym}
-                        selectMode
-                        onSelect={() => handleGymSelect(String(group.gym.id))}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <LocationGroupsList
+                locationGroups={locationGroups}
+                selectedGymId={selectedGymId}
+                listItemRefs={listItemRefs}
+                scrollContainerRef={scrollContainerRef}
+                onGymSelect={handleGymSelect}
+                firstAddressKey={firstAddressKey}
+              />
             )}
             {!loading && !showLocationView && gyms.length > 0 && (
               <div className="space-y-4">
