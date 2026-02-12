@@ -5,20 +5,27 @@
 
 /**
  * Gets the API base URL based on the environment
- * - Server-side (Docker): uses nginx service name for internal Docker network
+ * - Server-side (Docker): use API_BASE_URL when set (e.g. http://nginx:80)
+ * - Server-side (local/cPanel): when API_BASE_URL is not set, use public URL so fetches work
  * - Client-side (browser): uses cms.gymdues.com in dev, localhost:8080 otherwise
  */
 export function getApiBaseUrl(): string {
+  const isDev = process.env.NODE_ENV === 'development'
+
   // Check if we're on the server side (Node.js environment)
   if (typeof window === 'undefined') {
-    // Server-side: use Docker service name for internal communication
-    // Docker Desktop provides host.docker.internal to access host, but nginx is simpler
-    return process.env.API_BASE_URL || 'http://nginx:80'
+    // Server-side: prefer API_BASE_URL when set (Docker internal URL)
+    if (process.env.API_BASE_URL) {
+      return process.env.API_BASE_URL
+    }
+    // When not in Docker (e.g. local dev or cPanel), server must use a reachable URL
+    if (isDev && !process.env.NEXT_PUBLIC_API_BASE_URL) {
+      return 'https://cms.gymdues.com'
+    }
+    return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
   }
-  
+
   // Client-side: use public URL that browser can access
-  // In development, use cms.gymdues.com for better image handling
-  const isDev = process.env.NODE_ENV === 'development'
   if (isDev && !process.env.NEXT_PUBLIC_API_BASE_URL) {
     return 'https://cms.gymdues.com'
   }
