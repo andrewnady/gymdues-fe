@@ -75,8 +75,9 @@ export default function GymsPage() {
               JavaScript Required
             </h2>
             <p className='text-yellow-700'>
-              This page requires JavaScript to be enabled to display gym listings and interactive features. 
-              Please enable JavaScript in your browser settings to use this page.
+              This page requires JavaScript to be enabled to display gym listings and interactive features.
+              <br />
+              Please, enable your Javascript rendering for your browser to view the USA Gyms Map.
             </p>
           </div>
         </div>
