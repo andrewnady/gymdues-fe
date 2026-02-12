@@ -68,6 +68,19 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function GymsPage() {
   return (
     <div className='min-h-screen'>
+      <noscript>
+        <div className='container mx-auto px-4 py-8'>
+          <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6'>
+            <h2 className='text-xl font-semibold text-yellow-800 mb-2'>
+              JavaScript Required
+            </h2>
+            <p className='text-yellow-700'>
+              This page requires JavaScript to be enabled to display gym listings and interactive features. 
+              Please enable JavaScript in your browser settings to use this page.
+            </p>
+          </div>
+        </div>
+      </noscript>
       <div className='container mx-auto px-4 py-4'>
         <div className='my-12 text-center max-w-screen-lg mx-auto'>
           <h1 className='text-4xl font-bold mb-4'>

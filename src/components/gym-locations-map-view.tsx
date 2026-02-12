@@ -147,10 +147,10 @@ export function GymLocationsMapView({ addresses, currentAddressId, onAddressSele
   }
 
   return (
-    <div className="relative h-full min-h-[300px] w-full rounded-md overflow-hidden">
+    <div className="relative h-full min-h-[300px] w-full rounded-md overflow-hidden z-10">
       <div
         ref={containerRef}
-        className="absolute inset-0 h-full min-h-[300px] w-full"
+        className="absolute inset-0 h-full min-h-[300px] w-full z-10"
         aria-label="Locations map"
         style={{ minHeight: 300 }}
       />

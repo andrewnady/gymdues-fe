@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+import { getApiBaseUrl } from './api-config'
+
+const API_BASE_URL = getApiBaseUrl()
 
 export interface BlogComment {
   id: number

@@ -1,6 +1,7 @@
 import { BlogPost } from '@/types/blog'
+import { getApiBaseUrl, transformApiUrl, transformApiResponse } from './api-config'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
+const API_BASE_URL = getApiBaseUrl()
 
 // Placeholder image for posts without featured images
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=600&fit=crop&q=80'
@@ -42,7 +43,7 @@ function normalizeBlogPost(post: Record<string, unknown>): BlogPost {
   if (post.featured_images && Array.isArray(post.featured_images) && post.featured_images.length > 0) {
     featuredImages = (post.featured_images as Array<Record<string, unknown>>).map((img) => ({
       id: Number(img.id || 0),
-      path: String(img.path || img.url || ''),
+      path: transformApiUrl(img.path || img.url || ''),
       alt: String(img.alt || ''),
     }))
   } else if (post.coverImage || post.cover_image || post.image) {
@@ -50,7 +51,7 @@ function normalizeBlogPost(post: Record<string, unknown>): BlogPost {
     featuredImages = [
       {
         id: 0,
-        path: String(post.coverImage || post.cover_image || post.image),
+        path: transformApiUrl(post.coverImage || post.cover_image || post.image),
         alt: String(post.title || ''),
       },
     ]
@@ -119,7 +120,10 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
       throw new Error(`Failed to fetch blog posts: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json()
+    let data = await response.json()
+    
+    // Transform URLs in the response (replace nginx with localhost:8080)
+    data = transformApiResponse(data)
 
     // Handle different response formats
     let posts: Record<string, unknown>[] = []
@@ -159,7 +163,10 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
       })
 
       if (response.ok) {
-        const data = await response.json()
+        let data = await response.json()
+        
+        // Transform URLs in the response
+        data = transformApiResponse(data)
 
         // Handle different response formats
         let post: Record<string, unknown> | null = null

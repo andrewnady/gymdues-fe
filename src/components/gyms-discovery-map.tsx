@@ -281,7 +281,7 @@ export function GymsDiscoveryMap({
     <div className="relative h-full min-h-[300px] w-full rounded-md overflow-hidden">
       <div
         ref={containerRef}
-        className="absolute inset-0 h-full min-h-[300px] w-full"
+        className="absolute inset-0 h-full min-h-[300px] w-full z-10"
         aria-label="Gyms map"
         style={{ minHeight: 300 }}
       />

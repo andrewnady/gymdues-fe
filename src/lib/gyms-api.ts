@@ -9,8 +9,9 @@ import {
   GymWithAddressesGroup,
   LocationWithCount,
 } from '@/types/gym'
+import { getApiBaseUrl, transformApiUrl, transformApiResponse } from './api-config'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
+const API_BASE_URL = getApiBaseUrl()
 
 export interface ApiError {
   message: string
@@ -51,13 +52,33 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
       ? Number(gym.addresses_count)
       : undefined
 
+  // Transform URL fields to replace Docker internal hostnames
+  const normalizedGym: Record<string, unknown> = { ...gym }
+  
+  // Transform logo URL if present
+  if (normalizedGym.logo && typeof normalizedGym.logo === 'string') {
+    normalizedGym.logo = transformApiUrl(normalizedGym.logo)
+  } else if (normalizedGym.logo && typeof normalizedGym.logo === 'object' && normalizedGym.logo !== null) {
+    const logoObj = normalizedGym.logo as Record<string, unknown>
+    if (logoObj.path) logoObj.path = transformApiUrl(logoObj.path)
+    if (logoObj.url) logoObj.url = transformApiUrl(logoObj.url)
+  }
+
+  // Transform any other image/URL fields
+  const urlFields = ['image', 'photo', 'cover', 'thumbnail', 'avatar']
+  urlFields.forEach(field => {
+    if (normalizedGym[field] && typeof normalizedGym[field] === 'string') {
+      normalizedGym[field] = transformApiUrl(normalizedGym[field] as string)
+    }
+  })
+
   return {
-    ...gym,
+    ...normalizedGym,
     reviewCount: Number(reviewCount) || 0,
     addresses_count: addressesCount,
     // Preserve date fields if they exist
-    created_at: gym.created_at ? String(gym.created_at) : undefined,
-    updated_at: gym.updated_at ? String(gym.updated_at) : undefined,
+    created_at: normalizedGym.created_at ? String(normalizedGym.created_at) : undefined,
+    updated_at: normalizedGym.updated_at ? String(normalizedGym.updated_at) : undefined,
   } as Gym
 }
 
@@ -100,7 +121,10 @@ export async function getAllGyms(
       throw new Error(`Failed to fetch gyms: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json()
+    let data = await response.json()
+    
+    // Transform URLs in the response (replace nginx with localhost:8080)
+    data = transformApiResponse(data)
 
     // Handle different response formats
     // If the API returns { data: [...] } or { gyms: [...] }, extract the array
@@ -181,7 +205,10 @@ export async function getPaginatedGyms(options: {
       throw new Error(`Failed to fetch gyms: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json()
+    let data = await response.json()
+    
+    // Transform URLs in the response
+    data = transformApiResponse(data)
 
     // Laravel-style pagination: { current_page, data: [...], last_page, per_page, total, ... }
     type LaravelPaginatedResponse = {
@@ -296,7 +323,10 @@ export async function getGymBySlug(
       })
 
       if (response.ok) {
-        const data = await response.json()
+        let data = await response.json()
+        
+        // Transform URLs in the response
+        data = transformApiResponse(data)
 
         // Handle different response formats
         let gym: Record<string, unknown> | null = null
@@ -374,7 +404,12 @@ export async function getAddressesByGymId(
     throw new Error(`Failed to fetch addresses: ${response.status} ${response.statusText}`)
   }
 
-  const res = (await response.json()) as {
+  let resData = await response.json()
+  
+  // Transform URLs in the response
+  resData = transformApiResponse(resData)
+  
+  const res = resData as {
     data: GymAddress[]
     current_page: number
     last_page: number
@@ -461,7 +496,10 @@ export async function getAddress(addressId: string): Promise<AddressDetail | nul
     if (response.status === 404) return null
     throw new Error(`Failed to fetch address: ${response.status} ${response.statusText}`)
   }
-  const data = (await response.json()) as Record<string, unknown>
+  let data = await response.json()
+  
+  // Transform URLs in the response
+  data = transformApiResponse(data) as Record<string, unknown>
   return {
     id: data.id as number | string,
     hours: (Array.isArray(data.hours) ? data.hours : []) as AddressDetail['hours'],
@@ -483,7 +521,10 @@ export async function getTrendingGyms(limit?: number): Promise<Gym[]> {
       throw new Error(`Failed to fetch trending gyms: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json()
+    let data = await response.json()
+    
+    // Transform URLs in the response
+    data = transformApiResponse(data)
 
     // Handle different response formats
     let gyms: Record<string, unknown>[] = []
@@ -543,7 +584,10 @@ export async function getGymById(id: string): Promise<Gym | null> {
       throw new Error(`Failed to fetch gym: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json()
+    let data = await response.json()
+    
+    // Transform URLs in the response
+    data = transformApiResponse(data)
 
     // Handle different response formats
     let gym: Record<string, unknown> | null = null
@@ -575,8 +619,13 @@ export async function getStates(): Promise<StateWithCount[]> {
     if (!response.ok) {
       throw new Error(`Failed to fetch states: ${response.status} ${response.statusText}`)
     }
-    const data = (await response.json()) as { state: string; stateName: string; count: number }[]
-    return Array.isArray(data) ? data : []
+    let data = await response.json()
+    
+    // Transform URLs in the response
+    data = transformApiResponse(data)
+    
+    const states = data as { state: string; stateName: string; count: number }[]
+    return Array.isArray(states) ? states : []
   } catch (error) {
     console.error('Error fetching states:', error)
     return []
