@@ -8,9 +8,9 @@
 ./prepare-deploy.sh
 
 # Or manually build in production mode
-NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com pnpm build
+NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com pnpm build
 # or
-NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com npm run build
+NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com npm run build
 ```
 
 ### 2. Upload to cPanel
@@ -42,7 +42,7 @@ Upload these folders/files to `public_html`:
 In Node.js App settings, add:
 ```
 NODE_ENV=production
-NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
+NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com
 HOSTNAME=localhost
 ```
 
@@ -57,7 +57,7 @@ HOSTNAME=localhost
 ./prepare-deploy.sh
 
 # Or build manually in production mode
-NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com pnpm build
+NODE_ENV=production NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com pnpm build
 
 # Start (for testing)
 pnpm start

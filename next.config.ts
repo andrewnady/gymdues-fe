@@ -43,16 +43,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cms.gymdues.staging-apps.net',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cms.staging.gymdues.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'cms.gymdues.com',
         pathname: '/**',
       },

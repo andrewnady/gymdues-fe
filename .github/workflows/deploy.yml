@@ -48,7 +48,7 @@ jobs:
         run: pnpm run build:production
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_API_BASE_URL: https://cms.staging.gymdues.com
+          NEXT_PUBLIC_API_BASE_URL: https://cms.gymdues.com
 
       - name: Create deployment package
         run: |
@@ -70,7 +70,7 @@ jobs:
           else
             # Create .env file with production values
             echo "NODE_ENV=production" > deploy/.env
-            echo "NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com" >> deploy/.env
+            echo "NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com" >> deploy/.env
             echo "HOSTNAME=localhost" >> deploy/.env
             echo "PORT=3000" >> deploy/.env
           fi
@@ -80,7 +80,7 @@ jobs:
             # Remove old API URL line if exists
             sed -i.bak '/NEXT_PUBLIC_API_BASE_URL/d' deploy/.env 2>/dev/null || true
             # Add production API URL
-            echo "NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com" >> deploy/.env
+            echo "NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com" >> deploy/.env
             rm -f deploy/.env.bak 2>/dev/null || true
           fi
 

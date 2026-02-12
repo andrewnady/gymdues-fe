@@ -64,7 +64,7 @@ In the Node.js App setup:
    ```
    NODE_ENV=production
    PORT=3000
-   NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
+   NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com
    HOSTNAME=localhost
    ```
 

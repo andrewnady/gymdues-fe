@@ -8,7 +8,7 @@ The application is configured to use the following production settings:
 
 ```
 NODE_ENV=production
-NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
+NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com
 HOSTNAME=localhost
 PORT=3000 (cPanel will set this automatically)
 ```
@@ -33,7 +33,7 @@ This script will:
 ```bash
 # Set production environment variables
 export NODE_ENV=production
-export NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
+export NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com
 
 # Build
 pnpm build
@@ -56,13 +56,13 @@ After building, verify the production settings:
 1. Check that `.next` folder exists
 2. Verify `.env` file contains:
    - `NODE_ENV=production`
-   - `NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com`
+   - `NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com`
 3. Check build output for any warnings or errors
 
 ## Important Notes
 
 - **Always build in production mode** for cPanel deployment
-- The API URL `https://cms.staging.gymdues.com` is hardcoded in the build
+- The API URL `https://cms.gymdues.com` is hardcoded in the build
 - Environment variables starting with `NEXT_PUBLIC_` are embedded at build time
 - Make sure to set the same environment variables in cPanel Node.js App settings
 
@@ -72,7 +72,7 @@ When setting up the Node.js App in cPanel, ensure these environment variables ar
 
 ```
 NODE_ENV=production
-NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
+NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com
 HOSTNAME=localhost
 ```
 

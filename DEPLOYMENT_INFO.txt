@@ -35,7 +35,7 @@ cPanel Configuration:
 
 2. Set Environment Variables:
    - NODE_ENV=production
-   - NEXT_PUBLIC_API_BASE_URL=https://cms.staging.gymdues.com
+   - NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com
    - HOSTNAME=localhost
    - PORT (cPanel will set this automatically)
 
@@ -49,7 +49,7 @@ cPanel Configuration:
 Important Notes:
 ----------------
 - Build was created with NODE_ENV=production
-- API URL is set to: https://cms.staging.gymdues.com
+- API URL is set to: https://cms.gymdues.com
 - Ensure .env file is configured with production values
 - Verify API URL in NEXT_PUBLIC_API_BASE_URL matches production
 - Check that all required Node.js modules are installed
