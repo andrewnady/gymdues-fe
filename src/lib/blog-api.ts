@@ -43,15 +43,16 @@ function normalizeBlogPost(post: Record<string, unknown>): BlogPost {
   if (post.featured_images && Array.isArray(post.featured_images) && post.featured_images.length > 0) {
     featuredImages = (post.featured_images as Array<Record<string, unknown>>).map((img) => ({
       id: Number(img.id || 0),
-      path: transformApiUrl(img.path || img.url || ''),
+      path: transformApiUrl(String(img.path || img.url || '')),
       alt: String(img.alt || ''),
     }))
   } else if (post.coverImage || post.cover_image || post.image) {
     // Fallback to old format - convert to featured_images array
+    const coverImage = post.coverImage || post.cover_image || post.image
     featuredImages = [
       {
         id: 0,
-        path: transformApiUrl(post.coverImage || post.cover_image || post.image),
+        path: transformApiUrl(typeof coverImage === 'string' ? coverImage : String(coverImage || '')),
         alt: String(post.title || ''),
       },
     ]

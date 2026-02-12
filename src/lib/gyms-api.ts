@@ -60,8 +60,8 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
     normalizedGym.logo = transformApiUrl(normalizedGym.logo)
   } else if (normalizedGym.logo && typeof normalizedGym.logo === 'object' && normalizedGym.logo !== null) {
     const logoObj = normalizedGym.logo as Record<string, unknown>
-    if (logoObj.path) logoObj.path = transformApiUrl(logoObj.path)
-    if (logoObj.url) logoObj.url = transformApiUrl(logoObj.url)
+    if (logoObj.path) logoObj.path = transformApiUrl(String(logoObj.path))
+    if (logoObj.url) logoObj.url = transformApiUrl(String(logoObj.url))
   }
 
   // Transform any other image/URL fields
