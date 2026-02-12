@@ -14,6 +14,36 @@ import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'GymDues',
+  alternateName: [
+    'Gym Dues',
+    'https://gymdues.com',
+    'Gym Membership Prices',
+    'Gym Membership Cost',
+    'Gym Pricing Database',
+  ],
+  url: siteUrl,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${siteUrl}/search#search={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'GymDues',
+    logo: {
+      '@type': 'ImageObject',
+      url: `${siteUrl}/images/logo.svg`,
+    },
+  },
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   // Homepage always uses root path with trailing slash
   const canonicalUrl = new URL('/', siteUrl).toString()
@@ -127,6 +157,10 @@ export default async function Home() {
 
   return (
     <div className='min-h-screen'>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
       <RedirectGymsHash />
       <HeroSection popularGyms={popularGyms} />
       <WhyChooseSection />
