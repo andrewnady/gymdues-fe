@@ -60,6 +60,10 @@ export function ReadMoreText({ children, className = '' }: ReadMoreTextProps) {
 
   return (
     <div className={className}>
+      {/* Full content for SEO: in DOM from SSR, crawlable, not visibility-hidden so indexers see it */}
+      <div className="sr-only">
+        {children}
+      </div>
       {/* Hidden element to measure full content height - only render on client */}
       {isMounted && (
         <div
