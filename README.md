@@ -1,21 +1,8 @@
-# websquids-next-starter
+# Gymdues Next.js (Frontend)
 
 ## Overview
 
-**websquids-next-starter** is a starter project designed for building modern web applications. It includes essential tooling and configuration to streamline development with Next.js, TypeScript, TailwindCSS, shadcn/ui, and a collection of utilities to ensure code quality and performance.
-
-## Features
-
-- **Next.js**: The React Framework for the Web.
-- **React**: Latest React framework for building UI components.
-- **TypeScript**: Strongly typed development for scalable and maintainable code.
-- **TailwindCSS**: Utility-first CSS framework for fast UI styling.
-- **Zustand**: Simplified state management.
-- **ESLint**: Linter for maintaining consistent and error-free code.
-- **Prettier**: Code formatter for consistent style.
-- **Shadcn/ui**: Build your component library.
-
----
+**Gymdues** frontend is a Next.js application that powers the gym directory site. It fetches content from the Gymdues Winter CMS API and serves the public-facing pages (gym listings, gym details, reviews, etc.).
 
 ## Requirements
 
@@ -24,111 +11,88 @@
 
 ---
 
-## Installation
+## Onboarding
 
-1. Clone the repository:
+### 1. Clone and install
 
-   ```bash
-   git clone <repository-url>
-   cd websquids-next-starter
-   ```
+This repo may live inside a parent folder (e.g. `gymdues-app`) alongside the CMS repo. Clone and install:
 
-2. Install dependencies:
-   ```bash
-   pnpm i
-   ```
+```bash
+git clone <repository-url>
+cd gymdues-nextjs
+pnpm install
+```
+
+### 2. Environment
+
+Create `.env` or `.env.local` and set the CMS API URL:
+
+- **Production**: `NEXT_PUBLIC_API_BASE_URL=https://cms.gymdues.com`
+- **Local development** (with CMS running locally): `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080` (or your CMS URL)
+
+Other optional vars: `HOSTNAME`, `PORT`.
+
+### 3. Commands
+
+| Command | Description |
+|--------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm run build:production` | Production build (used by CI) |
+| `pnpm run type-check` | Run TypeScript check |
+| `pnpm lint` | Run ESLint |
+| `pnpm lint:fix` | Fix lint issues |
+| `pnpm format` | Format with Prettier |
 
 ---
 
-## Usage
+## Deployment
 
-### Development
+Deployment is automated via **GitHub Actions**. Only the **main** branch triggers a deploy.
 
-Start the development server:
+### How it works
 
-```bash
-pnpm dev
-```
+1. **Trigger**: Push to `main` (or manually run the workflow).
+2. **Build**: `.github/workflows/deploy.yml` runs type-check, production build, creates a deployment tarball.
+3. **Deploy**: Artifact is uploaded to the server via SSH; PM2 reloads the Next.js app (`gymdues-nextjs`).
 
-### Build
+### GitHub setup
 
-Build the project for production:
+Configure in the repo **Settings → Secrets and variables → Actions**:
 
-```bash
-pnpm build
-```
+| Type | Name | Description |
+|------|------|-------------|
+| Variables | `DEPLOY_HOST` | Server hostname or IP |
+| Variables | `DEPLOY_USER` | SSH user for deploy |
+| Variables | `DEPLOY_PATH` | App directory on server (e.g. `/var/www/gymdues-nextjs`) |
+| Secret | `DEPLOY_SSH_KEY` | Private key for SSH deploy (contents of the key file) |
 
-### Preview
+### Manual deploy
 
-Preview the production build locally:
-
-```bash
-pnpm preview
-```
-
-### Lint
-
-Run ESLint to check for code quality issues:
-
-```bash
-pnpm lint
-```
-
-### Format Code
-
-Format code using Prettier:
-
-```bash
-pnpm format
-```
-
-### Fix Linting Issues
-
-Automatically fix lint issues:
-
-```bash
-pnpm lint:fix
-```
+To run a deployment without pushing to `main`: **Actions → Build and Deploy Next.js → Run workflow**.
 
 ---
 
-## Project Structure
+## Project structure
 
-```plaintext
+```
 .
-├── src/          # Source code
-├── public/       # Static assets
-├── package.json  # Project configuration
-├── vite.config.js # Vite configuration
-└── README.md     # Project documentation
+├── src/
+│   ├── app/          # Next.js App Router pages and layout
+│   ├── components/   # React components
+│   └── ...
+├── public/           # Static assets
+├── .github/workflows/deploy.yml
+└── package.json
 ```
 
 ---
 
-## Key Dependencies
+## Tech stack
 
-### Runtime
-
-- `react` & `react-dom`: ^19.0.0
-- `zustand`: State management
-- `tailwindcss`: Utility-first CSS
-
-### Development
-
-- `typescript`: Type-checking
-- `eslint` & `prettier`: Code quality and formatting tools
-
----
-
-## Customization
-
-To configure TailwindCSS, modify the `tailwind.config.js` file in the root directory.
-
----
-
-## Contributing
-
-Contributions are welcome! Feel free to fork the repository and submit a pull request.
+- **Next.js** (App Router), **React**, **TypeScript**
+- **TailwindCSS**, **shadcn/ui**
+- **Zustand** (state), **ESLint**, **Prettier**
 
 ---
 
@@ -136,10 +100,4 @@ Contributions are welcome! Feel free to fork the repository and submit a pull re
 
 This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
 
----
-
-## Author
-
-Developed by [websquids LLC](https://websquids.com).
-
-For any questions or support, contact [info@websquids.com](mailto:info@websquids.com).
+Developed by [websquids LLC](https://websquids.com). For questions: [info@websquids.com](mailto:info@websquids.com).
