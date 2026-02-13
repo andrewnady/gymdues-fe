@@ -9,14 +9,26 @@ interface ReviewsSectionProps {
 export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
+  // Helper function to format date safely
+  const formatReviewDate = (dateStr?: string): string => {
+    if (!dateStr) return new Date().toISOString().split('T')[0]
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) {
+        return new Date().toISOString().split('T')[0]
+      }
+      return date.toISOString().split('T')[0]
+    } catch {
+      return new Date().toISOString().split('T')[0]
+    }
+  }
+
   // Review Schemas (Schema.org) - Same format as gyms slug page
   const reviewSchemas = reviews
     .filter((review) => review.gymSlug)
     .map((review) => {
       // Format date for review - just the date part, not full ISO
-      const reviewDate = review.reviewed_at
-        ? new Date(review.reviewed_at).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0]
+      const reviewDate = formatReviewDate(review.reviewed_at)
 
       // Strip HTML tags from review text
       const reviewBody = review.text?.replace(/<[^>]*>/g, '').trim() || ''
