@@ -52,8 +52,45 @@ function formatReviewDate(dateString: string): string {
 }
 
 export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
+  // Generate Review schema (JSON-LD) for all reviews
+  const reviewSchema = reviews
+    .filter((review) => review.gymSlug)
+    .map((review) => ({
+      '@type': 'Review',
+      '@id': `${siteUrl}/reviews/${review.id}`,
+      author: {
+        '@type': 'Person',
+        name: review.reviewer || 'Anonymous',
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: review.rating || review.rate,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      reviewBody: review.text || '',
+      datePublished: review.reviewed_at,
+      itemReviewed: {
+        '@type': 'ExerciseGym',
+        '@id': `${siteUrl}/gyms/${review.gymSlug}`,
+        name: review.gymName || review.gym?.name,
+        image: review.gym?.logo,
+      },
+    }))
+
   return (
     <div className='w-full'>
+      {/* Review Schema (JSON-LD) */}
+      {reviewSchema.length > 0 && (
+        <script
+          type='application/ld+json'
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(reviewSchema),
+          }}
+        />
+      )}
       <Carousel
         opts={{
           align: 'start',

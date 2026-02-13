@@ -7,8 +7,55 @@ interface ReviewsSectionProps {
 }
 
 export function ReviewsSection({ reviews }: ReviewsSectionProps) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
+  // Review Schemas (Schema.org) - Same format as gyms slug page
+  const reviewSchemas = reviews
+    .filter((review) => review.gymSlug)
+    .map((review) => {
+      // Format date for review - just the date part, not full ISO
+      const reviewDate = review.reviewed_at
+        ? new Date(review.reviewed_at).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0]
+
+      // Strip HTML tags from review text
+      const reviewBody = review.text?.replace(/<[^>]*>/g, '').trim() || ''
+
+      const gymUrl = `${siteUrl}/gyms/${review.gymSlug}`
+
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'Review',
+        itemReviewed: {
+          '@type': 'ExerciseGym',
+          name: review.gymName || review.gym?.name,
+          url: gymUrl,
+        },
+        author: {
+          '@type': 'Person',
+          name: review.reviewer || 'Anonymous',
+        },
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: String(review.rating || review.rate || 0),
+        },
+        datePublished: reviewDate,
+        reviewBody: reviewBody,
+      }
+    })
+
   return (
     <section className='py-20 bg-muted/30'>
+      {/* Review Schemas (JSON-LD) - Same format as gyms slug page */}
+      {reviewSchemas.map((review, index) => (
+        <script
+          key={`review-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(review),
+          }}
+        />
+      ))}
       <div className='container mx-auto px-4'>
         <div className='text-center mb-12'>
           <div className='inline-flex items-center justify-center gap-2 mb-4'>
