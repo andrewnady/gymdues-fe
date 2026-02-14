@@ -297,27 +297,29 @@ export default async function GymDetailPage({ params }: PageProps) {
 
   return (
     <div className='min-h-screen relative'>
-      {/* JSON-LD Structured Data */}
+      {/* JSON-LD Structured Data - only output when data exists to avoid empty/null for SEO */}
       {/* Offer Schemas for each membership plan */}
-      {offerSchemas.map((offer, index) => (
-        <script
-          key={`offer-${index}`}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(offer),
-          }}
-        />
-      ))}
+      {offerSchemas.length > 0 &&
+        offerSchemas.map((offer, index) => (
+          <script
+            key={`offer-${index}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(offer),
+            }}
+          />
+        ))}
       {/* Review Schemas */}
-      {reviewSchemas.map((review, index) => (
-        <script
-          key={`review-${index}`}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(review),
-          }}
-        />
-      ))}
+      {reviewSchemas.length > 0 &&
+        reviewSchemas.map((review, index) => (
+          <script
+            key={`review-${index}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(review),
+            }}
+          />
+        ))}
       {/* FAQ Schema */}
       {faqSchema && (
         <script

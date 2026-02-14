@@ -58,16 +58,17 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
 
   return (
     <section className='py-20 bg-muted/30'>
-      {/* Review Schemas (JSON-LD) - Same format as gyms slug page */}
-      {reviewSchemas.map((review, index) => (
-        <script
-          key={`review-${index}`}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(review),
-          }}
-        />
-      ))}
+      {/* Review Schemas (JSON-LD) - only output when present to avoid empty values for SEO */}
+      {reviewSchemas.length > 0 &&
+        reviewSchemas.map((review, index) => (
+          <script
+            key={`review-${index}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(review),
+            }}
+          />
+        ))}
       <div className='container mx-auto px-4'>
         <div className='text-center mb-12'>
           <div className='inline-flex items-center justify-center gap-2 mb-4'>
