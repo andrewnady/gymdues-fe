@@ -21,9 +21,9 @@ interface BestGymsByLocationProps {
 
 export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
   const [gyms, setGyms] = useState<Gym[]>([])
-  const [setMeta] = useState<GymsPaginationMeta | null>(null)
+  const [meta, setMeta] = useState<GymsPaginationMeta | null>(null)
   const [loading, setLoading] = useState(true)
-  const [page] = useState(1)
+  const [page, setPage] = useState(1)
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
