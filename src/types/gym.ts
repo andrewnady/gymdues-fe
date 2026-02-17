@@ -174,3 +174,9 @@ export interface LocationWithCount {
   postal_code: string | null
   count: number
 }
+
+export interface gymCities {
+  label: string
+  type: string
+  filter: string
+}

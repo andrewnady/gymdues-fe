@@ -1,10 +1,20 @@
+'use client'
+
 import { BestGymCityResult } from '@/components/best-gym/city-result'
 import { BestGymFilterSidebar } from '@/components/best-gym/filter-sidebar'
 import { GymsPageFaqSection } from '@/components/gyms-page-faq-section'
 import { ReadMoreText } from '@/components/read-more-text'
-import { Suspense } from 'react'
+import { useState } from 'react'
 
 export default function BestGyms() {
+  const [selectedStates, setSelectedStates] = useState<string[]>([])
+  const [selectedCities, setSelectedCities] = useState<string[]>([])
+
+  const clearFilters = () => {
+    setSelectedStates([])
+    setSelectedCities([])
+  }
+
   return (
     <div className='min-h-screen'>
       <noscript>
@@ -38,31 +48,21 @@ export default function BestGyms() {
         </div>
       </section>
       <div className='container mx-auto px-4 py-4'>
-        <Suspense
-          fallback={
-            <div className='flex flex-col h-[calc(100vh-8rem)] min-h-[500px]'>
-              <div className='h-24 bg-muted/50 animate-pulse rounded-t-lg' />
-              <div className='flex-1 grid grid-cols-1 lg:grid-cols-2 gap-0'>
-                <div className='p-4 space-y-2'>
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className='h-20 bg-muted animate-pulse rounded-md' />
-                  ))}
-                </div>
-                <div className='bg-muted/30 flex items-center justify-center text-muted-foreground'>
-                  Loading…
-                </div>
-              </div>
-            </div>
-          }
-        >
-          <section className='py-10'>
-            <div className='flex flex-col md:flex-row items-start justify-between p-4 gap-[60px]'>
-              <BestGymFilterSidebar />
-              {/* Content Side */}
-              <BestGymCityResult />
-            </div>
-          </section>
-        </Suspense>
+        <section className='py-10'>
+          <div className='flex flex-col md:flex-row items-start justify-between p-4 gap-[60px]'>
+            <BestGymFilterSidebar
+              selectedStates={selectedStates}
+              selectedCities={selectedCities}
+              onStatesChange={setSelectedStates}
+              onCitiesChange={setSelectedCities}
+            />
+            <BestGymCityResult
+              selectedStates={selectedStates}
+              selectedCities={selectedCities}
+              onClearFilters={clearFilters}
+            />
+          </div>
+        </section>
 
         {/* FAQs Section */}
         <section className='mt-16 mb-12' aria-labelledby='faq-heading'>

@@ -167,7 +167,7 @@ export async function getPaginatedGyms(options: {
   page?: number
   perPage?: number
   /** Request minimal fields (id, slug, updated_at) for sitemap generation */
-  fields?: 'sitemap'
+  fields?: 'sitemap' | string 
 }): Promise<PaginatedGymsResponse> {
   const { search, state, city, trending, page, perPage, fields } = options
 
@@ -195,6 +195,8 @@ export async function getPaginatedGyms(options: {
     }
     if (fields === 'sitemap') {
       url.searchParams.append('fields', 'sitemap')
+    }else if (fields) {
+      url.searchParams.append('fields', fields)
     }
 
     const response = await fetch(url.toString(), {
@@ -293,6 +295,87 @@ export async function getPaginatedGyms(options: {
     return { gyms, meta }
   } catch (error) {
     console.error('Error fetching paginated gyms:', error)
+    throw error
+  }
+}
+
+
+export async function filterTopGyms(options: {
+  state?: string
+  city?: string
+  page?: number
+  perPage?: number
+}): Promise<PaginatedGymsResponse> {
+  const { state, city, page, perPage } = options
+
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/filtered-top-gyms`)
+
+    if (state && state.trim()) {
+      url.searchParams.append('state', state.trim())
+    }
+    if (city && city.trim()) {
+      url.searchParams.append('city', city.trim())
+    }
+    if (page && page > 0) {
+      url.searchParams.append('page', page.toString())
+    }
+    if (perPage && perPage > 0) {
+      url.searchParams.append('per_page', perPage.toString())
+    }
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch gyms: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+
+    // Transform URLs in the response
+    data = transformApiResponse(data)
+
+    // Laravel-style pagination
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'current_page' in data &&
+      Array.isArray(data.data)
+    ) {
+      const gyms = normalizeGyms(data.data)
+      const meta: GymsPaginationMeta = {
+        current_page: data.current_page,
+        from: data.from,
+        last_page: data.last_page,
+        per_page: data.per_page,
+        to: data.to,
+        total: data.total,
+        next_page_url: data.next_page_url ?? null,
+        prev_page_url: data.prev_page_url ?? null,
+      }
+      return { gyms, meta }
+    }
+
+    // Fallback: plain array
+    const gymsArray = Array.isArray(data) ? data : []
+    const gyms = normalizeGyms(gymsArray)
+    return {
+      gyms,
+      meta: {
+        current_page: 1,
+        from: gyms.length > 0 ? 1 : null,
+        last_page: 1,
+        per_page: gyms.length || 1,
+        to: gyms.length > 0 ? gyms.length : null,
+        total: gyms.length,
+        next_page_url: null,
+        prev_page_url: null,
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching filtered top gyms:', error)
     throw error
   }
 }
@@ -629,6 +712,31 @@ export async function getStates(): Promise<StateWithCount[]> {
   } catch (error) {
     console.error('Error fetching states:', error)
     return []
+  }
+}
+
+/**
+ * Gets states with gym counts from the database (GET /api/v1/gyms/cities-and-states).
+ * Use for state filter autocomplete.
+ */
+export async function getCityStates(): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/gyms/cities-and-states`, {
+      next: { revalidate: 300 },
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch states: ${response.status} ${response.statusText}`)
+    }
+    const data = await response.json()
+
+    return {
+      states: Array.isArray(data.states) ? data.states : [],
+      cities: Array.isArray(data.cities) ? data.cities : [],
+    }
+
+  } catch (error) {
+    console.error('Error fetching states:', error)
+      return { states: [], cities: [] }
   }
 }
 

@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
       { source: '/sitemap.xml/', destination: '/api/sitemap-index' },
       { source: '/sitemap/gyms.xml', destination: '/api/sitemap-gyms-index' },
       { source: '/sitemap/gyms.xml/', destination: '/api/sitemap-gyms-index' },
+      { source: '/best-:city-gyms', destination: '/best-gyms/:city' },
+      { source: '/best-:city-gyms/', destination: '/best-gyms/:city' },
     ]
   },
 

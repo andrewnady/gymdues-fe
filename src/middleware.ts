@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const response = NextResponse.next()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
-  
+
   // Get the pathname as requested (preserve trailing slash if present)
   const pathname = request.nextUrl.pathname
   
