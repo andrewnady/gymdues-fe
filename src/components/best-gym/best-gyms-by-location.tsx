@@ -4,10 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Gym } from '@/types/gym'
 import { GymCard } from '@/components/gym-card'
-import { filterTopGyms, getPaginatedGyms, GymsPaginationMeta } from '@/lib/gyms-api'
+import {  getPaginatedGyms, GymsPaginationMeta } from '@/lib/gyms-api'
 import { Breadcrumb } from '@/components/breadcrumb'
-import { MapPin } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { ReadMoreText } from '../read-more-text'
 import { BestGymsFaqSection } from './best-gyms-faq-section'
 
@@ -23,9 +21,8 @@ interface BestGymsByLocationProps {
 
 export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
   const [gyms, setGyms] = useState<Gym[]>([])
-  const [meta, setMeta] = useState<GymsPaginationMeta | null>(null)
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
+  const [page] = useState(1)
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
