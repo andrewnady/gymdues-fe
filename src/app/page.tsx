@@ -8,7 +8,6 @@ import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { HeroSection } from '@/components/hero-section'
 import { WhyChooseSection } from '@/components/why-choose-section'
 import { TrendingGymsSection } from '@/components/trending-gyms-section'
-import { RatedGymsSection } from '@/components/rated-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
@@ -178,7 +177,7 @@ export default async function Home() {
       <WhyChooseSection />
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
-      <RatedGymsSection gyms={trendingGyms} />
+      {/* <RatedGymsSection gyms={trendingGyms} /> */}
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 
