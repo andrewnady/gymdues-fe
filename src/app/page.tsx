@@ -119,7 +119,7 @@ export default async function Home() {
 
   let popularGyms: Gym[] = []
   try {
-    const allGyms = await getAllGyms()
+    const allGyms = await getAllGyms(undefined, undefined, undefined, undefined, true)
     popularGyms = allGyms.slice(0, 5)
   } catch (error) {
     console.error('Failed to load popular gyms:', error)

@@ -97,7 +97,8 @@ export async function getAllGyms(
   search?: string,
   state?: string,
   city?: string,
-  trending?: boolean
+  trending?: boolean,
+  popular?: boolean
 ): Promise<Gym[]> {
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
@@ -113,6 +114,10 @@ export async function getAllGyms(
     if (trending !== undefined) {
       url.searchParams.append('trending', trending.toString())
     }
+     if (popular !== undefined) {
+      url.searchParams.append('popular', popular.toString())
+    }
+    
     const response = await fetch(url.toString(), {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
