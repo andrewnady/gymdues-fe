@@ -66,6 +66,7 @@ export async function getReviews(options?: {
   max_rate?: number
   page?: number
   per_page?: number
+  not_null?: boolean
 }): Promise<ReviewWithGym[]> {
   try {
     const params = new URLSearchParams()
@@ -87,6 +88,9 @@ export async function getReviews(options?: {
     }
     if (options?.per_page) {
       params.append('per_page', String(options.per_page))
+    }
+    if (options?.not_null) {
+      params.append('not_null', String(options.not_null))
     }
 
     const url = `${API_BASE_URL}/api/v1/reviews${params.toString() ? `?${params.toString()}` : ''}`
@@ -130,6 +134,9 @@ export async function getAllReviews(maxReviews: number = 12): Promise<ReviewWith
   try {
     const reviews = await getReviews({
       per_page: maxReviews,
+      min_rate: 5,
+      max_rate: 5,
+      not_null: true,
       page: 1,
     })
 

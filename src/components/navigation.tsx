@@ -52,6 +52,7 @@ export function Navigation() {
 
   const navLinks = [
     { href: '/gyms', label: 'Browse Gyms' },
+    { href: '/best-gyms', label: 'Best Gyms' },
     { href: '/blog', label: 'Blog' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
@@ -95,11 +96,7 @@ export function Navigation() {
             }`}
             aria-label='Toggle menu'
           >
-            {isMobileMenuOpen ? (
-              <X className='h-6 w-6' />
-            ) : (
-              <Menu className='h-6 w-6' />
-            )}
+            {isMobileMenuOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
           </button>
         </div>
       </div>

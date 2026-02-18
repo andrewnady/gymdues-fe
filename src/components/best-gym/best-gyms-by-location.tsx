@@ -1,0 +1,330 @@
+'use client'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { Gym } from '@/types/gym'
+import { GymCard } from '@/components/gym-card'
+import {  getPaginatedGyms, GymsPaginationMeta } from '@/lib/gyms-api'
+import { Breadcrumb } from '@/components/breadcrumb'
+import { ReadMoreText } from '../read-more-text'
+import { BestGymsFaqSection } from './best-gyms-faq-section'
+
+const GymsDiscoveryMap = dynamic(
+  () => import('../gyms-discovery-map').then((m) => m.GymsDiscoveryMap),
+  { ssr: false },
+)
+
+interface BestGymsByLocationProps {
+  filter: string
+  type: string
+}
+
+export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
+  const [gyms, setGyms] = useState<Gym[]>([])
+  const [meta, setMeta] = useState<GymsPaginationMeta | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // Called from map pin click or top-10 list click — scrolls to card
+  const handleGymSelect = useCallback((gymId: string) => {
+    setSelectedGymId((prev) => (prev === gymId ? null : gymId))
+    const el = listItemRefs.current[gymId]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [])
+
+  // IntersectionObserver: first visible card in scroll area → update map (no scroll)
+  useEffect(() => {
+    const root = scrollContainerRef.current
+    if (!root || gyms.length === 0 || loading) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(
+          (e) => e.isIntersecting && e.intersectionRatio >= 0.5
+        )
+        if (visible.length === 0) return
+        const sorted = [...visible].sort(
+          (a, b) =>
+            (a.target as HTMLElement).getBoundingClientRect().top -
+            (b.target as HTMLElement).getBoundingClientRect().top
+        )
+        const gymId = (sorted[0].target as HTMLElement).getAttribute('data-gym-id')
+        if (gymId) setSelectedGymId(gymId)
+      },
+      { root, threshold: [0.5], rootMargin: '0px' }
+    )
+    gyms.forEach((gym) => {
+      const el = listItemRefs.current[String(gym.id)]
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [gyms, loading])
+
+  useEffect(() => {
+    async function fetchGyms() {
+      setLoading(true)
+      try {
+        const params: {
+          state?: string
+          city?: string
+          page: number
+          perPage: number
+          fields?: string
+        } = {
+          page,
+          perPage: 12,
+        }
+        params.fields = 'topgyms'
+        if (type === 'state') {
+          params.state = filter
+        } else {
+          params.city = filter
+        }
+        const result = await getPaginatedGyms(params)
+        setGyms(result.gyms)
+        setMeta(result.meta)
+      } catch (error) {
+        console.error('Error fetching best gyms:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchGyms()
+  }, [filter, type, page])
+
+  const title = `Best Gyms in ${filter}`
+
+  return (
+    <div className='min-h-screen'>
+      <section className='bg-primary/5 py-20'>
+        <div className='container mx-auto px-4 py-4 text-center max-w-screen-lg'>
+          <div className='mb-4'>
+            <Breadcrumb
+              items={[
+                { label: 'Home', href: '/' },
+                { label: `Best Gyms in ${filter}`, href: '' },
+              ]}
+            />
+          </div>
+          <h1 className='text-4xl font-bold mb-4'>{title}</h1>
+          <p className='text-muted-foreground text-lg'>
+            Discover the top-rated gyms in {filter}. Compare membership prices, facilities, and
+            reviews to find the perfect gym for you.
+          </p>
+        </div>
+      </section>
+      <section>
+        <div className='container mx-auto px-4 py-10'>
+          <ReadMoreText className='text-muted-foreground text-lg'>
+            {type === 'state' ? (
+              <>
+                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
+                {gyms.length > 0
+                  ? gyms
+                      .slice(0, 10)
+                      .map((g) => g.name)
+                      .join(', ')
+                  : 'top-rated local gyms'}
+                . The fitness culture across {filter} is shaped by 24/7 convenience, a strong strength training culture, and boutique studio variety, with popular training styles such as strength training, HIIT, Pilates, boxing, and CrossFit.
+                <br />
+                <br />
+                In addition to large gym chains, {filter} has a wide range of Pilates, yoga, boxing, and HIIT studios and specialized facilities, making it easier to find a great fit for fat loss or muscle gain. Many members look for gyms near major metropolitan hubs and suburban centers because it aligns with work-life balance and local commuting patterns.
+                <br />
+                <br />
+                Since {filter} spans a mix of urban and residential landscapes, training habits often shift with local climate and seasonal shifts. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer options from full-service health clubs to strength-focused gyms, with amenities like group classes, personal training, and saunas.
+              </>
+            ) : (
+              <>
+                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
+                {gyms.length > 0
+                  ? gyms
+                      .slice(0, 10)
+                      .map((g) => g.name)
+                      .join(', ')
+                  : 'top-rated local gyms'}
+                . The fitness scene in {filter} is known for 24/7 convenience, a deep-rooted strength training culture, and boutique studio variety, with popular training styles like strength training, HIIT, Pilates, boxing, and CrossFit.
+                <br />
+                <br />
+                Beyond traditional gyms, {filter} also has a strong mix of Pilates, yoga, boxing, and HIIT studios and specialized facilities, which is great if you&apos;re focused on fat loss or muscle gain. Many people choose gyms near major transit hubs and central landmarks because it&apos;s convenient for commuting and balancing a busy daily schedule.
+                <br />
+                <br />
+                With its vibrant urban layout and local seasonal shifts, workout routines in {filter} often adapt throughout the year. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer everything from full-service health clubs to strength-focused gyms, plus amenities like group classes, personal training, and saunas.
+              </>
+            )}
+          </ReadMoreText>
+        </div>
+      </section>
+
+      <section>
+        <div className='container mx-auto bg-white rounded-lg shadow p-6 mb-10'>
+          {loading ? (
+            <div className='h-8 w-64 bg-muted animate-pulse rounded-lg mb-4' />
+          ) : (
+            <h2 className='text-2xl font-semibold mb-4'>
+              {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
+            </h2>
+          )}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            {loading
+              ? [...Array(10)].map((_, i) => (
+                  <div key={i} className='h-14 bg-muted animate-pulse rounded-lg' />
+                ))
+              : gyms.slice(0, 10).map((gym, index) => (
+                  <div
+                    key={gym.id}
+                    className='group bg-slate-50 border border-gray-100 flex items-center gap-4 p-4 rounded-lg transition-colors duration-300 hover:bg-primary cursor-pointer'
+                    onClick={() => {
+                      const el = listItemRefs.current[String(gym.id)]
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        handleGymSelect(String(gym.id))
+                      }
+                    }}
+                  >
+                    <span className='bg-primary size-8 rounded-full flex items-center justify-center text-white font-sans font-bold transition-colors duration-300 group-hover:bg-slate-50 group-hover:text-primary'>
+                      {index + 1}
+                    </span>
+                    <h3 className='text-lg font-medium transition-colors duration-300 group-hover:text-white'>
+                      {gym.name}
+                    </h3>
+                  </div>
+                ))}
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className='container mx-auto py-10'>
+          <div className='flex flex-col lg:flex-row gap-4'>
+            <div className='flex-1 min-w-0'>
+              <div
+                ref={scrollContainerRef}
+                className='flex-1 min-h-0 max-h-[calc(100vh-100px)] overflow-y-auto p-4 bg-white rounded-lg shadow'
+              >
+                {loading && (
+                  <div className='space-y-4'>
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className='h-64 bg-muted animate-pulse rounded-lg' />
+                    ))}
+                  </div>
+                )}
+                {!loading && gyms.length === 0 && (
+                  <p className='text-muted-foreground text-sm py-4 text-center'>
+                    No gyms found. Try a different location.
+                  </p>
+                )}
+                {!loading && gyms.length > 0 && (
+                  <div className='space-y-4'>
+                    {gyms.map((gym) => {
+                      const isSelected =
+                        selectedGymId !== null && String(gym.id) === String(selectedGymId)
+                      return (
+                        <div
+                          key={gym.id}
+                          data-gym-id={String(gym.id)}
+                          ref={(el) => {
+                            listItemRefs.current[String(gym.id)] = el
+                          }}
+                          className={
+                            isSelected ? 'ring-2 ring-primary ring-offset-2 rounded-lg' : undefined
+                          }
+                        >
+                          <GymCard
+                            gym={gym}
+                            selectMode
+                            onSelect={() => handleGymSelect(String(gym.id))}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className='w-full lg:w-1/2 sticky top-20 h-[calc(100vh-100px)] min-h-[300px] flex flex-col bg-muted/30 rounded-lg shadow bg-white p-4'>
+              {loading ? (
+                <div className='flex-1 flex items-center justify-center text-muted-foreground'>
+                  Loading map…
+                </div>
+              ) : (
+                <div className='flex-1 min-h-[300px] w-full'>
+                  <GymsDiscoveryMap
+                    gyms={gyms}
+                    selectedGymId={selectedGymId}
+                    onGymSelect={handleGymSelect}
+                    locationGroups={null}
+                    selectedLocationKey={null}
+                    onLocationSelect={() => {}}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className='mt-16 mb-12' aria-labelledby='faq-heading'>
+        <div className='container mx-auto py-10'>
+          <BestGymsFaqSection location={filter} />
+        </div>
+      </section>
+
+      {/* <div className='container mx-auto px-4 py-10'>
+        {loading ? (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className='h-80 bg-muted animate-pulse rounded-lg' />
+            ))}
+          </div>
+        ) : gyms.length === 0 ? (
+          <div className='text-center py-16'>
+            <MapPin className='h-12 w-12 mx-auto text-muted-foreground mb-4' />
+            <h2 className='text-2xl font-semibold mb-2'>No gyms found</h2>
+            <p className='text-muted-foreground'>
+              We couldn&apos;t find any gyms in {filter}. Try browsing other locations.
+            </p>
+          </div>
+        ) : (
+          <>
+            {meta && (
+              <p className='text-sm text-muted-foreground mb-6'>
+                Showing {meta.from}–{meta.to} of {meta.total} gyms
+              </p>
+            )}
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {gyms.map((gym) => (
+                <GymCard key={gym.slug} gym={gym} />
+              ))}
+            </div>
+            {meta && meta.last_page > 1 && (
+              <div className='flex justify-center items-center gap-4 mt-8'>
+                <Button
+                  variant='outline'
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+                <span className='text-sm text-muted-foreground'>
+                  Page {meta.current_page} of {meta.last_page}
+                </span>
+                <Button
+                  variant='outline'
+                  disabled={page >= meta.last_page}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div> */}
+    </div>
+  )
+}

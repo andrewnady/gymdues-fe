@@ -99,5 +99,3 @@ To run a deployment without pushing to `main`: **Actions → Build and Deploy Ne
 ## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
-
-Developed by [websquids LLC](https://websquids.com). For questions: [info@websquids.com](mailto:info@websquids.com).
