@@ -122,59 +122,37 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
           <ReadMoreText className='text-muted-foreground text-lg'>
             {type === 'state' ? (
               <>
-                The best gyms in {filter}—based on ratings and reviews from {'{review_sources}'}
-                —include{' '}
+                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
                 {gyms.length > 0
                   ? gyms
                       .slice(0, 10)
                       .map((g) => g.name)
                       .join(', ')
-                  : '{gym_list}'}
-                . The fitness culture across {filter} is shaped by {'{fitness_identity_1}'},{' '}
-                {'{fitness_identity_2}'}, and {'{fitness_identity_3}'}, with popular training styles
-                such as {'{popular_styles}'}.
+                  : 'top-rated local gyms'}
+                . The fitness culture across {filter} is shaped by 24/7 convenience, a strong strength training culture, and boutique studio variety, with popular training styles such as strength training, HIIT, Pilates, boxing, and CrossFit.
                 <br />
                 <br />
-                In addition to large gym chains, {filter} has a wide range of {'{boutique_types}'}{' '}
-                studios and specialized facilities, making it easier to find a great fit for{' '}
-                {'{goal_1}'} or {'{goal_2}'}. Many members look for gyms near{' '}
-                {'{state_area_examples}'} because it aligns with {'{lifestyle_reason_1}'} and{' '}
-                {'{lifestyle_reason_2}'}.
+                In addition to large gym chains, {filter} has a wide range of Pilates, yoga, boxing, and HIIT studios and specialized facilities, making it easier to find a great fit for fat loss or muscle gain. Many members look for gyms near major metropolitan hubs and suburban centers because it aligns with work-life balance and local commuting patterns.
                 <br />
                 <br />
-                Since {filter} spans {'{geo_description_state}'}, training habits often shift with{' '}
-                {'{seasonality_or_climate_factor}'}. Whether you&apos;re a {'{audience_1}'}, a{' '}
-                {'{audience_2}'}, or a {'{audience_3}'}, the best gyms in {filter} offer options
-                from {'{gym_type_1}'} to {'{gym_type_2}'}, with amenities like {'{amenity_1}'},{' '}
-                {'{amenity_2}'}, and {'{amenity_3}'}.
+                Since {filter} spans a mix of urban and residential landscapes, training habits often shift with local climate and seasonal shifts. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer options from full-service health clubs to strength-focused gyms, with amenities like group classes, personal training, and saunas.
               </>
             ) : (
               <>
-                The best gyms in {filter}—based on ratings and reviews from {'{review_sources}'}
-                —include{' '}
+                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
                 {gyms.length > 0
                   ? gyms
                       .slice(0, 10)
                       .map((g) => g.name)
                       .join(', ')
-                  : '{gym_list}'}
-                . The fitness scene in {filter} is known for {'{fitness_identity_1}'},{' '}
-                {'{fitness_identity_2}'}, and {'{fitness_identity_3}'}, with popular training styles
-                like {'{popular_styles}'}.
+                  : 'top-rated local gyms'}
+                . The fitness scene in {filter} is known for 24/7 convenience, a deep-rooted strength training culture, and boutique studio variety, with popular training styles like strength training, HIIT, Pilates, boxing, and CrossFit.
                 <br />
                 <br />
-                Beyond traditional gyms, {filter} also has a strong mix of {'{boutique_types}'}{' '}
-                studios and specialized facilities, which is great if you&apos;re focused on{' '}
-                {'{goal_1}'} or {'{goal_2}'}. Many people choose gyms near{' '}
-                {'{local_neighborhoods_or_landmarks}'} because it&apos;s convenient for{' '}
-                {'{lifestyle_reason_1}'} and {'{lifestyle_reason_2}'}.
+                Beyond traditional gyms, {filter} also has a strong mix of Pilates, yoga, boxing, and HIIT studios and specialized facilities, which is great if you&apos;re focused on fat loss or muscle gain. Many people choose gyms near major transit hubs and central landmarks because it&apos;s convenient for commuting and balancing a busy daily schedule.
                 <br />
                 <br />
-                With {'{geo_description_city}'} and {'{seasonality_or_climate_factor}'}, workout
-                routines in {filter} often adapt throughout the year. Whether you&apos;re a{' '}
-                {'{audience_1}'}, a {'{audience_2}'}, or a {'{audience_3}'}, the best gyms in{' '}
-                {filter} offer everything from {'{gym_type_1}'} to {'{gym_type_2}'}, plus amenities
-                like {'{amenity_1}'}, {'{amenity_2}'}, and {'{amenity_3}'}.
+                With its vibrant urban layout and local seasonal shifts, workout routines in {filter} often adapt throughout the year. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer everything from full-service health clubs to strength-focused gyms, plus amenities like group classes, personal training, and saunas.
               </>
             )}
           </ReadMoreText>
