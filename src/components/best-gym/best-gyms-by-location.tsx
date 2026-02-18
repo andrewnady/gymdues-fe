@@ -105,7 +105,7 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
           <div className='mb-4'>
             <Breadcrumb
               items={[
-                { label: 'Home', href: '/best-gyms' },
+                { label: 'Home', href: process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL ?? '/' },
                 { label: `Best Gyms in ${filter}`, href: '' },
               ]}
             />
