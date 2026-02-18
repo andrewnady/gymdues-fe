@@ -105,20 +105,12 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
           <div className='mb-4'>
             <Breadcrumb
               items={[
-                { label: 'Home', href: '/' },
+                { label: 'Home', href: '/best-gyms' },
                 { label: `Best Gyms in ${filter}`, href: '' },
               ]}
             />
           </div>
           <h1 className='text-4xl font-bold mb-4'>{title}</h1>
-          <p className='text-muted-foreground text-lg'>
-            Discover the top-rated gyms in {filter}. Compare membership prices, facilities, and
-            reviews to find the perfect gym for you.
-          </p>
-        </div>
-      </section>
-      <section>
-        <div className='container mx-auto px-4 py-10'>
           <ReadMoreText className='text-muted-foreground text-lg'>
             {type === 'state' ? (
               <>
