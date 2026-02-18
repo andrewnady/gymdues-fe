@@ -89,6 +89,9 @@ export async function getReviews(options?: {
     if (options?.per_page) {
       params.append('per_page', String(options.per_page))
     }
+    if (options?.not_null) {
+      params.append('not_null', String(options.not_null))
+    }
 
     const url = `${API_BASE_URL}/api/v1/reviews${params.toString() ? `?${params.toString()}` : ''}`
 
