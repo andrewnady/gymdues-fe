@@ -50,9 +50,10 @@ export function BestGymCityCard({ gym, selectMode, onSelect }: BestGymCityCardPr
   }
 
   const slug = gym.filter.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  const bestGymsBaseUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || '/best-gyms'
 
   return (
-    <Link href={`/best-${slug}-gyms?type=${encodeURIComponent(gym.type)}`} className='block'>
+    <Link href={`${bestGymsBaseUrl}/best-${slug}-gyms?type=${encodeURIComponent(gym.type)}`} className='block'>
       {cardContent}
     </Link>
   )
