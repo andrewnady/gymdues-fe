@@ -9,13 +9,8 @@ import { Menu, X } from 'lucide-react'
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isBestGymsSubdomain, setIsBestGymsSubdomain] = useState(false)
   const pathname = usePathname()
-  const isHomePage = pathname === '/' && !isBestGymsSubdomain
-
-  useEffect(() => {
-    setIsBestGymsSubdomain(window.location.hostname.startsWith('bestgyms.'))
-  }, [])
+  const isHomePage = pathname === '/'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,21 +50,19 @@ export function Navigation() {
       ? 'bg-transparent backdrop-blur-sm'
       : 'bg-white/95 backdrop-blur-md shadow-md border-b'
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
-
   const navLinks = [
-    { href: `${siteUrl}/gyms`, label: 'Browse Gyms' },
-    { href: process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || `${siteUrl}/best-gyms`, label: 'Best Gyms' },
-    { href: `${siteUrl}/blog`, label: 'Blog' },
-    { href: `${siteUrl}/about`, label: 'About' },
-    { href: `${siteUrl}/contact`, label: 'Contact' },
+    { href: '/gyms', label: 'Browse Gyms' },
+    { href: '/best-gyms', label: 'Best Gyms' },
+    { href: '/blog', label: 'Blog' },
+    { href: '/about', label: 'About' },
+    { href: '/contact', label: 'Contact' },
   ]
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${navBackground}`}>
       <div className='container mx-auto'>
         <div className='flex h-16 items-center justify-between px-4'>
-          <Link href={`${siteUrl}/`} className='flex items-center'>
+          <Link href='/' className='flex items-center'>
             <Image
               src='/images/logo.svg'
               alt='GymDues'
