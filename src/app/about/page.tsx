@@ -269,7 +269,7 @@ export default function AboutPage() {
                 <div className='flex flex-col md:flex-row gap-6 items-start'>
                   <div className='flex-shrink-0 w-32 h-32 overflow-hidden rounded-full'>
                     <Image
-                      src='/images/Andrew-Nady.JPG'
+                      src='/images/Andrew-Nady.jpg'
                       alt='Andrew Nady'
                       width={200}
                       height={200}
