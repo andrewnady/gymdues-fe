@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Gym } from '@/types/gym'
 import { GymCard } from '@/components/gym-card'
@@ -28,13 +28,41 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  const handleGymSelect = (gymId: string) => {
+  // Called from map pin click or top-10 list click — scrolls to card
+  const handleGymSelect = useCallback((gymId: string) => {
     setSelectedGymId((prev) => (prev === gymId ? null : gymId))
     const el = listItemRefs.current[gymId]
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
-  }
+  }, [])
+
+  // IntersectionObserver: first visible card in scroll area → update map (no scroll)
+  useEffect(() => {
+    const root = scrollContainerRef.current
+    if (!root || gyms.length === 0 || loading) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(
+          (e) => e.isIntersecting && e.intersectionRatio >= 0.5
+        )
+        if (visible.length === 0) return
+        const sorted = [...visible].sort(
+          (a, b) =>
+            (a.target as HTMLElement).getBoundingClientRect().top -
+            (b.target as HTMLElement).getBoundingClientRect().top
+        )
+        const gymId = (sorted[0].target as HTMLElement).getAttribute('data-gym-id')
+        if (gymId) setSelectedGymId(gymId)
+      },
+      { root, threshold: [0.5], rootMargin: '0px' }
+    )
+    gyms.forEach((gym) => {
+      const el = listItemRefs.current[String(gym.id)]
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [gyms, loading])
 
   useEffect(() => {
     async function fetchGyms() {
@@ -155,9 +183,13 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
 
       <section>
         <div className='container mx-auto bg-white rounded-lg shadow p-6 mb-10'>
-          <h2 className='text-2xl font-semibold mb-4'>
-            {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
-          </h2>
+          {loading ? (
+            <div className='h-8 w-64 bg-muted animate-pulse rounded-lg mb-4' />
+          ) : (
+            <h2 className='text-2xl font-semibold mb-4'>
+              {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
+            </h2>
+          )}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {loading
               ? [...Array(10)].map((_, i) => (
@@ -193,7 +225,7 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
             <div className='flex-1 min-w-0'>
               <div
                 ref={scrollContainerRef}
-                className='flex-1 min-h-0 overflow-y-auto p-4 bg-white rounded-lg shadow'
+                className='flex-1 min-h-0 max-h-[calc(100vh-100px)] overflow-y-auto p-4 bg-white rounded-lg shadow'
               >
                 {loading && (
                   <div className='space-y-4'>
@@ -215,6 +247,7 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
                       return (
                         <div
                           key={gym.id}
+                          data-gym-id={String(gym.id)}
                           ref={(el) => {
                             listItemRefs.current[String(gym.id)] = el
                           }}
