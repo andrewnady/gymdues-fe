@@ -8,6 +8,7 @@ import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { HeroSection } from '@/components/hero-section'
 import { WhyChooseSection } from '@/components/why-choose-section'
 import { TrendingGymsSection } from '@/components/trending-gyms-section'
+import { RatedGymsSection } from '@/components/rated-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
@@ -59,48 +60,47 @@ export async function generateMetadata(): Promise<Metadata> {
         'x-default': canonicalUrl,
       },
     },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    title: 'Gym Membership Costs & Prices (2026) | Gymdues',
-    description:
-      'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
-    url: `${siteUrl}/`,
-    siteName: 'GymDues',
-    type: 'website',
-    images: [
-      {
-        url: `${siteUrl}/images/bg-header.jpg`,
-        width: 1200,
-        height: 630,
-        alt: 'Gym Membership Costs & Prices (2026) | Gymdues',
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
-    ],
-    locale: 'en_US',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Gym Membership Costs & Prices (2026) | Gymdues',
-    description:
-      'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
-    images: [`${siteUrl}/images/bg-header.jpg`],
-    creator: '@gymdues',
-    site: '@gymdues',
-  },
+    },
+    openGraph: {
+      title: 'Gym Membership Costs & Prices (2026) | Gymdues',
+      description:
+        'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
+      url: `${siteUrl}/`,
+      siteName: 'GymDues',
+      type: 'website',
+      images: [
+        {
+          url: `${siteUrl}/images/bg-header.jpg`,
+          width: 1200,
+          height: 630,
+          alt: 'Gym Membership Costs & Prices (2026) | Gymdues',
+        },
+      ],
+      locale: 'en_US',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Gym Membership Costs & Prices (2026) | Gymdues',
+      description:
+        'Compare gym membership prices by brand and location. See monthly costs, plans, fees, and tips to find the best deal.',
+      images: [`${siteUrl}/images/bg-header.jpg`],
+      creator: '@gymdues',
+      site: '@gymdues',
+    },
   }
 }
 
 export default async function Home() {
-
   let trendingGyms: Gym[] = []
   try {
     trendingGyms = await getTrendingGyms(3)
@@ -132,7 +132,20 @@ export default async function Home() {
     // Format dates on server side to prevent hydration mismatches
     reviews = reviews.map((review) => {
       const date = new Date(review.reviewed_at)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ]
       const formattedDate = isNaN(date.getTime())
         ? ''
         : `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`
@@ -154,7 +167,6 @@ export default async function Home() {
     // Fallback to empty array if API fails
   }
 
-
   return (
     <div className='min-h-screen'>
       <script
@@ -166,6 +178,7 @@ export default async function Home() {
       <WhyChooseSection />
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
+      <RatedGymsSection gyms={trendingGyms} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 

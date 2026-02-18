@@ -66,6 +66,7 @@ export async function getReviews(options?: {
   max_rate?: number
   page?: number
   per_page?: number
+  not_null?: boolean
 }): Promise<ReviewWithGym[]> {
   try {
     const params = new URLSearchParams()
@@ -130,6 +131,9 @@ export async function getAllReviews(maxReviews: number = 12): Promise<ReviewWith
   try {
     const reviews = await getReviews({
       per_page: maxReviews,
+      min_rate: 5,
+      max_rate: 5,
+      not_null: true,
       page: 1,
     })
 

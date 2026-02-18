@@ -16,13 +16,18 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ post }: BlogCardProps) {
+  console.log('post', post)
   return (
     <Link href={`/blog/${post.slug}`} className='block'>
       <Card className='overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col cursor-pointer'>
         <div className='relative h-48 w-full bg-muted'>
           <Image
-            src={post.featured_images?.length > 0 ? post.featured_images[0].path : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=600&fit=crop&q=80'}
-            alt={post.featured_images?.length > 0 ? post.featured_images[0].alt : post.title}
+            src={
+              post.featured_images?.length > 0
+                ? post.featured_images[0].path
+                : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=600&fit=crop&q=80'
+            }
+            alt={post.featured_images[0]?.alt || post.title}
             fill
             className='object-cover'
             sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
