@@ -26,43 +26,43 @@ export async function generateMetadata(): Promise<Metadata> {
         'x-default': canonicalUrl,
       },
     },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    title: 'About Gymdues | How We Track Gym Membership Prices',
-    description:
-      'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
-    url: `${siteUrl}/about/`,
-    siteName: 'GymDues',
-    images: [
-      {
-        url: `${siteUrl}/images/logo.svg`,
-        width: 1200,
-        height: 630,
-        alt: 'About GymDues - How We Track Gym Membership Prices',
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
       },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'About Gymdues | How We Track Gym Membership Prices',
-    description:
-      'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
-    images: [`${siteUrl}/images/logo.svg`],
-    creator: '@gymdues',
-    site: '@gymdues',
-  },
+    },
+    openGraph: {
+      title: 'About Gymdues | How We Track Gym Membership Prices',
+      description:
+        'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
+      url: `${siteUrl}/about/`,
+      siteName: 'GymDues',
+      images: [
+        {
+          url: `${siteUrl}/images/logo.svg`,
+          width: 1200,
+          height: 630,
+          alt: 'About GymDues - How We Track Gym Membership Prices',
+        },
+      ],
+      locale: 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'About Gymdues | How We Track Gym Membership Prices',
+      description:
+        'Learn how we collect and update gym membership pricing, our editorial standards, and how to get the most accurate costs.',
+      images: [`${siteUrl}/images/logo.svg`],
+      creator: '@gymdues',
+      site: '@gymdues',
+    },
   }
 }
 
@@ -193,7 +193,7 @@ export default function AboutPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className='mb-8'>
             <CardHeader>
               <CardTitle>Gymdues Founder</CardTitle>
             </CardHeader>
@@ -241,6 +241,59 @@ export default function AboutPage() {
                         className='text-primary hover:text-primary/80 font-medium inline-flex items-center gap-2'
                       >
                         Learn more about Admir Salcinovic
+                        <svg
+                          className='h-4 w-4'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+                          />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>{/* <CardTitle>Gymdues Founder</CardTitle> */}</CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                <div className='flex flex-col md:flex-row gap-6 items-start'>
+                  <div className='flex-shrink-0 w-32 h-32 overflow-hidden rounded-full'>
+                    <Image
+                      src='/images/Andrew-Nady.JPG'
+                      alt='Andrew Nady'
+                      width={200}
+                      height={200}
+                      className='h-full w-full object-cover'
+                      priority
+                    />
+                  </div>
+                  <div className='flex-1'>
+                    <h3 className='text-xl font-semibold mb-2'>Andrew Nady</h3>
+                    <p className='text-muted-foreground mb-4'>Product Lead</p>
+                    <p className='text-muted-foreground leading-relaxed mb-4'>
+                      Andrew leads GymDues product development end-to-end — from defining strategy
+                      and roadmap to writing requirements, aligning design and engineering, and
+                      shipping releases. He focuses on building scalable features, improving user
+                      experience, and driving growth through data-driven decisions.
+                    </p>
+                    <div className='pt-4'>
+                      <Link
+                        href='https://www.linkedin.com/in/andrew-n-9b3030135/'
+                        target='blank'
+                        rel='noopener noreferrer'
+                        className='text-primary hover:text-primary/80 font-medium inline-flex items-center gap-2'
+                      >
+                        Learn more about Andrew Nady
                         <svg
                           className='h-4 w-4'
                           fill='none'

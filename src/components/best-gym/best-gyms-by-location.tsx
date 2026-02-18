@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Gym } from '@/types/gym'
 import { GymCard } from '@/components/gym-card'
@@ -28,13 +28,41 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  const handleGymSelect = (gymId: string) => {
+  // Called from map pin click or top-10 list click — scrolls to card
+  const handleGymSelect = useCallback((gymId: string) => {
     setSelectedGymId((prev) => (prev === gymId ? null : gymId))
     const el = listItemRefs.current[gymId]
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
-  }
+  }, [])
+
+  // IntersectionObserver: first visible card in scroll area → update map (no scroll)
+  useEffect(() => {
+    const root = scrollContainerRef.current
+    if (!root || gyms.length === 0 || loading) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(
+          (e) => e.isIntersecting && e.intersectionRatio >= 0.5
+        )
+        if (visible.length === 0) return
+        const sorted = [...visible].sort(
+          (a, b) =>
+            (a.target as HTMLElement).getBoundingClientRect().top -
+            (b.target as HTMLElement).getBoundingClientRect().top
+        )
+        const gymId = (sorted[0].target as HTMLElement).getAttribute('data-gym-id')
+        if (gymId) setSelectedGymId(gymId)
+      },
+      { root, threshold: [0.5], rootMargin: '0px' }
+    )
+    gyms.forEach((gym) => {
+      const el = listItemRefs.current[String(gym.id)]
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [gyms, loading])
 
   useEffect(() => {
     async function fetchGyms() {
@@ -94,59 +122,37 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
           <ReadMoreText className='text-muted-foreground text-lg'>
             {type === 'state' ? (
               <>
-                The best gyms in {filter}—based on ratings and reviews from {'{review_sources}'}
-                —include{' '}
+                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
                 {gyms.length > 0
                   ? gyms
                       .slice(0, 10)
                       .map((g) => g.name)
                       .join(', ')
-                  : '{gym_list}'}
-                . The fitness culture across {filter} is shaped by {'{fitness_identity_1}'},{' '}
-                {'{fitness_identity_2}'}, and {'{fitness_identity_3}'}, with popular training styles
-                such as {'{popular_styles}'}.
+                  : 'top-rated local gyms'}
+                . The fitness culture across {filter} is shaped by 24/7 convenience, a strong strength training culture, and boutique studio variety, with popular training styles such as strength training, HIIT, Pilates, boxing, and CrossFit.
                 <br />
                 <br />
-                In addition to large gym chains, {filter} has a wide range of {'{boutique_types}'}{' '}
-                studios and specialized facilities, making it easier to find a great fit for{' '}
-                {'{goal_1}'} or {'{goal_2}'}. Many members look for gyms near{' '}
-                {'{state_area_examples}'} because it aligns with {'{lifestyle_reason_1}'} and{' '}
-                {'{lifestyle_reason_2}'}.
+                In addition to large gym chains, {filter} has a wide range of Pilates, yoga, boxing, and HIIT studios and specialized facilities, making it easier to find a great fit for fat loss or muscle gain. Many members look for gyms near major metropolitan hubs and suburban centers because it aligns with work-life balance and local commuting patterns.
                 <br />
                 <br />
-                Since {filter} spans {'{geo_description_state}'}, training habits often shift with{' '}
-                {'{seasonality_or_climate_factor}'}. Whether you&apos;re a {'{audience_1}'}, a{' '}
-                {'{audience_2}'}, or a {'{audience_3}'}, the best gyms in {filter} offer options
-                from {'{gym_type_1}'} to {'{gym_type_2}'}, with amenities like {'{amenity_1}'},{' '}
-                {'{amenity_2}'}, and {'{amenity_3}'}.
+                Since {filter} spans a mix of urban and residential landscapes, training habits often shift with local climate and seasonal shifts. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer options from full-service health clubs to strength-focused gyms, with amenities like group classes, personal training, and saunas.
               </>
             ) : (
               <>
-                The best gyms in {filter}—based on ratings and reviews from {'{review_sources}'}
-                —include{' '}
+                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
                 {gyms.length > 0
                   ? gyms
                       .slice(0, 10)
                       .map((g) => g.name)
                       .join(', ')
-                  : '{gym_list}'}
-                . The fitness scene in {filter} is known for {'{fitness_identity_1}'},{' '}
-                {'{fitness_identity_2}'}, and {'{fitness_identity_3}'}, with popular training styles
-                like {'{popular_styles}'}.
+                  : 'top-rated local gyms'}
+                . The fitness scene in {filter} is known for 24/7 convenience, a deep-rooted strength training culture, and boutique studio variety, with popular training styles like strength training, HIIT, Pilates, boxing, and CrossFit.
                 <br />
                 <br />
-                Beyond traditional gyms, {filter} also has a strong mix of {'{boutique_types}'}{' '}
-                studios and specialized facilities, which is great if you&apos;re focused on{' '}
-                {'{goal_1}'} or {'{goal_2}'}. Many people choose gyms near{' '}
-                {'{local_neighborhoods_or_landmarks}'} because it&apos;s convenient for{' '}
-                {'{lifestyle_reason_1}'} and {'{lifestyle_reason_2}'}.
+                Beyond traditional gyms, {filter} also has a strong mix of Pilates, yoga, boxing, and HIIT studios and specialized facilities, which is great if you&apos;re focused on fat loss or muscle gain. Many people choose gyms near major transit hubs and central landmarks because it&apos;s convenient for commuting and balancing a busy daily schedule.
                 <br />
                 <br />
-                With {'{geo_description_city}'} and {'{seasonality_or_climate_factor}'}, workout
-                routines in {filter} often adapt throughout the year. Whether you&apos;re a{' '}
-                {'{audience_1}'}, a {'{audience_2}'}, or a {'{audience_3}'}, the best gyms in{' '}
-                {filter} offer everything from {'{gym_type_1}'} to {'{gym_type_2}'}, plus amenities
-                like {'{amenity_1}'}, {'{amenity_2}'}, and {'{amenity_3}'}.
+                With its vibrant urban layout and local seasonal shifts, workout routines in {filter} often adapt throughout the year. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer everything from full-service health clubs to strength-focused gyms, plus amenities like group classes, personal training, and saunas.
               </>
             )}
           </ReadMoreText>
@@ -155,9 +161,13 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
 
       <section>
         <div className='container mx-auto bg-white rounded-lg shadow p-6 mb-10'>
-          <h2 className='text-2xl font-semibold mb-4'>
-            {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
-          </h2>
+          {loading ? (
+            <div className='h-8 w-64 bg-muted animate-pulse rounded-lg mb-4' />
+          ) : (
+            <h2 className='text-2xl font-semibold mb-4'>
+              {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
+            </h2>
+          )}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {loading
               ? [...Array(10)].map((_, i) => (
@@ -193,7 +203,7 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
             <div className='flex-1 min-w-0'>
               <div
                 ref={scrollContainerRef}
-                className='flex-1 min-h-0 overflow-y-auto p-4 bg-white rounded-lg shadow'
+                className='flex-1 min-h-0 max-h-[calc(100vh-100px)] overflow-y-auto p-4 bg-white rounded-lg shadow'
               >
                 {loading && (
                   <div className='space-y-4'>
@@ -215,6 +225,7 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
                       return (
                         <div
                           key={gym.id}
+                          data-gym-id={String(gym.id)}
                           ref={(el) => {
                             listItemRefs.current[String(gym.id)] = el
                           }}
