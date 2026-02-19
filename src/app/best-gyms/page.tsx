@@ -1,6 +1,7 @@
 import { BestGymsSection } from '@/components/best-gym/best-gyms-section'
 import { GymsPageFaqSection } from '@/components/gyms-page-faq-section'
 import { ReadMoreText } from '@/components/read-more-text'
+import { FavGymSlider } from '@/components/fav-gym-slider'
 import { getCityStates, filterTopGyms } from '@/lib/gyms-api'
 import { gymCities } from '@/types/gym'
 import type { Metadata } from 'next'
@@ -100,6 +101,10 @@ export default async function BestGyms() {
           {/* FAQs Section */}
           <section className='mt-16 mb-12' aria-labelledby='faq-heading'>
             <GymsPageFaqSection />
+          </section>
+
+          <section className='mt-16 mb-12' aria-labelledby='fav-gym-heading'>
+            <FavGymSlider cities={cities} />
           </section>
         </div>
       </div>
