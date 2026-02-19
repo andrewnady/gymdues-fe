@@ -16,6 +16,7 @@ interface RatedGymsSectionProps {
 }
 
 export function RatedGymsSection({ gyms }: RatedGymsSectionProps) {
+  console.log('gyms', gyms)
   return (
     <section className='py-20 bg-background'>
       <div className='container mx-auto px-4'>
@@ -42,16 +43,14 @@ export function RatedGymsSection({ gyms }: RatedGymsSectionProps) {
           className='w-full'
         >
           <CarouselContent className='-ml-4 md:-ml-6'>
-            {gyms
-              .filter((gym) => gym.description?.length > 0)
-              .map((gym) => (
-                <CarouselItem
-                  key={gym.id}
-                  className='pl-4 md:pl-6 basis-full md:basis-1/2 lg:basis-1/3'
-                >
-                  <GymCard gym={gym} />
-                </CarouselItem>
-              ))}
+            {gyms.map((gym) => (
+              <CarouselItem
+                key={gym.id}
+                className='pl-4 md:pl-6 basis-full md:basis-1/2 lg:basis-1/3'
+              >
+                <GymCard gym={gym} />
+              </CarouselItem>
+            ))}
           </CarouselContent>
           <CarouselPrevious className='hidden md:flex -left-4' />
           <CarouselNext className='hidden md:flex -right-4' />
