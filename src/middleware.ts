@@ -8,24 +8,42 @@ export function middleware(request: NextRequest) {
   if (hostname.startsWith('bestgyms.')) {
     const url = request.nextUrl.clone()
     const path = url.pathname
+    const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || 'https://bestgyms.gymdues.com'
 
     // Skip static files, Next.js internals, and API routes
     if (path.startsWith('/_next') || path.startsWith('/api') || path.includes('.')) {
       return NextResponse.next()
     }
 
+    // // Redirect trailing slashes to canonical (no trailing slash), except root
+    // if (path !== '/' && path.endsWith('/')) {
+    //   const canonicalPath = path.replace(/\/$/, '')
+    //   return NextResponse.redirect(new URL(`${bestGymsUrl}${canonicalPath}`), 301)
+    // }
+
     // Root → /best-gyms browse page
     if (path === '/') {
       url.pathname = '/best-gyms'
-      return NextResponse.rewrite(url)
+      const canonicalUrl = `${bestGymsUrl}/`
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-pathname', '/')
+      const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+      response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
+      return response
     }
 
-    // /best-{city}-gym → /best-gyms/{city}
-    // e.g. /best-houston-gym → /best-gyms/houston
-    const cityMatch = path.match(/^\/best-(.+)-gym\/?$/)
+    // /best-{city}-gyms → /best-gyms/{city}
+    // e.g. /best-houston-gyms → /best-gyms/houston
+    const cityMatch = path.match(/^\/best-(.+)-gyms?\/?$/)
     if (cityMatch) {
       url.pathname = `/best-gyms/${cityMatch[1]}`
-      return NextResponse.rewrite(url)
+      const canonicalPath = path.replace(/\/$/, '')
+      const canonicalUrl = `${bestGymsUrl}${canonicalPath}/`
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-pathname', canonicalPath)
+      const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+      response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
+      return response
     }
 
     return NextResponse.next()
