@@ -129,9 +129,7 @@ export default async function Home() {
   let ratedGyms: Gym[] = []
   try {
     const allGyms = await getAllGyms()
-
     ratedGyms = allGyms.slice(0, 10)
-    console.log('allGyms', ratedGyms)
   } catch (error) {
     console.error('Failed to load popular gyms:', error)
     // Fallback to empty array if API fails

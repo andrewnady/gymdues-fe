@@ -16,7 +16,6 @@ interface RatedGymsSectionProps {
 }
 
 export function RatedGymsSection({ gyms }: RatedGymsSectionProps) {
-  console.log('gyms', gyms)
   return (
     <section className='py-20 bg-background'>
       <div className='container mx-auto px-4'>
