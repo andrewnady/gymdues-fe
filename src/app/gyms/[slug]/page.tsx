@@ -19,6 +19,8 @@ import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { ReadMoreText } from '@/components/read-more-text'
 import { GymSlugAddressBlock } from '@/components/gym-slug-address-block'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { NearbyGymsSlider } from '@/components/nearby-gyms-slider'
+import type { Gym } from '@/types/gym'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -556,6 +558,19 @@ export default async function GymDetailPage({ params }: PageProps) {
               </Card>
             )
           })()}
+
+        {/* Nearby Gyms Slider */}
+        {/* TODO: Replace mock data with real API call — e.g. GET /gyms?zipCode={gym.zipCode}&exclude={gym.slug}&limit=10 */}
+        {(() => {
+          const nearbyGyms = [
+            { id: 'mock-1', name: 'Planet Fitness',  slug: 'planet-fitness',  city: gym.city, state: gym.state, rating: 4.2, reviewCount: 312, description: 'Affordable, judgment-free gym with cardio machines, strength equipment, and tanning. Open 24 hours with flexible no-contract membership plans.', address: '', zipCode: '', phone: '', email: '', reviews: [], pricing: [], faqs: [], hours: [], featureImage: '' },
+            { id: 'mock-2', name: 'Anytime Fitness',  slug: 'anytime-fitness', city: gym.city, state: gym.state, rating: 4.5, reviewCount: 187, description: 'Conveniently located 24/7 gym with modern equipment, personal training, tanning, and access to 5,000+ locations worldwide with one membership.', address: '', zipCode: '', phone: '', email: '', reviews: [], pricing: [], faqs: [], hours: [], featureImage: '' },
+            { id: 'mock-3', name: 'LA Fitness',       slug: 'la-fitness',      city: gym.city, state: gym.state, rating: 4.0, reviewCount: 429, description: 'Full-service health club featuring indoor pools, racquetball courts, group fitness classes, basketball courts, and certified personal trainers.', address: '', zipCode: '', phone: '', email: '', reviews: [], pricing: [], faqs: [], hours: [], featureImage: '' },
+            { id: 'mock-4', name: "Gold's Gym",       slug: 'golds-gym',       city: gym.city, state: gym.state, rating: 4.3, reviewCount: 256, description: 'Iconic fitness brand offering free weights, strength training, group classes, cardio equipment, and personal training in an energetic atmosphere.', address: '', zipCode: '', phone: '', email: '', reviews: [], pricing: [], faqs: [], hours: [], featureImage: '' },
+            { id: 'mock-5', name: 'Crunch Fitness',   slug: 'crunch-fitness',  city: gym.city, state: gym.state, rating: 4.1, reviewCount: 143, description: 'High-energy gym with a huge variety of group fitness classes, state-of-the-art equipment, tanning, and HydroMassage at an unbeatable price.', address: '', zipCode: '', phone: '', email: '', reviews: [], pricing: [], faqs: [], hours: [], featureImage: '' },
+          ] as Gym[]
+          return <NearbyGymsSlider gyms={nearbyGyms} zipCode={gym.zipCode} />
+        })()}
       </div>
     </div>
   )
