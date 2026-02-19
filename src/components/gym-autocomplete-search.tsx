@@ -112,13 +112,13 @@ export function GymAutocompleteSearch() {
                 className="pl-12 h-14 text-base border-0 focus-visible:ring-0 bg-transparent"
               />
             </div>
-            <Button
+            {/* <Button
               type="submit"
               size="lg"
               className="h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl"
             >
               Search
-            </Button>
+            </Button> */}
           </div>
         </div>
       </form>

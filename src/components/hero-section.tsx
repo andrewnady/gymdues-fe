@@ -19,7 +19,7 @@ export function HeroSection({ popularGyms }: HeroSectionProps) {
       <div className='container mx-auto px-4 relative z-10 w-full pt-16'>
         <div className='max-w-4xl mx-auto text-center'>
           <h1 className='text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white'>
-            Best Gyms in the World
+            Gym Membership Prices: Compare Costs Across Top Gyms
           </h1>
           <ReadMoreText className='text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto'>
             <p>
