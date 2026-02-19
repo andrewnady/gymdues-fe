@@ -187,7 +187,7 @@ export interface ReviewSubmission {
   rate: number
   email: string
   text: string
-  address_id: string
+  address_id: number
 }
 export async function SubmitReviewForm(submissionData: ReviewSubmission) {
   try {

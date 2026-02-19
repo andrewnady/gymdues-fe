@@ -6,7 +6,7 @@ import type { Gym, AddressDetail, OperatingHours, Plan, Review } from '@/types/g
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GymReviewsPaginated } from '@/components/gym-reviews-paginated'
 import { ReadMoreText } from '@/components/read-more-text'
-import { Send, Star } from 'lucide-react'
+import { Star } from 'lucide-react'
 import {
   Carousel,
   CarouselContent,
@@ -15,10 +15,6 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { Badge } from '@/components/ui/badge'
-import { Button } from './ui/button'
-import { Dialog, Flex, Text, TextField } from '@radix-ui/themes'
-import { Input } from './ui/input'
-import { submitContactForm } from '@/lib/contact-api'
 import { LeaveReview } from './leave-a-review'
 
 function formatTimeToAmPm(timeString: string): string {
@@ -88,7 +84,6 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
   const hours: OperatingHours[] = addressData?.hours ?? gym.hours ?? []
   const pricing: Plan[] = addressData?.pricing ?? gym.pricing ?? []
   const reviewCount = reviews.length
-  console.log('addressData', addressData)
 
   return (
     <>
@@ -102,7 +97,7 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
                 {loading && resolvedId ? 'Loading…' : `${reviewCount} total reviews`}
               </CardDescription>
             </CardHeader>
-            <LeaveReview gymId={gym.id} />
+            <LeaveReview addressId={gym.address.id} />
           </div>
 
           <CardContent>

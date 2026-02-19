@@ -3,47 +3,15 @@
 import { Dialog, Flex } from '@radix-ui/themes'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { Search, Send, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { Send, X } from 'lucide-react'
+import { useState } from 'react'
 import { SubmitReviewForm } from '@/lib/reviews-api'
-import { getAddressesByGymId } from '@/lib/gyms-api'
-import { GymAddress } from '@/types/gym'
 
 interface LeaveReviewProps {
-  gymId: string
+  addressId: number
 }
 
-export function LeaveReview({ gymId }: LeaveReviewProps) {
-  /* -------------------------------------------------------------------------- */
-  /*                               Address Fetch                                */
-  /* -------------------------------------------------------------------------- */
-
-  const [data, setData] = useState<GymAddress[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchAddresses = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const res = await getAddressesByGymId(gymId, {
-        page: 1,
-        per_page: 100,
-      })
-      setData(res.data)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load addresses')
-      setData([])
-    } finally {
-      setLoading(false)
-    }
-  }, [gymId])
-
-  useEffect(() => {
-    fetchAddresses()
-  }, [fetchAddresses])
-
+export function LeaveReview({ addressId }: LeaveReviewProps) {
   /* -------------------------------------------------------------------------- */
   /*                                  Form State                                */
   /* -------------------------------------------------------------------------- */
@@ -53,37 +21,12 @@ export function LeaveReview({ gymId }: LeaveReviewProps) {
     rate: 0,
     email: '',
     text: '',
-    address_id: '',
+    address_id: addressId,
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorReview, setErrorReview] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-
-  /* -------------------------------------------------------------------------- */
-  /*                        Searchable Select States                             */
-  /* -------------------------------------------------------------------------- */
-
-  const [search, setSearch] = useState('')
-  const [showDropdown, setShowDropdown] = useState(false)
-
-  /* ---------------------- Set default first address ------------------------- */
-
-  useEffect(() => {
-    if (data.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        address_id: String(data[0]?.id ?? ''),
-      }))
-      setSearch(data[0]?.full_address ?? '')
-    }
-  }, [data])
-
-  /* -------------------------- Filter addresses ------------------------------ */
-
-  const filteredAddresses = data.filter((item) =>
-    (item.full_address ?? '').toLowerCase().includes(search.toLowerCase()),
-  )
 
   /* -------------------------------------------------------------------------- */
   /*                               Form Handlers                                */
@@ -106,10 +49,8 @@ export function LeaveReview({ gymId }: LeaveReviewProps) {
         rate: 0,
         email: '',
         text: '',
-        address_id: '',
+        address_id: addressId,
       })
-
-      setSearch('')
     } catch (err) {
       setErrorReview(
         err instanceof Error ? err.message : 'Failed to submit review. Please try again.',
@@ -128,14 +69,6 @@ export function LeaveReview({ gymId }: LeaveReviewProps) {
     }))
   }
 
-  /* -------------------- Close dropdown on outside click --------------------- */
-
-  useEffect(() => {
-    const handleClickOutside = () => setShowDropdown(false)
-    window.addEventListener('click', handleClickOutside)
-    return () => window.removeEventListener('click', handleClickOutside)
-  }, [])
-
   /* -------------------------------------------------------------------------- */
   /*                                   UI                                       */
   /* -------------------------------------------------------------------------- */
@@ -144,7 +77,7 @@ export function LeaveReview({ gymId }: LeaveReviewProps) {
     <div>
       <Dialog.Root>
         <Dialog.Trigger>
-          <Button variant='secondary'>Leave a Review</Button>
+          <Button variant='secondary'>Leave a Review {addressId}</Button>
         </Dialog.Trigger>
 
         <Dialog.Content maxWidth='600px'>
@@ -191,55 +124,6 @@ export function LeaveReview({ gymId }: LeaveReviewProps) {
                   max={5}
                   maxLength={1}
                 />
-              </div>
-
-              {/* ---------------------------------------------------------------- */}
-              {/*                     Searchable Select Field                       */}
-              {/* ---------------------------------------------------------------- */}
-
-              <div className='space-y-2 relative' onClick={(e) => e.stopPropagation()}>
-                <label className='text-sm font-medium'>Select Location</label>
-                <div className='relative'>
-                  <Input
-                    placeholder='Search location...'
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value)
-                      setShowDropdown(true)
-                    }}
-                    onFocus={() => setShowDropdown(true)}
-                    className='pe-8'
-                  />
-                  <Search className='absolute right-3 top-4 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none' />
-                </div>
-
-                {showDropdown && (
-                  <div className='absolute z-50 w-full bg-white dark:bg-gray-900 border rounded-md shadow-md max-h-60 overflow-y-auto'>
-                    {filteredAddresses.length > 0 ? (
-                      filteredAddresses.map((item) => (
-                        <div
-                          key={item.id}
-                          className='px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-sm'
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              address_id: String(item.id),
-                            }))
-
-                            setSearch(item.full_address ?? '')
-                            setShowDropdown(false)
-                          }}
-                        >
-                          {item.full_address}
-                        </div>
-                      ))
-                    ) : (
-                      <div className='px-3 py-2 text-sm text-muted-foreground'>
-                        No location found
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Email */}
