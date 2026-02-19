@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+// import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
 import { Gym } from '@/types/gym'
 import Link from 'next/link'

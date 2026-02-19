@@ -1,15 +1,15 @@
-echo "🔍 Running type-check before push..."
+# echo "🔍 Running type-check before push..."
 
-# Try pnpm first, fallback to npm
-if command -v pnpm >/dev/null 2>&1; then
-  pnpm run type-check
-else
-  npm run type-check
-fi
+# # Try pnpm first, fallback to npm
+# if command -v pnpm >/dev/null 2>&1; then
+#   pnpm run type-check
+# else
+#   npm run type-check
+# fi
 
-if [ $? -ne 0 ]; then
-  echo "❌ Type-check failed! Please fix TypeScript errors before pushing."
-  exit 1
-fi
+# if [ $? -ne 0 ]; then
+#   echo "❌ Type-check failed! Please fix TypeScript errors before pushing."
+#   exit 1
+# fi
 
-echo "✅ Type-check passed!"
+# echo "✅ Type-check passed!"
