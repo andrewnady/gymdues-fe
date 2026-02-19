@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Gym } from '@/types/gym'
 import { GymCard } from '@/components/gym-card'
-import {  getPaginatedGyms, GymsPaginationMeta } from '@/lib/gyms-api'
+import { getPaginatedGyms, GymsPaginationMeta } from '@/lib/gyms-api'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { ReadMoreText } from '../read-more-text'
 import { BestGymsFaqSection } from './best-gyms-faq-section'
@@ -17,16 +17,19 @@ const GymsDiscoveryMap = dynamic(
 interface BestGymsByLocationProps {
   filter: string
   type: string
+  initialGyms: Gym[]
+  initialMeta: GymsPaginationMeta
 }
 
-export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
-  const [gyms, setGyms] = useState<Gym[]>([])
-  const [, setMeta] = useState<GymsPaginationMeta | null>(null)
-  const [loading, setLoading] = useState(true)
+export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: BestGymsByLocationProps) {
+  const [gyms, setGyms] = useState<Gym[]>(initialGyms)
+  const [, setMeta] = useState<GymsPaginationMeta | null>(initialMeta)
+  const [loading, setLoading] = useState(false)
   const [page] = useState(1)
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const listItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const listItemRefs = useRef<Record<string, HTMLLIElement | null>>({})
+  const isInitialMount = useRef(true)
 
   // Called from map pin click or top-10 list click — scrolls to card
   const handleGymSelect = useCallback((gymId: string) => {
@@ -65,6 +68,12 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
   }, [gyms, loading])
 
   useEffect(() => {
+    // Skip the very first render — the server already provided the initial data via props.
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+
     async function fetchGyms() {
       setLoading(true)
       try {
@@ -160,13 +169,13 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
               {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
             </h2>
           )}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <ol className='grid grid-cols-1 md:grid-cols-2 gap-4 list-none'>
             {loading
               ? [...Array(10)].map((_, i) => (
-                  <div key={i} className='h-14 bg-muted animate-pulse rounded-lg' />
+                  <li key={i} className='h-14 bg-muted animate-pulse rounded-lg' />
                 ))
               : gyms.slice(0, 10).map((gym, index) => (
-                  <div
+                  <li
                     key={gym.id}
                     className='group bg-slate-50 border border-gray-100 flex items-center gap-4 p-4 rounded-lg transition-colors duration-300 hover:bg-primary cursor-pointer'
                     onClick={() => {
@@ -183,9 +192,9 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
                     <h3 className='text-lg font-medium transition-colors duration-300 group-hover:text-white'>
                       {gym.name}
                     </h3>
-                  </div>
+                  </li>
                 ))}
-          </div>
+          </ol>
         </div>
       </section>
 
@@ -210,12 +219,12 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
                   </p>
                 )}
                 {!loading && gyms.length > 0 && (
-                  <div className='space-y-4'>
+                  <ol className='space-y-4 list-none'>
                     {gyms.map((gym) => {
                       const isSelected =
                         selectedGymId !== null && String(gym.id) === String(selectedGymId)
                       return (
-                        <div
+                        <li
                           key={gym.id}
                           data-gym-id={String(gym.id)}
                           ref={(el) => {
@@ -230,15 +239,26 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
                             selectMode
                             onSelect={() => handleGymSelect(String(gym.id))}
                           />
-                        </div>
+                        </li>
                       )
                     })}
-                  </div>
+                  </ol>
                 )}
               </div>
             </div>
 
             <div className='w-full lg:w-1/2 sticky top-20 h-[calc(100vh-100px)] min-h-[300px] flex flex-col bg-muted/30 rounded-lg shadow bg-white p-4'>
+              <noscript>
+                <div className='flex-1 flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+                  <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5' viewBox='0 0 20 20' fill='currentColor'>
+                    <path fillRule='evenodd' d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z' clipRule='evenodd' />
+                  </svg>
+                  <p className='text-yellow-700 text-sm'>
+                    Please enable JavaScript rendering in your browser to view the interactive map
+                    and full details of {Math.min(10, gyms.length)} Best {filter} Gyms.
+                  </p>
+                </div>
+              </noscript>
               {loading ? (
                 <div className='flex-1 flex items-center justify-center text-muted-foreground'>
                   Loading map…
@@ -265,58 +285,6 @@ export function BestGymsByLocation({ filter, type }: BestGymsByLocationProps) {
           <BestGymsFaqSection location={filter} />
         </div>
       </section>
-
-      {/* <div className='container mx-auto px-4 py-10'>
-        {loading ? (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className='h-80 bg-muted animate-pulse rounded-lg' />
-            ))}
-          </div>
-        ) : gyms.length === 0 ? (
-          <div className='text-center py-16'>
-            <MapPin className='h-12 w-12 mx-auto text-muted-foreground mb-4' />
-            <h2 className='text-2xl font-semibold mb-2'>No gyms found</h2>
-            <p className='text-muted-foreground'>
-              We couldn&apos;t find any gyms in {filter}. Try browsing other locations.
-            </p>
-          </div>
-        ) : (
-          <>
-            {meta && (
-              <p className='text-sm text-muted-foreground mb-6'>
-                Showing {meta.from}–{meta.to} of {meta.total} gyms
-              </p>
-            )}
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {gyms.map((gym) => (
-                <GymCard key={gym.slug} gym={gym} />
-              ))}
-            </div>
-            {meta && meta.last_page > 1 && (
-              <div className='flex justify-center items-center gap-4 mt-8'>
-                <Button
-                  variant='outline'
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  Previous
-                </Button>
-                <span className='text-sm text-muted-foreground'>
-                  Page {meta.current_page} of {meta.last_page}
-                </span>
-                <Button
-                  variant='outline'
-                  disabled={page >= meta.last_page}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </div> */}
     </div>
   )
 }

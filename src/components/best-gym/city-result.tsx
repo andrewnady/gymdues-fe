@@ -1,21 +1,30 @@
 'use client'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { BestGymCityCard } from './city-card'
 import { filterTopGyms, GymsPaginationMeta } from '@/lib/gyms-api'
 import { gymCities } from '@/types/gym'
-import { useEffect, useState } from 'react'
 
 interface BestGymCityResultProps {
+  initialGyms: gymCities[]
+  initialMeta: GymsPaginationMeta
   selectedStates: string[]
   selectedCities: string[]
   onClearFilters: () => void
 }
 
-export function BestGymCityResult({ selectedStates, selectedCities, onClearFilters }: BestGymCityResultProps) {
-  const [gyms, setGyms] = useState<gymCities[]>([])
-  const [meta, setMeta] = useState<GymsPaginationMeta | null>(null)
+export function BestGymCityResult({
+  initialGyms,
+  initialMeta,
+  selectedStates,
+  selectedCities,
+  onClearFilters,
+}: BestGymCityResultProps) {
+  const [gyms, setGyms] = useState<gymCities[]>(initialGyms)
+  const [meta, setMeta] = useState<GymsPaginationMeta | null>(initialMeta)
   const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const isInitialMount = useRef(true)
 
   const stateParam = selectedStates.join(',')
   const cityParam = selectedCities.join(',')
@@ -25,6 +34,14 @@ export function BestGymCityResult({ selectedStates, selectedCities, onClearFilte
   }, [stateParam, cityParam])
 
   useEffect(() => {
+    // Skip the very first render when no filters are applied and we're on page 1 —
+    // the server already provided the initial data via props.
+    if (isInitialMount.current && !stateParam && !cityParam && page === 1) {
+      isInitialMount.current = false
+      return
+    }
+    isInitialMount.current = false
+
     setLoading(true)
     filterTopGyms({ state: stateParam || undefined, city: cityParam || undefined, page, perPage: 12 })
       .then(({ gyms, meta }) => {

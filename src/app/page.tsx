@@ -166,12 +166,59 @@ export default async function Home() {
     // Fallback to empty array if API fails
   }
 
+  const reviewSchema =
+    reviews.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'GymDues',
+          url: siteUrl,
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: (
+              reviews.reduce((sum, r) => sum + (r.rate || r.rating || 0), 0) / reviews.length
+            ).toFixed(1),
+            reviewCount: reviews.length,
+            bestRating: '5',
+            worstRating: '1',
+          },
+          review: reviews.map((review) => ({
+            '@type': 'Review',
+            author: {
+              '@type': 'Person',
+              name: review.reviewer,
+            },
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: String(review.rate || review.rating),
+              bestRating: '5',
+              worstRating: '1',
+            },
+            reviewBody: review.text,
+            datePublished: (() => {
+              const d = new Date(review.reviewed_at)
+              return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : undefined
+            })(),
+            itemReviewed: {
+              '@type': 'LocalBusiness',
+              name: review.gymName || review.gym?.name,
+            },
+          })),
+        }
+      : null
+
   return (
     <div className='min-h-screen'>
       <script
         type='application/ld+json'
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
+      {reviewSchema && (
+        <script
+          type='application/ld+json'
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }}
+        />
+      )}
       <RedirectGymsHash />
       <HeroSection popularGyms={popularGyms} />
       <WhyChooseSection />
