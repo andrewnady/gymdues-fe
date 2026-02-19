@@ -53,7 +53,7 @@ export function BestGymCityCard({ gym, selectMode, onSelect }: BestGymCityCardPr
   const bestGymsBaseUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || '/best-gyms'
 
   return (
-    <Link href={`${bestGymsBaseUrl}/best-${slug}-gyms?type=${encodeURIComponent(gym.type)}`} className='block'>
+    <Link href={`${bestGymsBaseUrl}/best-${slug}-gyms`} className='block'>
       {cardContent}
     </Link>
   )
