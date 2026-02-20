@@ -796,6 +796,55 @@ export async function getCityStates(fields?: string): Promise<{ states: StateWit
 }
 
 /**
+ * Fetches next favourite gym spots from the API.
+ * Supports optional state, city, per_page, and page parameters.
+ */
+export async function getNextFavouriteGyms(options: {
+  state?: string
+  city?: string
+  perPage?: number
+  page?: number
+} = {}): Promise<StateWithCount[]> {
+  const { state, city, perPage, page } = options
+
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/next-favourite-gyms`)
+
+    if (state && state.trim()) url.searchParams.append('state', state.trim())
+    if (city && city.trim()) url.searchParams.append('city', city.trim())
+    if (perPage && perPage > 0) url.searchParams.append('per_page', perPage.toString())
+    if (page && page > 0) url.searchParams.append('page', page.toString())
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch next favourite gyms: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+    data = transformApiResponse(data)
+
+    // Laravel paginated: { data: [...], current_page, ... }
+    if (typeof data === 'object' && data !== null && 'data' in data && Array.isArray(data.data)) {
+      return data.data as StateWithCount[]
+    }
+
+    // Plain array
+    if (Array.isArray(data)) {
+      return data as StateWithCount[]
+    }
+
+    return []
+  } catch (error) {
+    // Non-critical: slider is hidden when the list is empty
+    console.warn('getNextFavouriteGyms: endpoint unavailable, slider will be hidden.', error instanceof Error ? error.message : error)
+    return []
+  }
+}
+
+/**
  * Gets states with gym counts (legacy: fetches all gyms and derives states).
  * Prefer getStates() which uses the database endpoint.
  */

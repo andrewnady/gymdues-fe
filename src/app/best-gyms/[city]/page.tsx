@@ -1,5 +1,6 @@
 import { BestGymsByLocation } from '@/components/best-gym/best-gyms-by-location'
-import { getPaginatedGyms } from '@/lib/gyms-api'
+import { FavGymSlider } from '@/components/fav-gym-slider'
+import { getPaginatedGyms, getNextFavouriteGyms, getCityStates } from '@/lib/gyms-api'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 
@@ -103,14 +104,25 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
     gymsParams.city = filter
   }
 
-  const { gyms, meta } = await getPaginatedGyms(gymsParams)
-  const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
+  const favGymsParams = type === 'state' ? { state: filter } : { city: filter }
+  const [{ gyms, meta }, favGymsResult, { cities }] = await Promise.all([
+    getPaginatedGyms(gymsParams),
+    getNextFavouriteGyms({ perPage: 10, ...favGymsParams }),
+    getCityStates(),
+  ])
+  const favGyms = favGymsResult.length > 0 ? favGymsResult : cities
+const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
 
   return (
     <>
       <link rel='canonical' href={canonicalUrl} />
       <meta property='og:url' content={canonicalUrl} />
       <BestGymsByLocation filter={filter} type={type} initialGyms={gyms} initialMeta={meta} />
+      <div className='container mx-auto px-4'>
+        <section className='mt-16 mb-12' aria-labelledby='fav-gym-heading'>
+          <FavGymSlider cities={favGyms} />
+        </section>
+      </div>
     </>
   )
 }
