@@ -4,8 +4,8 @@ import { getCityStates } from '@/lib/gyms-api'
 const BEST_GYMS_BASE_URL = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || 'https://bestgyms.gymdues.com'
 const URLS_PER_SITEMAP = 100
 
-function toSlug(name: string): string {
-  return name.toLowerCase().replace(/\s+/g, '-')
+function toSlug(name?: string): string {
+  return name?.toLowerCase().replace(/\s+/g, '-') || ''
 }
 
 /** Serves /sitemap/best-gyms/0.xml, /sitemap/best-gyms/1.xml, ... (100 URLs per file) */
@@ -21,14 +21,14 @@ export async function GET(
   const index = Number(match[1])
 
   try {
-    const { cities, states } = await getCityStates()
+    const { cities, states } = await getCityStates("sitemaps")
     const base = BEST_GYMS_BASE_URL.replace(/\/$/, '')
 
     const allEntries = [
       ...cities
-        .filter((c) => c.stateName)
+        .filter((c) => c.city)
         .map((c) => ({
-          url: `${base}/best-${toSlug(c.stateName)}-gyms/`,
+          url: `${base}/best-${toSlug(c.city)}-gyms/`,
           priority: '0.8',
         })),
       ...states
