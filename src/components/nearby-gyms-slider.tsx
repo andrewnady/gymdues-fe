@@ -37,14 +37,20 @@ export function NearbyGymsSlider({ gyms, zipCode }: NearbyGymsSliderProps) {
         className="w-full"
       >
         <CarouselContent className="-ml-4 md:-ml-6">
-          {gyms.map((gym) => (
-            <CarouselItem
-              key={gym.id}
-              className="pl-4 md:pl-6 basis-full sm:basis-1/2 lg:basis-1/3"
-            >
-              <GymCard gym={gym} />
-            </CarouselItem>
-          ))}
+          {gyms.map((gym) => {
+            const addressObj = typeof gym.address === 'object' && gym.address !== null ? gym.address : null
+            const normalizedGym = addressObj
+              ? { ...gym, city: addressObj.city || gym.city, state: addressObj.state || gym.state }
+              : gym
+            return (
+              <CarouselItem
+                key={gym.id}
+                className="pl-4 md:pl-6 basis-full sm:basis-1/2 lg:basis-1/3"
+              >
+                <GymCard gym={normalizedGym} />
+              </CarouselItem>
+            )
+          })}
         </CarouselContent>
         <CarouselPrevious className="hidden md:flex -left-4" />
         <CarouselNext className="hidden md:flex -right-4" />

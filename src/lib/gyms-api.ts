@@ -696,6 +696,50 @@ export async function getGymById(id: string): Promise<Gym | null> {
 }
 
 /**
+ * Fetches nearby gyms for a given gym slug.
+ * Calls GET /api/v1/gyms/{slug}/nearby with optional address_id and per_page params.
+ */
+export async function getNearbyGyms(
+  slug: string,
+  options?: { address_id?: string | number; per_page?: number }
+): Promise<Gym[]> {
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/${encodeURIComponent(slug)}/nearby`)
+    if (options?.address_id != null && String(options.address_id).trim()) {
+      url.searchParams.set('address_id', String(options.address_id).trim())
+    }
+    if (options?.per_page && options.per_page > 0) {
+      url.searchParams.set('per_page', String(options.per_page))
+    }
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch nearby gyms: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+    data = transformApiResponse(data)
+
+    let gyms: Record<string, unknown>[] = []
+    if (Array.isArray(data)) {
+      gyms = data
+    } else if (data.data && Array.isArray(data.data)) {
+      gyms = data.data
+    } else if (data.gyms && Array.isArray(data.gyms)) {
+      gyms = data.gyms
+    }
+
+    return normalizeGyms(gyms)
+  } catch (error) {
+    console.error('Error fetching nearby gyms:', error)
+    return []
+  }
+}
+
+/**
  * Gets states with gym counts from the database (GET /api/v1/gyms/states).
  * Use for state filter autocomplete.
  */
