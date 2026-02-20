@@ -67,10 +67,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function BestGyms() {
   const [{ states, cities }, { gyms, meta }] = await Promise.all([
-    getCityStates("sitemaps"),
+    getCityStates(),
     filterTopGyms({ page: 1, perPage: 12 }),
   ])
- console.log([cities.length, states.length])
   const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/`
 
   return (
