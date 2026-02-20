@@ -10,6 +10,12 @@ export function middleware(request: NextRequest) {
     const path = url.pathname
     const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || 'https://bestgyms.gymdues.com'
 
+    // Serve sitemap index for bestgyms subdomain
+    if (path === '/sitemap.xml' || path === '/sitemap.xml/') {
+      url.pathname = '/api/sitemap-best-gyms-index'
+      return NextResponse.rewrite(url)
+    }
+
     // Skip static files, Next.js internals, and API routes
     if (path.startsWith('/_next') || path.startsWith('/api') || path.includes('.')) {
       return NextResponse.next()
