@@ -2,7 +2,7 @@ import { BestGymsSection } from '@/components/best-gym/best-gyms-section'
 import { GymsPageFaqSection } from '@/components/gyms-page-faq-section'
 import { ReadMoreText } from '@/components/read-more-text'
 import { FavGymSlider } from '@/components/fav-gym-slider'
-import { getCityStates, filterTopGyms } from '@/lib/gyms-api'
+import { getCityStates, filterTopGyms, getNextFavouriteGyms } from '@/lib/gyms-api'
 import { gymCities } from '@/types/gym'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
@@ -67,9 +67,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BestGyms() {
-  const [{ states, cities }, { gyms, meta }] = await Promise.all([
+  const [{ states, cities }, { gyms, meta }, favGyms] = await Promise.all([
     getCityStates(),
     filterTopGyms({ page: 1, perPage: 12 }),
+    getNextFavouriteGyms({ perPage: 10 }),
   ])
   const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/`
 
@@ -103,7 +104,7 @@ export default async function BestGyms() {
           </section>
 
           <section className='mt-16 mb-12' aria-labelledby='fav-gym-heading'>
-            <FavGymSlider cities={cities} />
+            <FavGymSlider cities={favGyms} />
           </section>
         </div>
       </div>
