@@ -72,12 +72,12 @@ export function FavGymSlider({ cities }: FavGymSliderProps) {
           className='w-full overflow-visible [&>div]:overflow-visible'
         >
         <CarouselContent className='-ml-3'>
-          {cities.filter((city) => !!(city.city || city.state)).map((city, index) => {
-            const name: string = city.city || city.stateName || city.state
+          {cities.filter((city) => !!(city.city || city.state || city.filter)).map((city, index) => {
+            const name: string = city.city || city.stateName || city.state || city.filter
             const gymCity: gymCities = {
-              label: name,
-              type: city.city ? 'city' : 'state',
-              filter: name,
+              label: city.label || name,
+              type: city.type || (city.city ? 'city' : 'state'),
+              filter: city.filter || name,
             }
             return (
               <CarouselItem
