@@ -70,7 +70,6 @@ export default async function BestGyms() {
     getCityStates(),
     filterTopGyms({ page: 1, perPage: 12 }),
   ])
-
   const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/`
 
   return (

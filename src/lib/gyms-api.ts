@@ -768,9 +768,15 @@ export async function getStates(): Promise<StateWithCount[]> {
  * Gets states with gym counts from the database (GET /api/v1/gyms/cities-and-states).
  * Use for state filter autocomplete.
  */
-export async function getCityStates(): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
+export async function getCityStates(fields?: string): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/gyms/cities-and-states`, {
+     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
+     console.log(fields)
+    if (fields && fields.trim()) {
+      url.searchParams.append('fields', fields.trim())
+    }
+    // console.log(url.toString())
+    const response = await fetch(url.toString(), {
       next: { revalidate: 300 },
     })
     if (!response.ok) {
