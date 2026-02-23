@@ -14,10 +14,10 @@ import { useState, useCallback } from 'react'
 
 interface FavGymSliderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cities: any[]
+  gyms: any[],
 }
 
-export function FavGymSlider({ cities }: FavGymSliderProps) {
+export function FavGymSlider({ gyms }: FavGymSliderProps) {
   const [api, setApi] = useState<CarouselApi>()
   const [canScrollPrev, setCanScrollPrev] = useState(false)
   const [canScrollNext, setCanScrollNext] = useState(true)
@@ -32,8 +32,8 @@ export function FavGymSlider({ cities }: FavGymSliderProps) {
       setCanScrollNext(carouselApi.canScrollNext())
     })
   }, [])
-
-  if (!cities || cities.length === 0) return null
+  
+  if (!gyms || gyms.length === 0) return null
 
   return (
     <div className='w-full'>
@@ -72,10 +72,11 @@ export function FavGymSlider({ cities }: FavGymSliderProps) {
           className='w-full overflow-visible [&>div]:overflow-visible'
         >
         <CarouselContent className='-ml-3'>
-          {cities.filter((city) => !!(city.city || city.state || city.filter)).map((city, index) => {
+          {gyms.filter((city) => !!(city.city || city.state || city.filter)).map((city, index) => {
+
             const name: string = city.city || city.stateName || city.state || city.filter
             const gymCity: gymCities = {
-              label: city.label || name,
+              title: city.label || name,
               type: city.type || (city.city ? 'city' : 'state'),
               filter: city.filter || name,
             }

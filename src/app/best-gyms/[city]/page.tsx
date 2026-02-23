@@ -12,13 +12,12 @@ interface PageProps {
 const siteUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || 'https://bestgyms.gymdues.com'
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-  const { city: slug } = await params
+  const { city: filter } = await params
   const { type = 'city' } = await searchParams
 
-  const filter = slug
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  // Strip "best-gyms-in-" prefix to get the location slug, then capitalize for display
+  // const filterSlug = slug.startsWith('best-gyms-in-') ? slug.replace('best-gyms-in-', '') : slug
+  const slug = filter
 
   const headersList = await headers()
   // x-pathname is set by middleware to the original subdomain path (e.g. /best-houston-gyms)
@@ -77,16 +76,16 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 }
 
 export default async function BestCityGymsPage({ params, searchParams }: PageProps) {
-  const { city: slug } = await params
+  
+  const { city: filter } = await params
   const { type = 'city' } = await searchParams
 
-  // Convert slug back to filter value: "new-york" → "New York"
-  const filter = slug
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  // Strip "best-gyms-in-" prefix to get the location slug, then capitalize for display
+  // const filterSlug = slug.startsWith('best-gyms-in-') ? slug.replace('best-gyms-in-', '') : slug
+  const slug =  `best-${filter}-gyms`
 
   const gymsParams: {
+    slug?: string
     state?: string
     city?: string
     page: number
@@ -98,18 +97,20 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
     fields: 'topgyms',
   }
 
-  if (type === 'state') {
-    gymsParams.state = filter
-  } else {
-    gymsParams.city = filter
-  }
+  if (slug) {
+    // New API slug format — backend resolves state/city from slug directly
+    gymsParams.slug = slug
+  } 
 
-  const favGymsParams = type === 'state' ? { state: filter } : { city: filter }
-  const [{ gyms, meta }, favGymsResult, { cities }] = await Promise.all([
+ 
+  const [{ gyms, meta }, { cities }] = await Promise.all([
     getPaginatedGyms(gymsParams),
-    getNextFavouriteGyms({ perPage: 10, ...favGymsParams }),
     getCityStates(),
   ])
+  
+   const favGymsParams = meta.filterType === 'state' ? { state: filter } : { city: filter }
+  const favGymsResult = await getNextFavouriteGyms({ perPage: 10, ...favGymsParams });
+  
   const favGyms = favGymsResult.length > 0 ? favGymsResult : cities
 const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
 
@@ -120,7 +121,7 @@ const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
       <BestGymsByLocation filter={filter} type={type} initialGyms={gyms} initialMeta={meta} />
       <div className='container mx-auto px-4'>
         <section className='mt-16 mb-12' aria-labelledby='fav-gym-heading'>
-          <FavGymSlider cities={favGyms} />
+          <FavGymSlider gyms={favGyms} />
         </section>
       </div>
     </>

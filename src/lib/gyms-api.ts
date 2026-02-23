@@ -27,6 +27,7 @@ export interface GymsPaginationMeta {
   total: number
   next_page_url?: string | null
   prev_page_url?: string | null
+  filterType?: string
 }
 
 export interface PaginatedGymsResponse {
@@ -168,14 +169,16 @@ export async function getPaginatedGyms(options: {
   search?: string
   state?: string
   city?: string
+  slug?: string
   trending?: boolean
   page?: number
   perPage?: number
   /** Request minimal fields (id, slug, updated_at) for sitemap generation */
-  fields?: 'sitemap' | string 
+  fields?: 'sitemap' | string
 }): Promise<PaginatedGymsResponse> {
-  const { search, state, city, trending, page, perPage, fields } = options
-
+  const { search, state, city, slug, trending, page, perPage, fields } = options
+  console.log(options);
+  
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
 
@@ -187,6 +190,9 @@ export async function getPaginatedGyms(options: {
     }
     if (city && city.trim()) {
       url.searchParams.append('city', city.trim())
+    }
+    if (slug && slug.trim()) {
+      url.searchParams.append('slug', slug.trim())
     }
     if (trending !== undefined) {
       url.searchParams.append('trending', trending.toString())
@@ -295,6 +301,7 @@ export async function getPaginatedGyms(options: {
       total,
       next_page_url: null,
       prev_page_url: null,
+      filterType: data.page.filterType,
     }
 
     return { gyms, meta }
@@ -771,7 +778,6 @@ export async function getStates(): Promise<StateWithCount[]> {
 export async function getCityStates(fields?: string): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
   try {
      const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
-     console.log(fields)
     if (fields && fields.trim()) {
       url.searchParams.append('fields', fields.trim())
     }
