@@ -749,6 +749,50 @@ export async function getGymById(id: string): Promise<Gym | null> {
 }
 
 /**
+ * Fetches nearby gyms for a given gym slug.
+ * Calls GET /api/v1/gyms/{slug}/nearby with optional address_id and per_page params.
+ */
+export async function getNearbyGyms(
+  slug: string,
+  options?: { address_id?: string | number; per_page?: number }
+): Promise<Gym[]> {
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/${encodeURIComponent(slug)}/nearby`)
+    if (options?.address_id != null && String(options.address_id).trim()) {
+      url.searchParams.set('address_id', String(options.address_id).trim())
+    }
+    if (options?.per_page && options.per_page > 0) {
+      url.searchParams.set('per_page', String(options.per_page))
+    }
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch nearby gyms: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+    data = transformApiResponse(data)
+
+    let gyms: Record<string, unknown>[] = []
+    if (Array.isArray(data)) {
+      gyms = data
+    } else if (data.data && Array.isArray(data.data)) {
+      gyms = data.data
+    } else if (data.gyms && Array.isArray(data.gyms)) {
+      gyms = data.gyms
+    }
+
+    return normalizeGyms(gyms)
+  } catch (error) {
+    console.error('Error fetching nearby gyms:', error)
+    return []
+  }
+}
+
+/**
  * Gets states with gym counts from the database (GET /api/v1/gyms/states).
  * Use for state filter autocomplete.
  */
@@ -777,12 +821,15 @@ export async function getStates(): Promise<StateWithCount[]> {
  * Gets states with gym counts from the database (GET /api/v1/gyms/cities-and-states).
  * Use for state filter autocomplete.
  */
-export async function getCityStates(): Promise<{
-  states: StateWithCount[]
-  cities: StateWithCount[]
-}> {
+export async function getCityStates(fields?: string): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/gyms/cities-and-states`, {
+     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
+     console.log(fields)
+    if (fields && fields.trim()) {
+      url.searchParams.append('fields', fields.trim())
+    }
+    // console.log(url.toString())
+    const response = await fetch(url.toString(), {
       next: { revalidate: 300 },
     })
     if (!response.ok) {
@@ -797,6 +844,55 @@ export async function getCityStates(): Promise<{
   } catch (error) {
     console.error('Error fetching states:', error)
     return { states: [], cities: [] }
+  }
+}
+
+/**
+ * Fetches next favourite gym spots from the API.
+ * Supports optional state, city, per_page, and page parameters.
+ */
+export async function getNextFavouriteGyms(options: {
+  state?: string
+  city?: string
+  perPage?: number
+  page?: number
+} = {}): Promise<StateWithCount[]> {
+  const { state, city, perPage, page } = options
+
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/next-favourite-gyms`)
+
+    if (state && state.trim()) url.searchParams.append('state', state.trim())
+    if (city && city.trim()) url.searchParams.append('city', city.trim())
+    if (perPage && perPage > 0) url.searchParams.append('per_page', perPage.toString())
+    if (page && page > 0) url.searchParams.append('page', page.toString())
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch next favourite gyms: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+    data = transformApiResponse(data)
+
+    // Laravel paginated: { data: [...], current_page, ... }
+    if (typeof data === 'object' && data !== null && 'data' in data && Array.isArray(data.data)) {
+      return data.data as StateWithCount[]
+    }
+
+    // Plain array
+    if (Array.isArray(data)) {
+      return data as StateWithCount[]
+    }
+
+    return []
+  } catch (error) {
+    // Non-critical: slider is hidden when the list is empty
+    console.warn('getNextFavouriteGyms: endpoint unavailable, slider will be hidden.', error instanceof Error ? error.message : error)
+    return []
   }
 }
 
