@@ -27,9 +27,10 @@ interface GymCardProps {
   selectMode?: boolean
   /** Called when card is clicked in selectMode (not when Details is clicked). */
   onSelect?: () => void
+  hideDescription: boolean
 }
 
-export function GymCard({ gym, selectMode, onSelect }: GymCardProps) {
+export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardProps) {
   const [imageError, setImageError] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
@@ -89,9 +90,12 @@ export function GymCard({ gym, selectMode, onSelect }: GymCardProps) {
         )}
       </CardHeader>
       <CardContent className='flex-1'>
-        <CardDescription className='line-clamp-2'>
-          {stripHtmlTags(gym.description)}
-        </CardDescription>
+        {!hideDescription && (
+          <CardDescription className='line-clamp-2'>
+            {stripHtmlTags(gym.description)}
+          </CardDescription>
+        )}
+        
         {gym.amenities && gym.amenities.length > 0 && (
           <div className='mt-4'>
             <p className='text-xs text-muted-foreground mb-1'>Amenities:</p>

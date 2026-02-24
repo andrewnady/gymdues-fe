@@ -47,7 +47,7 @@ export function RatedGymsSection({ gyms }: RatedGymsSectionProps) {
                 key={gym.id}
                 className='pl-4 md:pl-6 basis-full md:basis-1/2 lg:basis-1/3'
               >
-                <GymCard gym={gym} />
+                <GymCard gym={gym} hideDescription={true} />
               </CarouselItem>
             ))}
           </CarouselContent>
