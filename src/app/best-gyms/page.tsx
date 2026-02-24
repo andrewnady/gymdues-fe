@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonicalUrl = pathname === '/' ? `${base}/` : `${base}${pathname}`
 
   return {
-    title: 'Gyms & Membership Prices by Brand & City | Gymdues',
+    title: 'Best Gyms in the World | Gymdues',
     description:
       'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
     alternates: {
@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: 'Gyms & Membership Prices by Brand & City | Gymdues',
+      title: 'Best Gyms in the World | Gymdues',
       description:
         'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
       siteName: 'GymDues',
@@ -48,14 +48,14 @@ export async function generateMetadata(): Promise<Metadata> {
           url: `${siteUrl}/images/bg-header.jpg`,
           width: 1200,
           height: 630,
-          alt: 'Gyms & Membership Prices by Brand & City | Gymdues',
+          alt: 'Best Gyms in the World | Gymdues',
         },
       ],
       locale: 'en_US',
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Gyms & Membership Prices by Brand & City | Gymdues',
+      title: 'Best Gyms in the World | Gymdues',
       description:
         'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
       images: [`${siteUrl}/images/bg-header.jpg`],
