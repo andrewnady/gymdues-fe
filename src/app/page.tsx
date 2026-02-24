@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getTrendingGyms, getLatestGyms, getAllGyms } from '@/lib/gyms-api'
+import { getTrendingGyms, getLatestGyms, getAllGyms, getRatedGyms } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
 import { BlogPost } from '@/types/blog'
@@ -103,7 +103,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   let trendingGyms: Gym[] = []
   try {
-    trendingGyms = await getTrendingGyms(3)
+    trendingGyms = await getTrendingGyms()
     if (trendingGyms.length === 0) {
       trendingGyms = await getLatestGyms(10)
     }
@@ -128,7 +128,7 @@ export default async function Home() {
 
   let ratedGyms: Gym[] = []
   try {
-    const allGyms = await getAllGyms()
+    const allGyms = await getRatedGyms()
     ratedGyms = allGyms.slice(0, 10)
   } catch (error) {
     console.error('Failed to load popular gyms:', error)
