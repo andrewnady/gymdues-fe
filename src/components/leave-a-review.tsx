@@ -26,6 +26,7 @@ export function LeaveReview({ addressId }: LeaveReviewProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorReview, setErrorReview] = useState<string | null>(null)
+  const [rateError, setRateError] = useState(false)
   const [success, setSuccess] = useState(false)
 
   /* -------------------------------------------------------------------------- */
@@ -35,8 +36,14 @@ export function LeaveReview({ addressId }: LeaveReviewProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    if (formData.rate === 0) {
+      setRateError(true)
+      return
+    }
+
     setIsSubmitting(true)
     setErrorReview(null)
+    setRateError(false)
     setSuccess(false)
 
     try {
@@ -77,7 +84,7 @@ export function LeaveReview({ addressId }: LeaveReviewProps) {
     <div>
       <Dialog.Root>
         <Dialog.Trigger>
-          <Button variant='secondary'>Leave a Review {addressId}</Button>
+          <Button>Leave a Review</Button>
         </Dialog.Trigger>
 
         <Dialog.Content maxWidth='600px'>
@@ -110,20 +117,29 @@ export function LeaveReview({ addressId }: LeaveReviewProps) {
 
               {/* Rate */}
               <div className='space-y-2'>
-                <label htmlFor='rate' className='text-sm font-medium'>
-                  Rate
-                </label>
-                <Input
-                  type='number'
-                  id='rate'
-                  placeholder='Rate'
-                  required
-                  value={formData.rate}
-                  onChange={handleChange}
-                  min={1}
-                  max={5}
-                  maxLength={1}
-                />
+                <label className='text-sm font-medium'>Rate</label>
+                <div className='flex gap-2'>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type='button'
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, rate: star }))
+                        setRateError(false)
+                      }}
+                      className={`w-10 h-10 rounded-md border text-sm font-semibold transition-colors ${
+                        formData.rate === star
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background border-input hover:bg-accent'
+                      }`}
+                    >
+                      {star}
+                    </button>
+                  ))}
+                </div>
+                {rateError && (
+                  <p className='text-sm text-destructive'>Please select a rating.</p>
+                )}
               </div>
 
               {/* Email */}

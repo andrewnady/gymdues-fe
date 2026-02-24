@@ -52,6 +52,12 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
 
   const resolvedId = addressId != null && String(addressId).trim() ? String(addressId).trim() : null
 
+  const leaveReviewAddressId: number | null = resolvedId
+    ? Number(resolvedId)
+    : typeof gym.address === 'object' && gym.address?.id != null
+      ? Number(gym.address.id)
+      : null
+
   useEffect(() => {
     if (!resolvedId) {
       setAddressData(null)
@@ -97,7 +103,7 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
                 {loading && resolvedId ? 'Loading…' : `${reviewCount} total reviews`}
               </CardDescription>
             </CardHeader>
-            <LeaveReview addressId={gym.address.id} />
+            {leaveReviewAddressId != null && <LeaveReview addressId={leaveReviewAddressId} />}
           </div>
 
           <CardContent>
