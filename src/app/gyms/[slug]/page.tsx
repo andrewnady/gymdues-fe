@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getGymBySlug, getNearbyGyms } from '@/lib/gyms-api'
+import { getGymBySlug, getNearbyGyms, getAddressesByGymId } from '@/lib/gyms-api'
 import { getReviewCount, getGymHeroImagePath } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -132,10 +132,16 @@ export default async function GymDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch nearby gyms from API
+  // Fetch nearby gyms and gym addresses from API
   const addressId =
     typeof gym.address === 'object' && gym.address !== null ? gym.address.id : undefined
-  const nearbyGyms = await getNearbyGyms(slug, { address_id: addressId, per_page: 10 })
+  const [nearbyGyms, addressesResult] = await Promise.all([
+    getNearbyGyms(slug, { address_id: addressId, per_page: 10 }),
+    (gym.addresses_count ?? 0) > 0
+      ? getAddressesByGymId(gym.id, { page: 1, per_page: 100 })
+      : Promise.resolve({ data: [], meta: null }),
+  ])
+  const gymAddresses = addressesResult.data
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
@@ -448,7 +454,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         </Card>
 
         {/* Map and address sections: #location= (address id) is read from hash on the client */}
-        <GymSlugAddressBlock slug={slug} gym={gym} />
+        <GymSlugAddressBlock slug={slug} gym={gym} initialAddresses={gymAddresses} />
 
         {/* Amenities - Full Width */}
         {gym.amenities && gym.amenities.length > 0 && (
