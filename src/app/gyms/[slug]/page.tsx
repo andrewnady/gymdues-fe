@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getGymBySlug } from '@/lib/gyms-api'
+import { getGymBySlug, getNearbyGyms } from '@/lib/gyms-api'
 import { getReviewCount, getGymHeroImagePath } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +19,7 @@ import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { ReadMoreText } from '@/components/read-more-text'
 import { GymSlugAddressBlock } from '@/components/gym-slug-address-block'
 import { Breadcrumb } from '@/components/breadcrumb'
+import { NearbyGymsSlider } from '@/components/nearby-gyms-slider'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -130,6 +131,11 @@ export default async function GymDetailPage({ params }: PageProps) {
   if (!gym) {
     notFound()
   }
+
+  // Fetch nearby gyms from API
+  const addressId =
+    typeof gym.address === 'object' && gym.address !== null ? gym.address.id : undefined
+  const nearbyGyms = await getNearbyGyms(slug, { address_id: addressId, per_page: 10 })
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
@@ -556,6 +562,9 @@ export default async function GymDetailPage({ params }: PageProps) {
               </Card>
             )
           })()}
+
+        {/* Nearby Gyms Slider */}
+        <NearbyGymsSlider gyms={nearbyGyms} zipCode={gym.zipCode} />
       </div>
     </div>
   )
