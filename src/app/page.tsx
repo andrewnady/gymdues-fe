@@ -11,6 +11,7 @@ import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
+import { RatedGymsSection } from '@/components/rated-gyms-section'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -125,6 +126,15 @@ export default async function Home() {
     // Fallback to empty array if API fails
   }
 
+  let ratedGyms: Gym[] = []
+  try {
+    const allGyms = await getAllGyms()
+    ratedGyms = allGyms.slice(0, 10)
+  } catch (error) {
+    console.error('Failed to load popular gyms:', error)
+    // Fallback to empty array if API fails
+  }
+
   let reviews: ReviewWithGym[] = []
   try {
     reviews = await getAllReviews(12)
@@ -224,7 +234,7 @@ export default async function Home() {
       <WhyChooseSection />
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
-      {/* <RatedGymsSection gyms={trendingGyms} /> */}
+      <RatedGymsSection gyms={ratedGyms} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 
