@@ -27,7 +27,7 @@ interface GymCardProps {
   selectMode?: boolean
   /** Called when card is clicked in selectMode (not when Details is clicked). */
   onSelect?: () => void
-  hideDescription: boolean
+  hideDescription?: boolean
 }
 
 export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardProps) {
