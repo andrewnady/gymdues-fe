@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonicalUrl = pathname === '/' ? `${base}/` : `${base}${pathname}`
 
   return {
-    title: 'Gyms & Membership Prices by Brand & City | Gymdues',
+    title: 'Best Gyms in the World | Gymdues',
     description:
       'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
     alternates: {
