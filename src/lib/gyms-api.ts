@@ -40,7 +40,10 @@ export interface PaginatedGymsResponse {
  */
 function normalizeGym(gym: Record<string, unknown>): Gym {
   // Handle reviewCount - check for various field name variations
-  let reviewCount = (gym.reviewCount || gym.review_count || gym.reviews_count || gym.reviewsCount) as number | undefined
+  let reviewCount = (gym.reviewCount ||
+    gym.review_count ||
+    gym.reviews_count ||
+    gym.reviewsCount) as number | undefined
 
   // If reviewCount is not provided, calculate it from reviews array
   if (reviewCount === undefined || reviewCount === null) {
@@ -54,11 +57,15 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
 
   // Transform URL fields to replace Docker internal hostnames
   const normalizedGym: Record<string, unknown> = { ...gym }
-  
+
   // Transform logo URL if present
   if (normalizedGym.logo && typeof normalizedGym.logo === 'string') {
     normalizedGym.logo = transformApiUrl(normalizedGym.logo)
-  } else if (normalizedGym.logo && typeof normalizedGym.logo === 'object' && normalizedGym.logo !== null) {
+  } else if (
+    normalizedGym.logo &&
+    typeof normalizedGym.logo === 'object' &&
+    normalizedGym.logo !== null
+  ) {
     const logoObj = normalizedGym.logo as Record<string, unknown>
     if (logoObj.path) logoObj.path = transformApiUrl(String(logoObj.path))
     if (logoObj.url) logoObj.url = transformApiUrl(String(logoObj.url))
@@ -66,7 +73,7 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
 
   // Transform any other image/URL fields
   const urlFields = ['image', 'photo', 'cover', 'thumbnail', 'avatar']
-  urlFields.forEach(field => {
+  urlFields.forEach((field) => {
     if (normalizedGym[field] && typeof normalizedGym[field] === 'string') {
       normalizedGym[field] = transformApiUrl(normalizedGym[field] as string)
     }
@@ -98,7 +105,7 @@ export async function getAllGyms(
   state?: string,
   city?: string,
   trending?: boolean,
-  popular?: boolean
+  popular?: boolean,
 ): Promise<Gym[]> {
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
@@ -114,10 +121,10 @@ export async function getAllGyms(
     if (trending !== undefined) {
       url.searchParams.append('trending', trending.toString())
     }
-     if (popular !== undefined) {
+    if (popular !== undefined) {
       url.searchParams.append('popular', popular.toString())
     }
-    
+
     const response = await fetch(url.toString(), {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
     })
@@ -127,7 +134,7 @@ export async function getAllGyms(
     }
 
     let data = await response.json()
-    
+
     // Transform URLs in the response (replace nginx with localhost:8080)
     data = transformApiResponse(data)
 
@@ -172,7 +179,7 @@ export async function getPaginatedGyms(options: {
   page?: number
   perPage?: number
   /** Request minimal fields (id, slug, updated_at) for sitemap generation */
-  fields?: 'sitemap' | string 
+  fields?: 'sitemap' | string
 }): Promise<PaginatedGymsResponse> {
   const { search, state, city, trending, page, perPage, fields } = options
 
@@ -200,7 +207,7 @@ export async function getPaginatedGyms(options: {
     }
     if (fields === 'sitemap') {
       url.searchParams.append('fields', 'sitemap')
-    }else if (fields) {
+    } else if (fields) {
       url.searchParams.append('fields', fields)
     }
 
@@ -213,21 +220,21 @@ export async function getPaginatedGyms(options: {
     }
 
     let data = await response.json()
-    
+
     // Transform URLs in the response
     data = transformApiResponse(data)
 
     // Laravel-style pagination: { current_page, data: [...], last_page, per_page, total, ... }
     type LaravelPaginatedResponse = {
-        data: Record<string, unknown>[]
-        current_page: number
-        from: number | null
-        last_page: number
-        per_page: number
-        to: number | null
-        total: number
-        next_page_url?: string | null
-        prev_page_url?: string | null
+      data: Record<string, unknown>[]
+      current_page: number
+      from: number | null
+      last_page: number
+      per_page: number
+      to: number | null
+      total: number
+      next_page_url?: string | null
+      prev_page_url?: string | null
     }
 
     if (
@@ -303,7 +310,6 @@ export async function getPaginatedGyms(options: {
     throw error
   }
 }
-
 
 export async function filterTopGyms(options: {
   state?: string
@@ -390,10 +396,7 @@ export async function filterTopGyms(options: {
  * Optionally pass addressId to get reviews, hours, and pricing for that location.
  * Falls back to fetching all gyms and filtering by slug if the slug endpoint doesn't exist.
  */
-export async function getGymBySlug(
-  slug: string,
-  addressId?: string | null
-): Promise<Gym | null> {
+export async function getGymBySlug(slug: string, addressId?: string | null): Promise<Gym | null> {
   if (!slug || typeof slug !== 'string') {
     console.error('Invalid slug provided:', slug)
     return null
@@ -412,7 +415,7 @@ export async function getGymBySlug(
 
       if (response.ok) {
         let data = await response.json()
-        
+
         // Transform URLs in the response
         data = transformApiResponse(data)
 
@@ -447,7 +450,9 @@ export async function getGymBySlug(
 
       // If other error status, log and continue to fallback
       if (!response.ok) {
-        console.warn(`API returned ${response.status} for slug ${slug}, falling back to filtering all gyms`)
+        console.warn(
+          `API returned ${response.status} for slug ${slug}, falling back to filtering all gyms`,
+        )
       }
     } catch (fetchError) {
       // If slug endpoint doesn't exist or fails, fall back to fetching all and filtering
@@ -476,7 +481,7 @@ export async function getGymBySlug(
  */
 export async function getAddressesByGymId(
   gymId: string,
-  options?: { page?: number; per_page?: number }
+  options?: { page?: number; per_page?: number },
 ): Promise<AddressesPaginatedResponse> {
   const page = options?.page ?? 1
   const perPage = options?.per_page ?? 5
@@ -493,10 +498,10 @@ export async function getAddressesByGymId(
   }
 
   let resData = await response.json()
-  
+
   // Transform URLs in the response
   resData = transformApiResponse(resData)
-  
+
   const res = resData as {
     data: GymAddress[]
     current_page: number
@@ -547,7 +552,9 @@ export async function getAddressesByLocation(options?: {
   }
   const response = await fetch(url.toString(), { cache: 'no-store' })
   if (!response.ok) {
-    throw new Error(`Failed to fetch addresses by location: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Failed to fetch addresses by location: ${response.status} ${response.statusText}`,
+    )
   }
   const data = (await response.json()) as { data: GymWithAddressesGroup[] }
   return {
@@ -585,7 +592,7 @@ export async function getAddress(addressId: string): Promise<AddressDetail | nul
     throw new Error(`Failed to fetch address: ${response.status} ${response.statusText}`)
   }
   let data = await response.json()
-  
+
   // Transform URLs in the response
   data = transformApiResponse(data) as Record<string, unknown>
   return {
@@ -610,7 +617,7 @@ export async function getTrendingGyms(limit?: number): Promise<Gym[]> {
     }
 
     let data = await response.json()
-    
+
     // Transform URLs in the response
     data = transformApiResponse(data)
 
@@ -638,6 +645,52 @@ export async function getTrendingGyms(limit?: number): Promise<Gym[]> {
     return normalizedGyms
   } catch (error) {
     console.error('Error fetching trending gyms:', error)
+    throw error
+  }
+}
+
+/**
+ * Fetches Gyms with rating > 4.5 from the API
+ */
+export async function getRatedGyms(limit?: number): Promise<Gym[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/gyms/highly-rated`, {
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch rated gyms: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+
+    // Transform URLs in the response
+    data = transformApiResponse(data)
+
+    // Handle different response formats
+    let gyms: Record<string, unknown>[] = []
+
+    if (data.data && Array.isArray(data.data)) {
+      gyms = data.data as Record<string, unknown>[]
+    } else if (data.gyms && Array.isArray(data.gyms)) {
+      gyms = data.gyms as Record<string, unknown>[]
+    } else if (Array.isArray(data)) {
+      gyms = data as Record<string, unknown>[]
+    } else {
+      throw new Error('Invalid response format from API')
+    }
+
+    // Normalize all gyms to ensure reviewCount is set
+    const normalizedGyms = normalizeGyms(gyms)
+
+    // Limit the results if a limit is specified
+    if (limit && limit > 0) {
+      return normalizedGyms.slice(0, limit)
+    }
+
+    return normalizedGyms
+  } catch (error) {
+    console.error('Error fetching rated gyms:', error)
     throw error
   }
 }
@@ -673,7 +726,7 @@ export async function getGymById(id: string): Promise<Gym | null> {
     }
 
     let data = await response.json()
-    
+
     // Transform URLs in the response
     data = transformApiResponse(data)
 
@@ -752,10 +805,10 @@ export async function getStates(): Promise<StateWithCount[]> {
       throw new Error(`Failed to fetch states: ${response.status} ${response.statusText}`)
     }
     let data = await response.json()
-    
+
     // Transform URLs in the response
     data = transformApiResponse(data)
-    
+
     const states = data as { state: string; stateName: string; count: number }[]
     return Array.isArray(states) ? states : []
   } catch (error) {
@@ -788,10 +841,9 @@ export async function getCityStates(fields?: string): Promise<{ states: StateWit
       states: Array.isArray(data.states) ? data.states : [],
       cities: Array.isArray(data.cities) ? data.cities : [],
     }
-
   } catch (error) {
     console.error('Error fetching states:', error)
-      return { states: [], cities: [] }
+    return { states: [], cities: [] }
   }
 }
 
@@ -861,19 +913,57 @@ export async function getStatesWithCounts(): Promise<StateWithCount[]> {
       }
     })
     const stateNames: Record<string, string> = {
-      AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas',
-      CA: 'California', CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware',
-      FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho',
-      IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas',
-      KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
-      MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
-      MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada',
-      NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York',
-      NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma',
-      OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina',
-      SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah',
-      VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia',
-      WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia',
+      AL: 'Alabama',
+      AK: 'Alaska',
+      AZ: 'Arizona',
+      AR: 'Arkansas',
+      CA: 'California',
+      CO: 'Colorado',
+      CT: 'Connecticut',
+      DE: 'Delaware',
+      FL: 'Florida',
+      GA: 'Georgia',
+      HI: 'Hawaii',
+      ID: 'Idaho',
+      IL: 'Illinois',
+      IN: 'Indiana',
+      IA: 'Iowa',
+      KS: 'Kansas',
+      KY: 'Kentucky',
+      LA: 'Louisiana',
+      ME: 'Maine',
+      MD: 'Maryland',
+      MA: 'Massachusetts',
+      MI: 'Michigan',
+      MN: 'Minnesota',
+      MS: 'Mississippi',
+      MO: 'Missouri',
+      MT: 'Montana',
+      NE: 'Nebraska',
+      NV: 'Nevada',
+      NH: 'New Hampshire',
+      NJ: 'New Jersey',
+      NM: 'New Mexico',
+      NY: 'New York',
+      NC: 'North Carolina',
+      ND: 'North Dakota',
+      OH: 'Ohio',
+      OK: 'Oklahoma',
+      OR: 'Oregon',
+      PA: 'Pennsylvania',
+      RI: 'Rhode Island',
+      SC: 'South Carolina',
+      SD: 'South Dakota',
+      TN: 'Tennessee',
+      TX: 'Texas',
+      UT: 'Utah',
+      VT: 'Vermont',
+      VA: 'Virginia',
+      WA: 'Washington',
+      WV: 'West Virginia',
+      WI: 'Wisconsin',
+      WY: 'Wyoming',
+      DC: 'District of Columbia',
     }
     return Array.from(stateMap.entries())
       .map(([state, count]) => ({
@@ -887,5 +977,3 @@ export async function getStatesWithCounts(): Promise<StateWithCount[]> {
     return []
   }
 }
-
-
