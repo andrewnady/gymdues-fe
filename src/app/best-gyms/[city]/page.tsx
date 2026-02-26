@@ -2,6 +2,7 @@ import { BestGymsByLocation } from '@/components/best-gym/best-gyms-by-location'
 import { FavGymSlider } from '@/components/fav-gym-slider'
 import { getPaginatedGyms, getNextFavouriteGyms, getCityStates } from '@/lib/gyms-api'
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -103,10 +104,10 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
   } 
 
  
-  const [{ gyms, meta }, { cities }] = await Promise.all([
-    getPaginatedGyms(gymsParams),
-    getCityStates(),
-  ])
+  const { gyms, meta } = await getPaginatedGyms(gymsParams).catch(() => redirect(siteUrl))
+  if (!gyms?.length) redirect(siteUrl)
+
+  const { cities } = await getCityStates()
   
    const favGymsParams = meta.filterType === 'state' ? { state: filter } : { city: filter }
   const favGymsResult = await getNextFavouriteGyms({ perPage: 10, ...favGymsParams });
