@@ -177,7 +177,12 @@ export interface LocationWithCount {
 }
 
 export interface gymCities {
-  label: string
+  label?:string
+  title: string
   type: string
   filter: string
+  slug?: string
+  state?: string
+  city?: string
+  featuredImage?: string
 }
