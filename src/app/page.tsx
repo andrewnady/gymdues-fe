@@ -1,5 +1,11 @@
 import type { Metadata } from 'next'
-import { getTrendingGyms, getLatestGyms, getAllGyms, getRatedGyms } from '@/lib/gyms-api'
+import {
+  getTrendingGyms,
+  getLatestGyms,
+  getAllGyms,
+  getRatedGyms,
+  getBestGymsByState,
+} from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
 import { BlogPost } from '@/types/blog'
@@ -12,6 +18,7 @@ import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
 import { RatedGymsSection } from '@/components/rated-gyms-section'
+import { BestGymsLocationSection } from '@/components/best-gyms-location-section'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -101,43 +108,72 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
+  // Run all independent data fetches in parallel to keep first load fast
+  const [
+    trendingResult,
+    popularResult,
+    ratedResult,
+    nyBestResult,
+    caBestResult,
+    reviewsResult,
+    postsResult,
+  ] = await Promise.allSettled([
+    getTrendingGyms(),
+    getAllGyms(undefined, undefined, undefined, undefined, true),
+    getRatedGyms(20),
+    getBestGymsByState('New York', 20),
+    getBestGymsByState('California', 20),
+    getAllReviews(12),
+    getRecentBlogPosts(3),
+  ])
+
   let trendingGyms: Gym[] = []
-  try {
-    trendingGyms = await getTrendingGyms()
-    if (trendingGyms.length === 0) {
-      trendingGyms = await getLatestGyms(10)
-    }
-  } catch (error) {
-    console.error('Failed to load trending gyms:', error)
-    // Fallback to latest 10 gyms if API fails
+  if (trendingResult.status === 'fulfilled') {
+    trendingGyms = trendingResult.value
+  } else {
+    console.error('Failed to load trending gyms:', trendingResult.reason)
+  }
+
+  // Fallback: if trending is empty, fetch latest 10 gyms
+  if (trendingGyms.length === 0) {
     try {
       trendingGyms = await getLatestGyms(10)
-    } catch {
-      // Keep empty array
+    } catch (error) {
+      console.error('Failed to load latest gyms fallback:', error)
     }
   }
 
   let popularGyms: Gym[] = []
-  try {
-    const allGyms = await getAllGyms(undefined, undefined, undefined, undefined, true)
-    popularGyms = allGyms.slice(0, 5)
-  } catch (error) {
-    console.error('Failed to load popular gyms:', error)
-    // Fallback to empty array if API fails
+  if (popularResult.status === 'fulfilled') {
+    popularGyms = popularResult.value.slice(0, 5)
+  } else {
+    console.error('Failed to load popular gyms:', popularResult.reason)
   }
 
   let ratedGyms: Gym[] = []
-  try {
-    const allGyms = await getRatedGyms()
-    ratedGyms = allGyms.slice(0, 10)
-  } catch (error) {
-    console.error('Failed to load popular gyms:', error)
-    // Fallback to empty array if API fails
+  if (ratedResult.status === 'fulfilled') {
+    ratedGyms = ratedResult.value
+  } else {
+    console.error('Failed to load rated gyms:', ratedResult.reason)
+  }
+
+  let nyBestGyms: Gym[] = []
+  if (nyBestResult.status === 'fulfilled') {
+    nyBestGyms = nyBestResult.value
+  } else {
+    console.error('Failed to load New York best gyms:', nyBestResult.reason)
+  }
+
+  let caBestGyms: Gym[] = []
+  if (caBestResult.status === 'fulfilled') {
+    caBestGyms = caBestResult.value
+  } else {
+    console.error('Failed to load California best gyms:', caBestResult.reason)
   }
 
   let reviews: ReviewWithGym[] = []
-  try {
-    reviews = await getAllReviews(12)
+  if (reviewsResult.status === 'fulfilled') {
+    reviews = reviewsResult.value
     // Format dates on server side to prevent hydration mismatches
     reviews = reviews.map((review) => {
       const date = new Date(review.reviewed_at)
@@ -163,17 +199,15 @@ export default async function Home() {
         formattedDate,
       }
     })
-  } catch (error) {
-    console.error('Failed to load reviews:', error)
-    // Fallback to empty array if API fails
+  } else {
+    console.error('Failed to load reviews:', reviewsResult.reason)
   }
 
   let recentPosts: BlogPost[] = []
-  try {
-    recentPosts = await getRecentBlogPosts(3)
-  } catch (error) {
-    console.error('Failed to load recent blog posts:', error)
-    // Fallback to empty array if API fails
+  if (postsResult.status === 'fulfilled') {
+    recentPosts = postsResult.value
+  } else {
+    console.error('Failed to load recent blog posts:', postsResult.reason)
   }
 
   const reviewSchema =
@@ -235,6 +269,16 @@ export default async function Home() {
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
       <RatedGymsSection gyms={ratedGyms} />
+      <BestGymsLocationSection
+        title='Best Gyms in New York City, NY'
+        description="Looking for the best gyms in New York? Whether you’re in NYC or anywhere across the state, New York offers everything from luxury fitness clubs and boutique studios to affordable 24/7 gyms and specialized strength-training facilities. Use GymDues to compare locations, membership options, amenities (weights, cardio, classes, pools, saunas), ratings, and real reviews—so you can quickly find a gym that matches your goals, schedule, and budget."
+        gyms={nyBestGyms}
+      />
+      <BestGymsLocationSection
+        title='Best Gyms in California'
+        description="Searching for the best gyms in California? From Los Angeles and San Diego to San Francisco and beyond, California has an incredible range of gyms—high-end health clubs, CrossFit boxes, Pilates and yoga studios, and budget-friendly chains with multiple locations. On GymDues, you can compare gym memberships, amenities, hours, ratings, and reviews to choose the right gym for your lifestyle—whether you want serious strength training, group classes, or a flexible monthly plan."
+        gyms={caBestGyms}
+      />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 

@@ -696,6 +696,60 @@ export async function getRatedGyms(limit?: number): Promise<Gym[]> {
 }
 
 /**
+ * Fetches best gyms for a given state from the API.
+ * Uses endpoint: GET /api/v1/gyms/filter-state/{stateName}
+ * (server is expected to already apply rating/quality filters).
+ */
+export async function getBestGymsByState(stateName: string, limit?: number): Promise<Gym[]> {
+  if (!stateName || !stateName.trim()) {
+    return []
+  }
+
+  try {
+    const url = `${API_BASE_URL}/api/v1/gyms/filter-state/${encodeURIComponent(stateName.trim())}`
+
+    const response = await fetch(url, {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch best gyms for state ${stateName}: ${response.status} ${response.statusText}`,
+      )
+    }
+
+    let data = await response.json()
+
+    // Transform URLs in the response
+    data = transformApiResponse(data)
+
+    // Handle common response formats
+    let gyms: Record<string, unknown>[] = []
+
+    if (Array.isArray(data)) {
+      gyms = data as Record<string, unknown>[]
+    } else if (data.data && Array.isArray(data.data)) {
+      gyms = data.data as Record<string, unknown>[]
+    } else if (data.gyms && Array.isArray(data.gyms)) {
+      gyms = data.gyms as Record<string, unknown>[]
+    } else {
+      throw new Error('Invalid response format from filter-state API')
+    }
+
+    const normalizedGyms = normalizeGyms(gyms)
+
+    if (limit && limit > 0) {
+      return normalizedGyms.slice(0, limit)
+    }
+
+    return normalizedGyms
+  } catch (error) {
+    console.error(`Error fetching best gyms for state ${stateName}:`, error)
+    return []
+  }
+}
+
+/**
  * Fetches latest gyms from the API (first page, no trending filter).
  * Used as fallback when trending gyms return empty.
  */
