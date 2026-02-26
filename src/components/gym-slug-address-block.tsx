@@ -1,7 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useState } from 'react'
-import type { Gym } from '@/types/gym'
+import type { Gym, GymAddress } from '@/types/gym'
 import { GymLocationsMap } from '@/components/gym-locations-map'
 import { GymAddressSections } from '@/components/gym-address-sections'
 
@@ -17,13 +17,14 @@ function getLocationFromHash(): string | null {
 interface GymSlugAddressBlockProps {
   slug: string
   gym: Gym
+  initialAddresses: GymAddress[]
 }
 
 /**
  * Reads #location= (address id) from the URL hash and passes it to the map and address sections.
  * Keeps in sync with hash changes (e.g. when user selects an address in the map).
  */
-export function GymSlugAddressBlock({ slug, gym }: GymSlugAddressBlockProps) {
+export function GymSlugAddressBlock({ slug, gym, initialAddresses }: GymSlugAddressBlockProps) {
   const [addressId, setAddressId] = useState<string | null>(null)
 
   // Sync from hash on mount and when hash changes (e.g. user clicked an address).
@@ -42,6 +43,7 @@ export function GymSlugAddressBlock({ slug, gym }: GymSlugAddressBlockProps) {
           slug={slug}
           gymId={gym.id}
           currentAddressId={addressId}
+          initialAddresses={initialAddresses}
         />
       )}
       <GymAddressSections gym={gym} addressId={addressId} />

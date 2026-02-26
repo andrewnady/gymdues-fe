@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getTrendingGyms, getLatestGyms, getAllGyms } from '@/lib/gyms-api'
+import { getTrendingGyms, getLatestGyms, getAllGyms, getRatedGyms } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
 import { BlogPost } from '@/types/blog'
@@ -11,6 +11,7 @@ import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
+import { RatedGymsSection } from '@/components/rated-gyms-section'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -102,7 +103,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   let trendingGyms: Gym[] = []
   try {
-    trendingGyms = await getTrendingGyms(3)
+    trendingGyms = await getTrendingGyms()
     if (trendingGyms.length === 0) {
       trendingGyms = await getLatestGyms(10)
     }
@@ -120,6 +121,15 @@ export default async function Home() {
   try {
     const allGyms = await getAllGyms(undefined, undefined, undefined, undefined, true)
     popularGyms = allGyms.slice(0, 5)
+  } catch (error) {
+    console.error('Failed to load popular gyms:', error)
+    // Fallback to empty array if API fails
+  }
+
+  let ratedGyms: Gym[] = []
+  try {
+    const allGyms = await getRatedGyms()
+    ratedGyms = allGyms.slice(0, 10)
   } catch (error) {
     console.error('Failed to load popular gyms:', error)
     // Fallback to empty array if API fails
@@ -224,7 +234,7 @@ export default async function Home() {
       <WhyChooseSection />
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
-      {/* <RatedGymsSection gyms={trendingGyms} /> */}
+      <RatedGymsSection gyms={ratedGyms} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 

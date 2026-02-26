@@ -180,3 +180,35 @@ export async function getGymReviews(
     return []
   }
 }
+
+// Leave a review API
+export interface ReviewSubmission {
+  name: string
+  rate: number
+  email: string
+  text: string
+  address_id: number
+}
+export async function SubmitReviewForm(submissionData: ReviewSubmission) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(submissionData),
+    })
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(
+        errorData.message || `Failed to submit review: ${response.status} ${response.statusText}`,
+      )
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error submitting review:', error)
+    throw error
+  }
+}

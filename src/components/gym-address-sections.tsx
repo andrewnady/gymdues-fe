@@ -15,6 +15,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { Badge } from '@/components/ui/badge'
+import { LeaveReview } from './leave-a-review'
 
 function formatTimeToAmPm(timeString: string): string {
   if (!timeString) return ''
@@ -50,6 +51,12 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
   const [error, setError] = useState<string | null>(null)
 
   const resolvedId = addressId != null && String(addressId).trim() ? String(addressId).trim() : null
+
+  const leaveReviewAddressId: number | null = resolvedId
+    ? Number(resolvedId)
+    : typeof gym.address === 'object' && gym.address?.id != null
+      ? Number(gym.address.id)
+      : null
 
   useEffect(() => {
     if (!resolvedId) {
@@ -89,16 +96,18 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
       {/* Reviews and Hours - Side by Side */}
       <div className='grid md:grid-cols-3 gap-8'>
         <Card className='md:col-span-2'>
-          <CardHeader>
-            <CardTitle>Reviews for {gym.name}</CardTitle>
-            <CardDescription>
-              {loading && resolvedId ? 'Loading…' : `${reviewCount} total reviews`}
-            </CardDescription>
-          </CardHeader>
+          <div className='p-6 flex justify-between gap-2 items-center'>
+            <CardHeader className='p-0'>
+              <CardTitle>Reviews for {gym.name}</CardTitle>
+              <CardDescription>
+                {loading && resolvedId ? 'Loading…' : `${reviewCount} total reviews`}
+              </CardDescription>
+            </CardHeader>
+            {leaveReviewAddressId != null && <LeaveReview addressId={leaveReviewAddressId} />}
+          </div>
+
           <CardContent>
-            {error && resolvedId && (
-              <p className='text-destructive text-sm mb-2'>{error}</p>
-            )}
+            {error && resolvedId && <p className='text-destructive text-sm mb-2'>{error}</p>}
             <GymReviewsPaginated reviews={reviews} gymName={gym.name} />
           </CardContent>
         </Card>
@@ -133,20 +142,18 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
       <section className={`py-20 bg-background ${pricing.length === 0 ? 'hidden' : ''}`}>
         <div className='container mx-auto px-4'>
           <div className='mb-12 text-center'>
-            <h2 className='text-3xl md:text-4xl font-bold mb-2'>
-              Membership Plans for {gym.name}
-            </h2>
+            <h2 className='text-3xl md:text-4xl font-bold mb-2'>Membership Plans for {gym.name}</h2>
             <ReadMoreText className='text-muted-foreground text-lg'>
               Choose the right {gym.name} plan by comparing what&apos;s included—not just the
               monthly price. In this section, we break down {gym.name} membership tiers, typical
-              perks (club access, classes, guest privileges), and common fees so you can
-              understand the real cost before you join. If you&apos;re researching pricing,
-              you&apos;ll also see guidance aligned with high-intent searches like{' '}
+              perks (club access, classes, guest privileges), and common fees so you can understand
+              the real cost before you join. If you&apos;re researching pricing, you&apos;ll also
+              see guidance aligned with high-intent searches like{' '}
               <strong>{gym.name} membership</strong>, <strong>{gym.name} membership cost</strong>,{' '}
               <strong>{gym.name} membership cost per month</strong>,{' '}
               <strong>{gym.name} membership plans</strong>, and{' '}
-              <strong>{gym.name} membership price per month</strong>—so you can pick the
-              best-value plan for your goals and schedule.
+              <strong>{gym.name} membership price per month</strong>—so you can pick the best-value
+              plan for your goals and schedule.
             </ReadMoreText>
           </div>
           {loading && resolvedId ? (
@@ -179,9 +186,7 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
                           )}
                           <div className='mb-4'>
                             <div className='text-4xl font-bold mb-2'>
-                              {typeof plan.price === 'number'
-                                ? plan.price.toFixed(2)
-                                : plan.price}
+                              {typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price}
                               <span className='text-lg font-normal text-muted-foreground'>
                                 /{plan.frequency.toLowerCase()}
                               </span>
