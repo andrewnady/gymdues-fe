@@ -40,6 +40,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
     }
   }, [])
 
+
   // IntersectionObserver: first visible card in scroll area → update map (no scroll)
   useEffect(() => {
     const root = scrollContainerRef.current
@@ -83,6 +84,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
           page: number
           perPage: number
           fields?: string
+          slug?: string
         } = {
           page,
           perPage: 12,
@@ -93,7 +95,9 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
         } else {
           params.city = filter
         }
+        
         const result = await getPaginatedGyms(params)
+
         setGyms(result.gyms)
         setMeta(result.meta)
       } catch (error) {
