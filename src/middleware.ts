@@ -53,7 +53,7 @@ export function middleware(request: NextRequest) {
     }
 
     // No pattern matched on the bestgyms subdomain — redirect to the base URL
-    return NextResponse.redirect(new URL(bestGymsUrl))
+    return NextResponse.redirect(new URL(bestGymsUrl), { status: 301 })
   }
 
   const response = NextResponse.next()
