@@ -10,6 +10,18 @@ const nextConfig: NextConfig = {
   // Allow trailing slashes in URLs
   trailingSlash: true,
 
+  // Redirect spam/legacy single-segment word+number slug URLs directly to homepage.
+  // These run before trailingSlash auto-redirects, so the browser receives a single
+  // 301 hop instead of: /look205 → /look205/ (trailingSlash) → / (middleware).
+  // e.g. /look205?kg=36238, /isolation153, /duck93, /penalty11
+  async redirects() {
+    const spamSlugPattern = ':slug([a-zA-Z][a-zA-Z0-9-]*\\d+)'
+    return [
+      { source: `/${spamSlugPattern}`,  destination: '/', permanent: true },
+      { source: `/${spamSlugPattern}/`, destination: '/', permanent: true },
+    ]
+  },
+
   // Sitemap indexes (Next.js does not create these when using generateSitemaps)
   async rewrites() {
     return [
