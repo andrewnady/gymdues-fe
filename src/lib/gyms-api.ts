@@ -80,6 +80,25 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
     }
   })
 
+  // Map featured_image (snake_case) to featuredImage (camelCase) with absolute URL
+  let featuredImage: string | undefined
+  const rawFeaturedImage = gym.featured_image
+  if (typeof rawFeaturedImage === 'string' && rawFeaturedImage) {
+    if (rawFeaturedImage.startsWith('http://') || rawFeaturedImage.startsWith('https://')) {
+      // Already absolute — just sanitize internal hostnames
+      featuredImage = transformApiUrl(rawFeaturedImage)
+    } else if (rawFeaturedImage.startsWith('/storage/')) {
+      // Path already contains the storage prefix — prepend base URL only
+      const base = API_BASE_URL.replace(/\/$/, '')
+      featuredImage = `${base}${rawFeaturedImage}`
+    } else {
+      // Plain media filename (WinterCMS Media Manager) — served under /storage/app/media/
+      const base = API_BASE_URL.replace(/\/$/, '')
+      const sep = rawFeaturedImage.startsWith('/') ? '' : '/'
+      featuredImage = `${base}/storage/app/media${sep}${rawFeaturedImage}`
+    }
+  }
+
   return {
     ...normalizedGym,
     reviewCount: Number(reviewCount) || 0,
@@ -87,6 +106,7 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
     // Preserve date fields if they exist
     created_at: normalizedGym.created_at ? String(normalizedGym.created_at) : undefined,
     updated_at: normalizedGym.updated_at ? String(normalizedGym.updated_at) : undefined,
+    featuredImage,
   } as Gym
 }
 
