@@ -120,6 +120,7 @@ export interface Gym {
     alt: string
   }[]
   featureImage: string
+  featuredImage?: string
   /** Can be string (legacy) or primary address object from list API (with lat/lng) */
   address: string | GymPrimaryAddress
   city: string
