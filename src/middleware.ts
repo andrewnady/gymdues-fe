@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+/** Redirect to the bare homepage, stripping ALL query params and path segments. */
+function redirectHome(request: NextRequest): NextResponse {
+  // request.nextUrl.origin = 'https://gymdues.com' (scheme + host only, no path/query)
+  return NextResponse.redirect(`${request.nextUrl.origin}/`, { status: 301 })
+}
+
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
 
@@ -56,11 +62,79 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(bestGymsUrl), { status: 301 })
   }
 
+  // ── Bulk 404 redirect rules ──────────────────────────────────────────────
+  // All redirects use redirectHome(request) which builds the destination from
+  // request.nextUrl.origin (scheme+host only) so query params are always stripped.
+  // next.config.ts redirects forward query strings by default, so all legacy
+  // redirect logic lives here for clean param-free destinations.
+
+  const pathname = request.nextUrl.pathname
+
+  // Pattern 0a: legacy path prefixes from previous site platforms
+  // e.g. /item/u185/26807/, /webapp/wcs/stores/…, /b/Bath/N-5yc1vZbzb3
+  const legacyPrefixes = [
+    '/item/', '/webapp/', '/shop/',
+    '/b/', '/c/', '/category/', '/contents/',
+  ]
+  if (legacyPrefixes.some(p => pathname.startsWith(p))) {
+    return redirectHome(request)
+  }
+
+  // Pattern 0b: legacy files added explicitly to the matcher
+  // e.g. /pages.php?stove201025810.html, /index.html
+  if (pathname === '/pages.php' || pathname === '/index.html') {
+    return redirectHome(request)
+  }
+
+  // Pattern 0c: Apple app site association file (not served)
+  if (pathname === '/apple-app-site-association') {
+    return redirectHome(request)
+  }
+
+  // Pattern 0d: WordPress RSS/Atom feed URLs
+  // e.g. /feed/, /comments/feed/, /pure-barre-membership-cost/feed/
+  if (
+    pathname === '/feed' || pathname === '/feed/' ||
+    pathname === '/comments/feed' || pathname === '/comments/feed/' ||
+    pathname.endsWith('/feed') || pathname.endsWith('/feed/')
+  ) {
+    return redirectHome(request)
+  }
+
+  // Pattern 1: paths whose first segment is a 6+ digit number
+  // e.g. /586536/60-Gift-Ideas-…, /522102/EAGLES-Cupcake-Rings-…
+  if (/^\/\d{6,}(\/|$)/.test(pathname)) {
+    return redirectHome(request)
+  }
+
+  // Pattern 2: single-segment word+number slugs (external/spam link artifacts)
+  // e.g. /isolation153, /duck93, /soon71, /penalty11?kg=32272
+  // Excludes real site routes: /gyms/, /best-gyms/, /blog/, /best-*, etc.
+  const realRoutePrefixes = [
+    '/gyms/', '/best-gyms/', '/blog/', '/best-',
+    '/about', '/contact', '/privacy-policy', '/terms-of-service',
+  ]
+  if (
+    /^\/[a-zA-Z][a-zA-Z0-9-]*\d+\/?$/.test(pathname) &&
+    !realRoutePrefixes.some(prefix => pathname.startsWith(prefix))
+  ) {
+    return redirectHome(request)
+  }
+
+  // Pattern 3: homepage with external tracking query params that cause
+  // duplicate-URL coverage issues (e.g. /?_g=463728, /?k=217…&channel=…)
+  if (pathname === '/') {
+    const sp = request.nextUrl.searchParams
+    if (sp.has('_g') || sp.has('k')) {
+      return redirectHome(request)
+    }
+  }
+  // ── End bulk 404 redirect rules ──────────────────────────────────────────
+
   const response = NextResponse.next()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
   // Get the pathname as requested (preserve trailing slash if present)
-  const pathname = request.nextUrl.pathname
   
   // Build canonical URL to match the exact requested URL
   // Use the pathname as-is to preserve trailing slashes
@@ -98,11 +172,15 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - images, fonts, etc. (static assets)
-     * Note: robots.txt and sitemap.xml are included so we can set headers for them
+     * Note: robots.txt and sitemap.xml are included so we can set headers for them.
+     * /pages.php and /index.html are listed explicitly because the wildcard
+     * regex above skips paths that contain a file extension dot.
      */
     '/((?!api|_next/static|_next/image|favicon.ico|images|fonts|.*\\..*).*)',
     '/robots.txt',
     '/sitemap.xml',
+    '/pages.php',
+    '/index.html',
   ],
 }
 
