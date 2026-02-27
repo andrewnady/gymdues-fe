@@ -7,8 +7,37 @@ function redirectHome(request: NextRequest): NextResponse {
   return NextResponse.redirect(`${request.nextUrl.origin}/`, { status: 301 })
 }
 
+/** Apply HSTS header: tells browsers to always use HTTPS for 1 year. */
+function withHSTS(response: NextResponse): NextResponse {
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+  return response
+}
+
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
+  const isProduction = process.env.NODE_ENV === 'production'
+
+  if (isProduction) {
+    // ── HTTP → HTTPS (301) ──────────────────────────────────────────────────
+    // x-forwarded-proto is set by the load balancer / reverse proxy when the
+    // original client request arrived over plain HTTP.
+    const proto = request.headers.get('x-forwarded-proto')
+    if (proto === 'http') {
+      const url = new URL(request.url)
+      url.protocol = 'https:'
+      return withHSTS(NextResponse.redirect(url.toString(), { status: 301 }))
+    }
+
+    // ── www → non-www (301) ─────────────────────────────────────────────────
+    // Covers: http://www.gymdues.com  →  https://gymdues.com
+    //         https://www.gymdues.com →  https://gymdues.com
+    if (hostname.startsWith('www.')) {
+      const url = new URL(request.url)
+      url.host = hostname.slice(4) // strip leading 'www.'
+      url.protocol = 'https:'
+      return withHSTS(NextResponse.redirect(url.toString(), { status: 301 }))
+    }
+  }
 
   // Route bestgyms subdomain to /best-gyms/* pages
   if (hostname.startsWith('bestgyms.')) {
@@ -159,7 +188,12 @@ export function middleware(request: NextRequest) {
     // For all other pages, set index, follow with max preview settings
     response.headers.set('X-Robots-Tag', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')
   }
-  
+
+  // HSTS — production only, never on localhost
+  if (isProduction) {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+  }
+
   return response
 }
 
