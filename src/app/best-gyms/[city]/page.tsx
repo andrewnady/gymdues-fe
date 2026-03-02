@@ -1,5 +1,6 @@
 import { BestGymsByLocation } from '@/components/best-gym/best-gyms-by-location'
 import { FavGymSlider } from '@/components/fav-gym-slider'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { getPaginatedGyms, getNextFavouriteGyms, getCityStates } from '@/lib/gyms-api'
 import { headers } from 'next/headers'
 import { permanentRedirect } from 'next/navigation'
@@ -141,10 +142,11 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
   const favGymsResult = await getNextFavouriteGyms({ perPage: 10, ...favGymsParams });
   
   const favGyms = favGymsResult.length > 0 ? favGymsResult : cities
-const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
+const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/${slug}/`
 
   return (
     <>
+      <ScrollToTop />
       <link rel='canonical' href={canonicalUrl} />
       <meta property='og:url' content={canonicalUrl} />
 
