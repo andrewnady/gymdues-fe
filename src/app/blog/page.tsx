@@ -76,8 +76,29 @@ export default async function BlogPage() {
     // Fallback to empty array if API fails
   }
 
+  const itemListSchema = posts.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'GymDues Blog: Gym Prices, Plans & Membership Guides',
+    description: 'Guides on gym membership costs, plan comparisons, hidden fees, and savings tips.',
+    numberOfItems: posts.length,
+    itemListElement: posts.map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${siteUrl}/blog/${post.slug}`,
+      name: post.title,
+    })),
+  } : null
+
   return (
     <div className='min-h-screen py-12'>
+      {/* ItemList schema */}
+      {itemListSchema && (
+        <script
+          type='application/ld+json'
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        />
+      )}
       <div className='container mx-auto px-4'>
         <div className='mb-12 text-center'>
           <h1 className='text-4xl font-bold mb-4'>

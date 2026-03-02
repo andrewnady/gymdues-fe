@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { GymsMapPageClient } from '@/components/gyms-map-page-client'
 import { GymsPageFaqSection } from '@/components/gyms-page-faq-section'
 import { ReadMoreText } from '@/components/read-more-text'
+import { gymsPageFaqs } from '@/data/gyms-page-faqs'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -65,9 +66,27 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+const faqPageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: gymsPageFaqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+}
+
 export default function GymsPage() {
   return (
     <div className='min-h-screen'>
+      {/* FAQPage schema */}
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema) }}
+      />
       <noscript>
         <div className='container mx-auto px-4 py-8'>
           <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6'>

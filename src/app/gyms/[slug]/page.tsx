@@ -232,10 +232,10 @@ export default async function GymDetailPage({ params }: PageProps) {
     })),
   } : null
 
-  // ExerciseGym Schema (additional schema for gym)
+  // LocalBusiness + HealthClub Schema (primary schema for gym pages)
   const exerciseGymSchema = {
     '@context': 'https://schema.org',
-    '@type': 'ExerciseGym',
+    '@type': ['LocalBusiness', 'HealthClub'],
     name: gym.name,
     description: gym.description,
     image: gymImage,
@@ -341,7 +341,7 @@ export default async function GymDetailPage({ params }: PageProps) {
           }}
         />
       )}
-      {/* ExerciseGym Schema */}
+      {/* LocalBusiness + HealthClub Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
