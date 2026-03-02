@@ -103,7 +103,7 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
     gymsParams.slug = slug
   } 
 
- 
+
   const { gyms, meta } = await getPaginatedGyms(gymsParams).catch(() => permanentRedirect(siteUrl))
   if (!gyms?.length) permanentRedirect(siteUrl)
 

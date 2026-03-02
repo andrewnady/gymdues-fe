@@ -1,0 +1,84 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { MapPin, ChevronRight, Filter } from 'lucide-react'
+import type { LocationWithCount } from '@/types/gym'
+import { cityGymsdataPath } from '@/lib/gymsdata-utils'
+
+type SortBy = 'count' | 'name'
+
+interface StateCitiesFilterProps {
+  cities: LocationWithCount[]
+  stateSlug: string
+}
+
+export function StateCitiesFilter({ cities, stateSlug }: StateCitiesFilterProps) {
+  const [sortBy, setSortBy] = useState<SortBy>('count')
+
+  const sortedCities = useMemo(() => {
+    const list = [...cities]
+    if (sortBy === 'name') {
+      list.sort((a, b) => {
+        const nameA = (a.city ?? a.label ?? '').toLowerCase()
+        const nameB = (b.city ?? b.label ?? '').toLowerCase()
+        return nameA.localeCompare(nameB)
+      })
+    }
+    return list
+  }, [cities, sortBy])
+
+  return (
+    <div className='space-y-4'>
+      <div className='flex flex-wrap items-center gap-2'>
+        <Filter className='h-4 w-4 text-muted-foreground shrink-0' aria-hidden />
+        <span className='text-sm font-medium text-muted-foreground'>Sort cities by:</span>
+        <div className='flex rounded-lg border border-border/80 bg-muted/30 p-0.5' role='tablist' aria-label='Sort order'>
+          <button
+            type='button'
+            role='tab'
+            aria-selected={sortBy === 'count'}
+            onClick={() => setSortBy('count')}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              sortBy === 'count' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Most gyms
+          </button>
+          <button
+            type='button'
+            role='tab'
+            aria-selected={sortBy === 'name'}
+            onClick={() => setSortBy('name')}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+              sortBy === 'name' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            City A–Z
+          </button>
+        </div>
+      </div>
+      <ul className='grid gap-2 sm:grid-cols-2 lg:grid-cols-3'>
+        {sortedCities.map((loc) => (
+          <li key={loc.label ?? `${loc.city}-${loc.state}`}>
+            <Link
+              href={cityGymsdataPath(stateSlug, loc.city ?? '')}
+              className='flex items-center justify-between rounded-xl border border-border/80 bg-card px-4 py-3 shadow-sm hover:bg-muted/50 hover:border-primary/40 transition-colors'
+            >
+              <div className='flex items-center gap-3'>
+                <MapPin className='h-5 w-5 text-primary shrink-0' aria-hidden />
+                <div>
+                  <span className='font-semibold text-foreground'>{loc.city ?? loc.label}</span>
+                  <span className='block text-sm text-muted-foreground tabular-nums'>
+                    {loc.count.toLocaleString('en-US')} gyms
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className='h-5 w-5 text-muted-foreground shrink-0' aria-hidden />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}

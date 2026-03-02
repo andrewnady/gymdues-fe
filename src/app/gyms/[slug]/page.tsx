@@ -296,7 +296,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         '@type': 'ListItem',
         position: 2,
         name: 'Gyms',
-        item: `${siteUrl}/gyms`,
+        item: `${siteUrl}/gymsdata`,
       },
       {
         '@type': 'ListItem',
@@ -369,7 +369,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                     className='!text-background'
                     items={[
                       { label: 'Home', href: '/' },
-                      { label: 'Gyms', href: '/gyms' },
+                      { label: 'Gyms', href: '/gymsdata' },
                       { label: gym.name, href: `/gyms/${slug}` },
                     ]}
                   />
