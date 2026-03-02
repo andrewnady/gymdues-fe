@@ -1,5 +1,6 @@
 import { BestGymsByLocation } from '@/components/best-gym/best-gyms-by-location'
 import { FavGymSlider } from '@/components/fav-gym-slider'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { getPaginatedGyms, getNextFavouriteGyms, getCityStates } from '@/lib/gyms-api'
 import { headers } from 'next/headers'
 import { permanentRedirect } from 'next/navigation'
@@ -145,6 +146,7 @@ const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/${slug}/`
 
   return (
     <>
+      <ScrollToTop />
       <link rel='canonical' href={canonicalUrl} />
       <meta property='og:url' content={canonicalUrl} />
 
