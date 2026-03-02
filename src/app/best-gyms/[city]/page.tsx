@@ -84,6 +84,34 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
   // Strip "best-gyms-in-" prefix to get the location slug, then capitalize for display
   // const filterSlug = slug.startsWith('best-gyms-in-') ? slug.replace('best-gyms-in-', '') : slug
   const slug =  `best-${filter}-gyms`
+  const base = siteUrl.replace(/\/$/, '')
+  const pageUrl = `${base}/${slug}/`
+
+  const locationName = filter.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  const breadcrumbLabel = type === 'state' ? `${locationName} State` : locationName
+
+  let breadcrumbSchema = null
+
+  if (filter) {
+    breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": `${base}/`
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": `Best Gyms in ${breadcrumbLabel}`,
+          "item": pageUrl
+        }
+      ]
+    }
+  }
 
   const gymsParams: {
     slug?: string
@@ -119,6 +147,17 @@ const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
     <>
       <link rel='canonical' href={canonicalUrl} />
       <meta property='og:url' content={canonicalUrl} />
+
+      {/* Inject only if exists */}
+      {breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbSchema),
+          }}
+        />
+      )}
+
       <BestGymsByLocation filter={filter} type={type} initialGyms={gyms} initialMeta={meta} />
       <div className='container mx-auto px-4'>
         <section className='mt-16 mb-12' aria-labelledby='fav-gym-heading'>
