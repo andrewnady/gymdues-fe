@@ -4,6 +4,7 @@ import { getPaginatedGyms, getNextFavouriteGyms, getCityStates } from '@/lib/gym
 import { headers } from 'next/headers'
 import { permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { bestGymsFaqs } from '@/data/best-gyms-faqs'
 
 interface PageProps {
   params: Promise<{ city: string }>
@@ -129,26 +130,56 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
   if (slug) {
     // New API slug format — backend resolves state/city from slug directly
     gymsParams.slug = slug
-  } 
+  }
 
- 
+
   const { gyms, meta } = await getPaginatedGyms(gymsParams).catch(() => permanentRedirect(siteUrl))
   if (!gyms?.length) permanentRedirect(siteUrl)
 
   const { cities } = await getCityStates()
-  
+
    const favGymsParams = meta.filterType === 'state' ? { state: filter } : { city: filter }
   const favGymsResult = await getNextFavouriteGyms({ perPage: 10, ...favGymsParams });
-  
+
   const favGyms = favGymsResult.length > 0 ? favGymsResult : cities
 const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
+
+  // ItemList schema — drives rich results for list-style pages
+  const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Best Gyms in ${breadcrumbLabel}`,
+    description: `Top-rated gyms in ${breadcrumbLabel} ranked by ratings and reviews`,
+    numberOfItems: gyms.length,
+    itemListElement: gyms.map((gym, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${mainSiteUrl}/gyms/${gym.slug}`,
+      name: gym.name,
+    })),
+  }
+
+  // FAQPage schema — built from static FAQ data with location substituted
+  const faqPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: bestGymsFaqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question.replace(/\{location\}/g, breadcrumbLabel),
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer.replace(/\{location\}/g, breadcrumbLabel),
+      },
+    })),
+  }
 
   return (
     <>
       <link rel='canonical' href={canonicalUrl} />
       <meta property='og:url' content={canonicalUrl} />
 
-      {/* Inject only if exists */}
+      {/* Breadcrumb schema */}
       {breadcrumbSchema && (
         <script
           type="application/ld+json"
@@ -157,6 +188,20 @@ const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
           }}
         />
       )}
+      {/* ItemList schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(itemListSchema),
+        }}
+      />
+      {/* FAQPage schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqPageSchema),
+        }}
+      />
 
       <BestGymsByLocation filter={filter} type={type} initialGyms={gyms} initialMeta={meta} />
       <div className='container mx-auto px-4'>

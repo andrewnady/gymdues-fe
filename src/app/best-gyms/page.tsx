@@ -5,6 +5,7 @@ import { getCityStates, filterTopGyms } from '@/lib/gyms-api'
 import { gymCities } from '@/types/gym'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { gymsPageFaqs } from '@/data/gyms-page-faqs'
 
 
 const siteUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || 'https://bestgyms.gymdues.com'
@@ -72,10 +73,51 @@ export default async function BestGyms() {
   ])
   const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/`
 
+  const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
+  // ItemList schema — drives rich results for the best gyms listing page
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Best Gyms in the World',
+    description: 'Top-rated gyms worldwide ranked by ratings and reviews',
+    numberOfItems: gyms.length,
+    itemListElement: gyms.map((gym, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${mainSiteUrl}/gyms/${gym.slug}`,
+      name: gym.name,
+    })),
+  }
+
+  // FAQPage schema — built from static FAQ data
+  const faqPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: gymsPageFaqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  }
+
   return (
     <>
       <link rel='canonical' href={canonicalUrl} />
       <meta property='og:url' content={canonicalUrl} />
+      {/* ItemList schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
+      {/* FAQPage schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema) }}
+      />
       <div className='min-h-screen'>
         <section className='bg-primary/5 py-20'>
           <div className='container mx-auto px-4 py-4 text-center max-w-screen-lg'>
