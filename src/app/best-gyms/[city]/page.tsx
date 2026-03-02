@@ -141,7 +141,7 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
   const favGymsResult = await getNextFavouriteGyms({ perPage: 10, ...favGymsParams });
   
   const favGyms = favGymsResult.length > 0 ? favGymsResult : cities
-const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/best-${slug}-gyms/`
+const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/${slug}/`
 
   return (
     <>
