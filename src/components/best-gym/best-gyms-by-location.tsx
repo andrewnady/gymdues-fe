@@ -109,7 +109,9 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
     fetchGyms()
   }, [filter, type, page])
 
-  const title = `Best Gyms in ${filter}`
+  const displayName = initialMeta.filterValue ? initialMeta.filterValue : filter;
+  
+  const title = `Best Gyms in ${displayName}`
 
   return (
     <div className='min-h-screen'>
@@ -119,7 +121,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
             <Breadcrumb
               items={[
                 { label: 'Home', href: process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL ?? '/' },
-                { label: `Best Gyms in ${filter}`, href: '' },
+                { label: `Best Gyms in ${displayName}`, href: '' },
               ]}
             />
           </div>
@@ -127,37 +129,37 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
           <ReadMoreText className='text-muted-foreground text-lg'>
             {type === 'state' ? (
               <>
-                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
+                The best gyms in {displayName}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
                 {gyms.length > 0
                   ? gyms
                       .slice(0, 10)
                       .map((g) => g.name)
                       .join(', ')
                   : 'top-rated local gyms'}
-                . The fitness culture across {filter} is shaped by 24/7 convenience, a strong strength training culture, and boutique studio variety, with popular training styles such as strength training, HIIT, Pilates, boxing, and CrossFit.
+                . The fitness culture across {displayName} is shaped by 24/7 convenience, a strong strength training culture, and boutique studio variety, with popular training styles such as strength training, HIIT, Pilates, boxing, and CrossFit.
                 <br />
                 <br />
-                In addition to large gym chains, {filter} has a wide range of Pilates, yoga, boxing, and HIIT studios and specialized facilities, making it easier to find a great fit for fat loss or muscle gain. Many members look for gyms near major metropolitan hubs and suburban centers because it aligns with work-life balance and local commuting patterns.
+                In addition to large gym chains, {displayName} has a wide range of Pilates, yoga, boxing, and HIIT studios and specialized facilities, making it easier to find a great fit for fat loss or muscle gain. Many members look for gyms near major metropolitan hubs and suburban centers because it aligns with work-life balance and local commuting patterns.
                 <br />
                 <br />
-                Since {filter} spans a mix of urban and residential landscapes, training habits often shift with local climate and seasonal shifts. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer options from full-service health clubs to strength-focused gyms, with amenities like group classes, personal training, and saunas.
+                Since {displayName} spans a mix of urban and residential landscapes, training habits often shift with local climate and seasonal shifts. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {displayName} offer options from full-service health clubs to strength-focused gyms, with amenities like group classes, personal training, and saunas.
               </>
             ) : (
               <>
-                The best gyms in {filter}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
+                The best gyms in {displayName}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}
                 {gyms.length > 0
                   ? gyms
                       .slice(0, 10)
                       .map((g) => g.name)
                       .join(', ')
                   : 'top-rated local gyms'}
-                . The fitness scene in {filter} is known for 24/7 convenience, a deep-rooted strength training culture, and boutique studio variety, with popular training styles like strength training, HIIT, Pilates, boxing, and CrossFit.
+                . The fitness scene in {displayName} is known for 24/7 convenience, a deep-rooted strength training culture, and boutique studio variety, with popular training styles like strength training, HIIT, Pilates, boxing, and CrossFit.
                 <br />
                 <br />
-                Beyond traditional gyms, {filter} also has a strong mix of Pilates, yoga, boxing, and HIIT studios and specialized facilities, which is great if you&apos;re focused on fat loss or muscle gain. Many people choose gyms near major transit hubs and central landmarks because it&apos;s convenient for commuting and balancing a busy daily schedule.
+                Beyond traditional gyms, {displayName} also has a strong mix of Pilates, yoga, boxing, and HIIT studios and specialized facilities, which is great if you&apos;re focused on fat loss or muscle gain. Many people choose gyms near major transit hubs and central landmarks because it&apos;s convenient for commuting and balancing a busy daily schedule.
                 <br />
                 <br />
-                With its vibrant urban layout and local seasonal shifts, workout routines in {filter} often adapt throughout the year. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {filter} offer everything from full-service health clubs to strength-focused gyms, plus amenities like group classes, personal training, and saunas.
+                With its vibrant urban layout and local seasonal shifts, workout routines in {displayName} often adapt throughout the year. Whether you&apos;re a beginner, a busy professional, or a powerlifter, the best gyms in {displayName} offer everything from full-service health clubs to strength-focused gyms, plus amenities like group classes, personal training, and saunas.
               </>
             )}
           </ReadMoreText>
@@ -170,7 +172,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
             <div className='h-8 w-64 bg-muted animate-pulse rounded-lg mb-4' />
           ) : (
             <h2 className='text-2xl font-semibold mb-4'>
-              {Math.min(10, gyms.length)} Best {filter} Gyms are listed below
+              {Math.min(10, gyms.length)} Best {displayName} Gyms are listed below
             </h2>
           )}
           <ol className='grid grid-cols-1 md:grid-cols-2 gap-4 list-none'>
@@ -259,7 +261,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
                   </svg>
                   <p className='text-yellow-700 text-sm'>
                     Please enable JavaScript rendering in your browser to view the interactive map
-                    and full details of {Math.min(10, gyms.length)} Best {filter} Gyms.
+                    and full details of {Math.min(10, gyms.length)} Best {displayName} Gyms.
                   </p>
                 </div>
               </noscript>
@@ -286,7 +288,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
 
       <section className='mt-16 mb-12' aria-labelledby='faq-heading'>
         <div className='container mx-auto py-10'>
-          <BestGymsFaqSection location={filter} />
+          <BestGymsFaqSection location={displayName} />
         </div>
       </section>
     </div>
