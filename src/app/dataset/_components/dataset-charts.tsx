@@ -24,7 +24,7 @@ export function DatasetCharts({ top10States }: DatasetChartsProps) {
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="name" width={55} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => [v.toLocaleString('en-US'), 'Gyms']} />
+              <Tooltip formatter={(v: number | undefined) => [(v ?? 0).toLocaleString('en-US'), 'Gyms']} />
               <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -49,7 +49,7 @@ export function DatasetCharts({ top10States }: DatasetChartsProps) {
                   <Cell key={i} fill={entry.color} stroke="hsl(var(--card))" strokeWidth={2} />
                 ))}
               </Pie>
-              <PieTooltip formatter={(v: number) => [v + '%', 'Share']} />
+              <PieTooltip formatter={(v: number | undefined) => [(v != null ? v : 0) + '%', 'Share']} />
             </PieChart>
           </PieResponsive>
         </div>

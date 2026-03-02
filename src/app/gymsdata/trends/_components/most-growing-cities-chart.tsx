@@ -19,8 +19,8 @@ export function MostGrowingCitiesChart() {
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => ['+' + value + ' gyms (12 mo)', 'Growth']}
-            labelFormatter={(label: string) => label}
+            formatter={(value: number | undefined) => ['+' + (value ?? 0) + ' gyms (12 mo)', 'Growth']}
+            labelFormatter={(label: React.ReactNode) => String(label ?? '')}
           />
           <Bar dataKey="growth" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="New gyms" />
         </BarChart>

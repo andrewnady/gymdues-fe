@@ -65,7 +65,7 @@ export function cityGymsdataPath(stateSlug: string, cityName: string): string {
 }
 
 /** Derived stats for a state page (until API provides). */
-export function getStateDerivedStats(stateCode: string, totalGyms: number, citiesCount: number) {
+export function getStateDerivedStats(stateCode: string, _totalGyms: number, _citiesCount: number) {
   const seed = stateCode.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
   return {
     pctEmail: Math.min(100, 58 + (seed % 18)),
@@ -76,7 +76,7 @@ export function getStateDerivedStats(stateCode: string, totalGyms: number, citie
 }
 
 /** Derived stats for a city (until API provides). */
-export function getCityDerivedStats(count: number, citySlug: string) {
+export function getCityDerivedStats(_count: number, citySlug: string) {
   const seed = citySlug.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
   return {
     pctEmail: Math.min(100, 58 + (seed % 18)),

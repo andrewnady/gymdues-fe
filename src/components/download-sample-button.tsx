@@ -20,7 +20,7 @@ export function DownloadSampleButton({
 }: DownloadSampleButtonProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
-  const handleSubmit = (data: DownloadSampleFormData) => {
+  const handleSubmit = (_data: DownloadSampleFormData) => {
     // In production: send data to API, then trigger download or email
     if (typeof window !== 'undefined') {
       window.alert(ALERT_MESSAGE)

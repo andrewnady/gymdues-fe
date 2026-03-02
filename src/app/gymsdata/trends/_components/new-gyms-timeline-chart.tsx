@@ -36,8 +36,8 @@ export function NewGymsTimelineChart() {
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => [value + ' new gyms', 'Count']}
-            labelFormatter={(label: string) => 'Month: ' + label}
+            formatter={(value: number | undefined) => [(value ?? 0) + ' new gyms', 'Count']}
+            labelFormatter={(label: React.ReactNode) => 'Month: ' + String(label ?? '')}
           />
           <Area
             type="monotone"

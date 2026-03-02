@@ -160,7 +160,7 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
               </tr>
             </thead>
             <tbody>
-              {METRICS.map(({ key, label, format, higherIsBetter }) => {
+              {METRICS.map(({ key, label, format }) => {
                 const winnerIdx = getWinnerIndex(key)
                 return (
                   <tr key={key} className='border-b border-border/50 last:border-b-0 hover:bg-muted/30'>

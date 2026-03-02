@@ -16,7 +16,7 @@ interface UsaMapOrTableSectionProps {
   totalGyms: number
 }
 
-export function UsaMapOrTableSection({ sortedStates, totalGyms }: UsaMapOrTableSectionProps) {
+export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps) {
   const [view, setView] = useState<View>('map')
   const [layer, setLayer] = useState<MapLayer>('all')
 

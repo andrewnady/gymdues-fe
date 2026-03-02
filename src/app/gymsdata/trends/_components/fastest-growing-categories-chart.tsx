@@ -30,7 +30,7 @@ export function FastestGrowingCategoriesChart() {
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => [value + '%', 'Share of growth']}
+            formatter={(value: number | undefined) => [(value != null ? value : 0) + '%', 'Share of growth']}
           />
           <Legend layout="vertical" align="right" verticalAlign="middle" wrapperStyle={{ fontSize: 12 }} />
         </PieChart>

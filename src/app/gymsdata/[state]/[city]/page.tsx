@@ -12,7 +12,7 @@ import {
   formatDataDate,
   toSlug,
 } from '@/lib/gymsdata-utils'
-import { MapPin, Building2, Mail, Phone, Share2, Star } from 'lucide-react'
+import { MapPin, Building2 } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 
@@ -64,10 +64,10 @@ export default async function GymsdataCityPage({ params }: Props) {
   const state = getStateBySlug(states, stateSlug)
   const stateCode = state?.state ?? null
   const citiesFromApi = stateCode ? await getCitiesByState(stateCode) : []
-  const citiesInState = stateCode
+  const citiesInState = stateCode && state
     ? (citiesFromApi.length > 0 ? citiesFromApi : getCitiesInState(locations, stateCode, state.stateName))
     : []
-  const loc = stateCode ? getCityBySlug(citiesInState, stateCode, citySlug, state.stateName) : null
+  const loc = stateCode && state ? getCityBySlug(citiesInState, stateCode, citySlug, state.stateName) : null
 
   if (!state || !loc) {
     return (

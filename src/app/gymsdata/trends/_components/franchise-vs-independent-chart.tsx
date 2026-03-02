@@ -32,7 +32,7 @@ export function FranchiseVsIndependentChart() {
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={(value: number) => [value.toLocaleString('en-US'), '']}
+            formatter={(value: number | undefined) => [(value ?? 0).toLocaleString('en-US'), '']}
             labelFormatter={(label) => label}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />

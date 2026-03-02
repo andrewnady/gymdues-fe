@@ -117,7 +117,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
       ? [...states].sort((a, b) => (a.stateName ?? '').localeCompare(b.stateName ?? ''))
       : [...states].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
   const topCities = locations.slice(0, 10)
-  const topThreeStates = sortedStates.slice(0, 3)
   const top10States = sortedStates.slice(0, 10)
   const maxStateCount = top10States[0]?.count ?? 1
   const stateComparisonRows = buildStateComparisonRows(sortedStates)
