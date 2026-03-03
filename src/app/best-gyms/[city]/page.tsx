@@ -14,6 +14,12 @@ interface PageProps {
 
 const siteUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || 'https://bestgyms.gymdues.com'
 
+function extractCenterText(slug: string): string {
+  return slug
+    .replace(/^best-/, '')
+    .replace(/-gyms$/, '')
+    .replace(/-/g, ' ')
+}
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { city: filter } = await params
   const { type = 'city' } = await searchParams
@@ -140,7 +146,8 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
 
   const { cities } = await getCityStates()
 
-   const favGymsParams = meta.filterType === 'state' ? { state: filter } : { city: filter }
+  const favGymFilter = extractCenterText(filter);
+   const favGymsParams = meta.filterType === 'state' ? { state: favGymFilter } : { city: favGymFilter }
   const favGymsResult = await getNextFavouriteGyms({ perPage: 10, ...favGymsParams });
 
   const favGyms = favGymsResult.length > 0 ? favGymsResult : cities
