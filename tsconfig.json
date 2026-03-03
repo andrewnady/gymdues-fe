@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/usa-list": [
+        "./src/features/list-of-gyms-in-united-states"
+      ],
+      "@/usa-list/*": [
+        "./src/features/list-of-gyms-in-united-states/*"
       ]
     },
     "forceConsistentCasingInFileNames": true,

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 
 /**
  * If user is on home (/) with a hash that contains gyms map params (location or name),
- * redirect to /gyms with the same hash so they see the browse gyms page, not home.
+ * redirect to /gymsdata with the same hash so they see the browse gyms page, not home.
  */
 export function RedirectGymsHash() {
   const pathname = usePathname()
@@ -19,7 +19,7 @@ export function RedirectGymsHash() {
     const hasLocation = params.has('location')
     const hasName = params.has('name')
     if (hasLocation || hasName) {
-      router.replace(`/gyms#${hash}`)
+      router.replace(`/gymsdata/#${hash}`)
     }
   }, [pathname, router])
 

@@ -122,8 +122,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en'>
+    <html lang='en' suppressHydrationWarning>
       <head suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('js-enabled');",
+          }}
+        />
         {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{

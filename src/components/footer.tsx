@@ -25,7 +25,7 @@ export function Footer() {
             <h3 className='font-semibold mb-4'>Explore</h3>
             <ul className='space-y-2 text-sm'>
               <li>
-                <Link href='/gyms' className='text-muted-foreground hover:text-primary'>
+                <Link href='/gymsdata' className='text-muted-foreground hover:text-primary'>
                   Browse Gyms
                 </Link>
               </li>

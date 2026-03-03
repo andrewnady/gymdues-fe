@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* No-JS: show .no-js-only by default; when JS runs, script adds .js-enabled and we show .js-only */
+.no-js-only {
+  display: block !important;
+}
+.js-only {
+  display: none !important;
+}
+html.js-enabled .js-only {
+  display: block !important;
+}
+html.js-enabled .no-js-only {
+  display: none !important;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -113,4 +127,80 @@ body {
 }
 .gym-marker-selected img {
   filter: brightness(0) invert(1);
+}
+
+/* USA gyms map: state fill transition + hover animation */
+.usa-gyms-map-wrapper {
+  animation: usa-map-reveal 0.8s ease-out forwards;
+}
+.usa-gyms-map-wrapper path {
+  transition: fill 0.35s ease, filter 0.25s ease, transform 0.25s ease, stroke 0.25s ease;
+  transform-origin: center;
+  stroke: #757070;
+  stroke-width: 0.8;
+}
+.usa-gyms-map-wrapper path:hover {
+  filter: brightness(1.12) saturate(1.1);
+  transform: scale(1.02);
+  stroke: #000000;
+  fill: #b45309 !important; /* amber-700 – distinct hover, not part of map scale */
+}
+@keyframes usa-map-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Hover card under map: pop-in for count */
+.usa-gyms-hover-card {
+  animation: usa-gyms-card-in 0.3s ease-out forwards;
+}
+@keyframes usa-gyms-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes usa-state-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gyms-table-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Top 10 states bar chart: grow-in animation driven by CSS variable --bar-width */
+.top-states-bar {
+  width: 0;
+  animation: top-states-bar-grow 700ms ease-out forwards;
+}
+@keyframes top-states-bar-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--bar-width);
+  }
 }

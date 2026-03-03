@@ -1,0 +1,26 @@
+{
+  "states": [
+    { "state": "CA", "stateName": "California", "count": 8245 },
+    { "state": "TX", "stateName": "Texas", "count": 6120 },
+    { "state": "FL", "stateName": "Florida", "count": 5890 },
+    { "state": "NY", "stateName": "New York", "count": 4520 },
+    { "state": "IL", "stateName": "Illinois", "count": 3210 },
+    { "state": "PA", "stateName": "Pennsylvania", "count": 2980 },
+    { "state": "OH", "stateName": "Ohio", "count": 2750 },
+    { "state": "GA", "stateName": "Georgia", "count": 2610 },
+    { "state": "NC", "stateName": "North Carolina", "count": 2480 },
+    { "state": "MI", "stateName": "Michigan", "count": 2350 }
+  ],
+  "locations": [
+    { "label": "Los Angeles, CA", "city": "Los Angeles", "state": "CA", "postal_code": null, "count": 1820 },
+    { "label": "Houston, TX", "city": "Houston", "state": "TX", "postal_code": null, "count": 1250 },
+    { "label": "Phoenix, AZ", "city": "Phoenix", "state": "AZ", "postal_code": null, "count": 980 },
+    { "label": "Chicago, IL", "city": "Chicago", "state": "IL", "postal_code": null, "count": 1420 },
+    { "label": "San Antonio, TX", "city": "San Antonio", "state": "TX", "postal_code": null, "count": 890 },
+    { "label": "San Diego, CA", "city": "San Diego", "state": "CA", "postal_code": null, "count": 760 },
+    { "label": "Dallas, TX", "city": "Dallas", "state": "TX", "postal_code": null, "count": 920 },
+    { "label": "San Jose, CA", "city": "San Jose", "state": "CA", "postal_code": null, "count": 540 },
+    { "label": "Jacksonville, FL", "city": "Jacksonville", "state": "FL", "postal_code": null, "count": 480 },
+    { "label": "Philadelphia, PA", "city": "Philadelphia", "state": "PA", "postal_code": null, "count": 620 }
+  ]
+}

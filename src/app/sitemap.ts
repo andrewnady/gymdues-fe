@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 const STATIC_PAGES: MetadataRoute.Sitemap = [
   { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
   {
-    url: `${BASE_URL}/gyms`,
+    url: `${BASE_URL}/gymsdata`,
     lastModified: new Date(),
     changeFrequency: 'daily',
     priority: 0.9,
