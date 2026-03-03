@@ -30,6 +30,8 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const listItemRefs = useRef<Record<string, HTMLLIElement | null>>({})
   const isInitialMount = useRef(true)
+  const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null)
+
 
   // Called from map pin click or top-10 list click — scrolls to card
   const handleGymSelect = useCallback((gymId: string) => {
@@ -40,6 +42,14 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
     }
   }, [])
 
+
+  const handleLocationSelect = useCallback((gymId: string, addressId: string) => {
+    const key = `${gymId}-${addressId}`
+    setSelectedLocationKey(key)
+    setSelectedGymId(gymId)
+    const el = listItemRefs.current[gymId]
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [])
 
   // IntersectionObserver: first visible card in scroll area → update map (no scroll)
   useEffect(() => {
@@ -276,8 +286,8 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
                     selectedGymId={selectedGymId}
                     onGymSelect={handleGymSelect}
                     locationGroups={null}
-                    selectedLocationKey={null}
-                    onLocationSelect={() => {}}
+                    selectedLocationKey={selectedLocationKey}
+                    onLocationSelect={handleLocationSelect}
                   />
                 </div>
               )}

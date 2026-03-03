@@ -220,13 +220,16 @@ export function GymsDiscoveryMap({
       const lat = Number(gym.address.latitude)
       const lng = Number(gym.address.longitude)
       const marker = L.marker([lat, lng], { icon: DEFAULT_ICON })
-      const label = gym.name
       const slug = gym.slug
-      const popupHtml = `<a href="/gyms/${escapeHtml(slug)}" class="font-medium hover:underline">${escapeHtml(label)}</a>`
+      const addressLabel = gym.address.full_address || [gym.address.street, gym.address.city, gym.address.state].filter(Boolean).join(', ')
+      const popupHtml = `<a href="/gyms/${escapeHtml(slug)}" class="font-medium hover:underline">${escapeHtml(gym.name)}</a>${addressLabel ? `<br/><span class="text-muted-foreground text-sm">${escapeHtml(addressLabel)}</span>` : ''}`
       marker.bindPopup(popupHtml)
-      if (onGymSelect) {
-        marker.on('click', () => onGymSelect(String(gym.id)))
-      }
+      marker.on('click', () => {
+        onGymSelect?.(String(gym.id))
+        if (gym.address && typeof gym.address === 'object' && gym.address.id) {
+          onLocationSelect?.(String(gym.id), String(gym.address.id))
+        }
+      })
       marker.addTo(map)
       markersRef.current.push(marker)
       markerGymIds.push(String(gym.id))
