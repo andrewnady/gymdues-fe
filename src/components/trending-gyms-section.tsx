@@ -41,7 +41,7 @@ export function TrendingGymsSection({ gyms }: TrendingGymsSectionProps) {
             </ReadMoreText>
           </div>
           <Link
-            href='/gyms'
+            href='/gymsdata'
             className='flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-4 md:mt-0 text-nowrap'
           >
             View All Gyms

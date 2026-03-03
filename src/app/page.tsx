@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import {
   getTrendingGyms,
   getLatestGyms,
@@ -281,6 +282,37 @@ export default async function Home() {
       />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
+
+      {/* Data & use cases – link to gym database and tools (relates to main page) */}
+      <section className='py-16 md:py-20 border-t bg-muted/20' aria-labelledby='data-tools-heading'>
+        <div className='container mx-auto px-4'>
+          <div className='max-w-4xl mx-auto text-center'>
+            <h2 id='data-tools-heading' className='text-2xl md:text-3xl font-bold tracking-tight mb-2'>
+              Gym database & use cases
+            </h2>
+            <p className='text-muted-foreground mb-6'>
+              Explore the full U.S. gym database, growth trends, competitive intelligence, free sample tiers, and guides for agencies, software companies, equipment suppliers, and franchise development.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href='/gymsdata/dataset'
+                className='inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md transition-all'
+              >
+                Buy dataset
+                <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor' aria-hidden>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 7l5 5m0 0l-5 5m5-5H6' />
+                </svg>
+              </Link>
+              <Link
+                href='/gymsdata#use-cases-heading'
+                className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-transparent px-6 py-3 text-sm font-semibold text-primary hover:bg-primary/10 transition-all'
+              >
+                Data & use cases
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Newsletter Section */}
       <section className='py-20 bg-primary/5'>

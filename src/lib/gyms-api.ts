@@ -1,6 +1,7 @@
 import {
   Gym,
   GymAddress,
+  GymPrimaryAddress,
   AddressDetail,
   StateWithCount,
   AddressesPaginatedResponse,
@@ -206,7 +207,7 @@ export async function getPaginatedGyms(options: {
 }): Promise<PaginatedGymsResponse> {
   const { search, state, city, slug, trending, page, perPage, fields } = options
   console.log(options);
-  
+
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
 
@@ -591,21 +592,78 @@ export async function getAddressesByLocation(options?: {
   }
 }
 
+const FETCH_TIMEOUT_MS = 15_000
+
+/**
+ * Fetches cities (locations with counts) for a given state from the API.
+ * Endpoint: GET /api/v1/gyms/cities?state={stateCode}
+ * Returns [] on error or when the endpoint is not available (caller can fall back to getListPageData + getCitiesInState).
+ */
+export async function getCitiesByState(stateCode: string): Promise<LocationWithCount[]> {
+  if (!stateCode || !String(stateCode).trim()) return []
+  const code = String(stateCode).trim().toUpperCase()
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities`)
+    url.searchParams.set('state', code)
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 300 },
+    })
+    if (!response.ok) {
+      if (response.status === 404) return []
+      throw new Error(`Failed to fetch cities: ${response.status} ${response.statusText}`)
+    }
+    let data = await response.json()
+    data = transformApiResponse(data)
+    let list: unknown[] = []
+    if (Array.isArray(data)) list = data
+    else if (data?.data && Array.isArray(data.data)) list = data.data
+    else if (data?.cities && Array.isArray(data.cities)) list = data.cities
+    const normalized = list
+      .filter((item): item is Record<string, unknown> => item != null && typeof item === 'object')
+      .map((item) => ({
+        label: typeof item.label === 'string' ? item.label : (item.city && typeof item.city === 'string' ? `${item.city}, ${item.state ?? code}` : String(item.label ?? '')),
+        city: typeof item.city === 'string' ? item.city : (typeof item.city === 'undefined' ? null : String(item.city)),
+        state: typeof item.state === 'string' ? item.state : code,
+        postal_code: typeof item.postal_code === 'string' ? item.postal_code : (item.postal_code ?? null) as string | null,
+        count: typeof item.count === 'number' ? item.count : Number(item.count) || 0,
+      })) as LocationWithCount[]
+    return normalized.sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
+  } catch (error) {
+    if (error instanceof Error) console.warn('getCitiesByState failed:', error.message)
+    return []
+  }
+}
+
 /**
  * Fetches locations (city+state and postal_code) with counts for autocomplete.
  * Sorted by count desc. Optional q filters by label.
+ * Uses a timeout to avoid hanging; returns [] on timeout or fetch failure.
  */
 export async function getLocations(q?: string): Promise<LocationWithCount[]> {
   const url = new URL(`${API_BASE_URL}/api/v1/gyms/locations`)
   if (q && q.trim()) {
     url.searchParams.set('q', q.trim())
   }
-  const response = await fetch(url.toString(), { cache: 'no-store' })
-  if (!response.ok) {
-    throw new Error(`Failed to fetch locations: ${response.status} ${response.statusText}`)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    const response = await fetch(url.toString(), {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch locations: ${response.status} ${response.statusText}`)
+    }
+    const data = (await response.json()) as LocationWithCount[]
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error('getLocations failed:', error)
+    }
+    return []
   }
-  const data = (await response.json()) as LocationWithCount[]
-  return Array.isArray(data) ? data : []
 }
 
 /**
@@ -1057,5 +1115,119 @@ export async function getStatesWithCounts(): Promise<StateWithCount[]> {
   } catch (error) {
     console.error('Error fetching states with counts:', error)
     return []
+  }
+}
+
+export interface ListPageData {
+  states: StateWithCount[]
+  locations: LocationWithCount[]
+}
+
+const LIST_PAGE_FETCH_TIMEOUT_MS = 18_000
+
+/**
+ * Fetches data for the gymsdata page.
+ * Tries real API (getStatesWithCounts + getLocations); on failure or empty states uses mock.
+ * Set USE_LIST_PAGE_MOCK=true to always use mock (e.g. until backend endpoint is ready).
+ */
+export async function getListPageData(): Promise<ListPageData> {
+  const useMock = process.env.USE_LIST_PAGE_MOCK === 'true' || process.env.USE_LIST_PAGE_MOCK === '1'
+  if (useMock) {
+    const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
+    return getMockListPageData()
+  }
+
+  const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+    ])
+
+  try {
+    const [states, locations] = await Promise.all([
+      withTimeout(
+        getStatesWithCounts().catch((): StateWithCount[] => []),
+        LIST_PAGE_FETCH_TIMEOUT_MS,
+        [] as StateWithCount[]
+      ),
+      withTimeout(
+        getLocations().catch((): LocationWithCount[] => []),
+        LIST_PAGE_FETCH_TIMEOUT_MS,
+        [] as LocationWithCount[]
+      ),
+    ])
+
+    if (states.length === 0) {
+      const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
+      return getMockListPageData()
+    }
+
+    return {
+      states,
+      locations: Array.isArray(locations) ? locations : [],
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.warn('getListPageData failed, using mock:', error.message)
+    }
+    const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
+    return getMockListPageData()
+  }
+}
+
+export interface DatasetMetrics {
+  pctPhone: number | null
+  pctEmail: number | null
+  pctWebsite: number | null
+  pctGeo: number | null
+}
+
+const METRICS_SAMPLE_SIZE = 1500
+
+function hasPhone(g: Gym): boolean {
+  return typeof g.phone === 'string' && g.phone.trim().length > 0
+}
+function hasEmail(g: Gym): boolean {
+  return typeof g.email === 'string' && g.email.trim().length > 0
+}
+function hasWebsite(g: Gym): boolean {
+  return typeof g.website === 'string' && g.website.trim().length > 0
+}
+function hasGeo(g: Gym): boolean {
+  const a = g.address
+  if (!a || typeof a === 'string') return false
+  const addr = a as GymPrimaryAddress
+  const lat = addr.latitude
+  const lng = addr.longitude
+  return typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)
+}
+
+/**
+ * Computes approximate dataset metrics (%-with-phone/email/website/geo) from a sample of gyms.
+ * Used for the Dataset metrics section on the list page. Returns nulls on error.
+ */
+export async function getDatasetMetrics(): Promise<DatasetMetrics> {
+  const empty: DatasetMetrics = {
+    pctPhone: null,
+    pctEmail: null,
+    pctWebsite: null,
+    pctGeo: null,
+  }
+  try {
+    const { gyms } = await getPaginatedGyms({
+      perPage: METRICS_SAMPLE_SIZE,
+      page: 1,
+    })
+    const sample = gyms.length
+    if (sample === 0) return empty
+    return {
+      pctPhone: Math.round((gyms.filter(hasPhone).length / sample) * 1000) / 10,
+      pctEmail: Math.round((gyms.filter(hasEmail).length / sample) * 1000) / 10,
+      pctWebsite: Math.round((gyms.filter(hasWebsite).length / sample) * 1000) / 10,
+      pctGeo: Math.round((gyms.filter(hasGeo).length / sample) * 1000) / 10,
+    }
+  } catch (error) {
+    console.warn('getDatasetMetrics failed:', error)
+    return empty
   }
 }

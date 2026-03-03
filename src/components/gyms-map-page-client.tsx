@@ -109,6 +109,8 @@ function parseLocationValue(value: string): { city?: string; state?: string; pos
   const v = value?.trim() ?? ''
   if (!v) return {}
   if (/^\d+$/.test(v)) return { postal_code: v }
+  // State-only from list page hash: ", CA" -> { state: "CA" }
+  if (/^,\s*[A-Za-z]{2}$/.test(v)) return { state: v.replace(/^,\s*/, '').trim() }
   const parts = v.split(/\s+/)
   const last = parts[parts.length - 1]
   if (last && /^\d+$/.test(last)) {
@@ -147,8 +149,12 @@ function parseHash(): { location: string; name: string } {
   if (typeof window === 'undefined') return { location: '', name: '' }
   const hash = window.location.hash.slice(1)
   const params = new URLSearchParams(hash)
+  const locationParam = params.get('location')?.trim() || ''
+  const stateParam = params.get('state')?.trim() || ''
+  // Support #state=CA from list page: treat as location ", ST" so parseLocationValue gives state
+  const location = locationParam || (stateParam ? `, ${stateParam}` : '')
   return {
-    location: params.get('location')?.trim() || '',
+    location,
     name: params.get('name')?.trim() || '',
   }
 }
@@ -198,7 +204,7 @@ export function GymsMapPageClient() {
     (updates: { location?: string; name?: string }) => {
       const newHash = buildHash(updates)
       const targetUrl = `/gyms${newHash}`
-      if (pathname !== '/gyms') {
+      if (pathname !== '/gymsdata' && pathname !== '/gymsdata/') {
         router.push(targetUrl)
       } else {
         window.history.replaceState(null, '', targetUrl)
@@ -208,13 +214,14 @@ export function GymsMapPageClient() {
     [pathname, router]
   )
 
-  // Load default location (first = most gyms) when no location in URL
+  // Load default location (first = most gyms) when no location and no state in URL
   useEffect(() => {
     getLocations()
       .then((list) => {
         if (list.length > 0) {
           setDefaultLocation(list[0])
           const current = parseHash()
+          // Don't overwrite when user came with #state= or #location=
           if (!current.location) {
             const value = stringifyLocation(list[0])
             updateUrl({ location: value, name: current.name })
@@ -225,10 +232,13 @@ export function GymsMapPageClient() {
       .catch(() => {})
   }, [updateUrl])
 
-  // Sync inputs from hash
+  // Sync inputs from hash (state-only ", CA" -> show "State: CA")
+  const locationDisplay = (loc: string) =>
+    loc && /^,\s*[A-Za-z]{2}$/.test(loc) ? `State: ${loc.replace(/^,\s*/, '')}` : loc
+
   useEffect(() => {
     const p = parseHash()
-    setLocationInput(p.location)
+    setLocationInput(locationDisplay(p.location))
     setNameInput(p.name)
   }, [])
 
@@ -236,7 +246,7 @@ export function GymsMapPageClient() {
     const handleHashChange = () => {
       setHashParams(parseHash())
       const p = parseHash()
-      setLocationInput(p.location)
+      setLocationInput(locationDisplay(p.location))
       setNameInput(p.name)
     }
     window.addEventListener('hashchange', handleHashChange)

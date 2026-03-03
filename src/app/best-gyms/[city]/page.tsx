@@ -134,6 +134,7 @@ export default async function BestCityGymsPage({ params, searchParams }: PagePro
   }
 
 
+
   const { gyms, meta } = await getPaginatedGyms(gymsParams).catch(() => permanentRedirect(siteUrl))
   if (!gyms?.length) permanentRedirect(siteUrl)
 
