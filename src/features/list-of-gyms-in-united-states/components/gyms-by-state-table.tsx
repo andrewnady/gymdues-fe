@@ -41,7 +41,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
               <h2 id='states-table-heading' className='text-2xl md:text-3xl font-bold tracking-tight'>
                 Number of gyms by U.S. state
               </h2>
-              <details className='ml-auto [&::-webkit-details-marker]:hidden' aria-label='Table details'>
+              {/* <details className='ml-auto [&::-webkit-details-marker]:hidden' aria-label='Table details'>
                 <summary className='inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-sm font-medium text-muted-foreground hover:border-input hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring'>
                   <Info className='h-4 w-4 shrink-0' aria-hidden />
                   <span>Details</span>
@@ -49,7 +49,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                 <p id='states-table-details' className='mt-2 text-sm text-muted-foreground max-w-2xl' role='region' aria-label='Table description'>
                   This table lists every U.S. state with verified gym counts. Columns: rank (#), state name (links to state gyms directory), state code, number of gyms, share of total, and an action to view gyms on the list page. Use it to compare gym density by state and find states with the most gyms. Data is updated weekly.
                 </p>
-              </details>
+              </details> */}
             </div>
             <p className='text-sm md:text-base text-muted-foreground max-w-2xl'>
               Gym count per state. Use the action to open the gyms page filtered by state and
@@ -73,11 +73,8 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
               <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-28'>
                 Gyms
               </th>
-              <th className='px-4 py-3.5 font-medium text-muted-foreground text-right hidden md:table-cell w-24'>
+              <th className='px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell w-40'>
                 % of total
-              </th>
-              <th className='px-4 py-3.5 font-medium text-muted-foreground hidden lg:table-cell w-36'>
-                Share
               </th>
               <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-32'>
                 Action
@@ -86,9 +83,8 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
           </thead>
           <tbody>
             {visible.map((state) => {
-              const pct = totalGyms > 0 ? ((state.count / totalGyms) * 100).toFixed(1) : '0'
-              const maxCount = sortedStates[0]?.count ?? 1
-              const barWidth = maxCount > 0 ? (state.count / maxCount) * 100 : 0
+              const pctNum = totalGyms > 0 ? (state.count / totalGyms) * 100 : 0
+              const pct = pctNum.toFixed(1)
               const globalIndex = sortedStates.findIndex((s) => s.state === state.state)
               return (
                 <tr
@@ -129,15 +125,16 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                   <td className='px-4 py-3 text-right font-semibold tabular-nums'>
                     {state.count.toLocaleString('en-US')}
                   </td>
-                  <td className='px-4 py-3 text-right text-muted-foreground hidden md:table-cell tabular-nums'>
-                    {pct}%
-                  </td>
-                  <td className='px-4 py-3 hidden lg:table-cell align-middle'>
-                    <div className='h-2.5 w-full min-w-[64px] max-w-[96px] ml-auto rounded-full bg-muted overflow-hidden'>
-                      <div
-                        className='h-full rounded-full bg-primary/80 transition-all duration-500'
-                        style={{ width: `${barWidth}%` }}
-                      />
+                  <td className='px-4 py-3 hidden md:table-cell align-middle'>
+                    <div className='flex items-center gap-2 min-w-[100px]'>
+                      <div className='flex-1 min-w-0 h-2.5 rounded-full bg-muted overflow-hidden'>
+                        <div
+                          className='h-full rounded-full bg-primary/80 transition-all duration-500'
+                          style={{ width: `${Math.min(pctNum, 100)}%` }}
+                          role='presentation'
+                        />
+                      </div>
+                      <span className='text-muted-foreground tabular-nums text-xs shrink-0 w-9 text-right'>{pct}%</span>
                     </div>
                   </td>
                   <td className='px-4 py-3 text-right'>
@@ -160,8 +157,14 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
               <td className='px-4 py-3 text-right tabular-nums'>
                 {totalGyms.toLocaleString('en-US')}
               </td>
-              <td className='px-4 py-3 text-right hidden md:table-cell tabular-nums'>100%</td>
-              <td className='px-4 py-3 hidden lg:table-cell' />
+              <td className='px-4 py-3 hidden md:table-cell'>
+                <div className='flex items-center gap-2 min-w-[100px]'>
+                  <div className='flex-1 min-w-0 h-2.5 rounded-full bg-muted overflow-hidden'>
+                    <div className='h-full w-full rounded-full bg-primary/80' role='presentation' />
+                  </div>
+                  <span className='text-muted-foreground tabular-nums text-xs shrink-0 w-9 text-right'>100%</span>
+                </div>
+              </td>
               <td className='px-4 py-3' />
             </tr>
           </tbody>
@@ -181,7 +184,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                 </>
               ) : (
                 <>
-                  Read more ({hiddenCount} more states)
+                  See more ({hiddenCount} more states)
                   <ChevronDown className='h-4 w-4' />
                 </>
               )}

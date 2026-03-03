@@ -22,11 +22,12 @@ export function ExitIntentPopup() {
       if (window.localStorage.getItem(STORAGE_KEY) === 'true') return
     } catch { /* noop */ }
 
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 5) setOpen(true)
+    // Only show when user moves cursor out of the page toward the tab bar (exit intent), not on a timer.
+    const handleLeave = (e: MouseEvent) => {
+      if (e.clientY <= 10) setOpen(true)
     }
-    document.addEventListener('mouseout', handleMouseLeave)
-    return () => document.removeEventListener('mouseout', handleMouseLeave)
+    document.documentElement.addEventListener('mouseleave', handleLeave)
+    return () => document.documentElement.removeEventListener('mouseleave', handleLeave)
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
