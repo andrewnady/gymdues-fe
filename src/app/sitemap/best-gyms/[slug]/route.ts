@@ -3,7 +3,7 @@ import { getBestGymPageSitemap } from '@/lib/gyms-api'
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL ||
-  'https://bestgyms.gymdues.com'
+  'https://bestgyms.gymdues.com/'
 
 const URLS_PER_SITEMAP = 100
 
@@ -36,7 +36,7 @@ export async function GET(
     const urls = pageEntries
       .map(
         (slug: string) => `  <url>
-    <loc>${BASE_URL}/${slug}/</loc>
+    <loc>${BASE_URL}${slug}/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`
