@@ -58,7 +58,7 @@ export function Navigation() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
 
   const navLinks = [
-    { href: `${siteUrl}/gymsdata`, label: 'Browse Gyms' },
+    { href: `${siteUrl}/gyms`, label: 'Browse Gyms' },
     { href: process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || `${siteUrl}/best-gyms`, label: 'Best Gyms' },
     { href: `${siteUrl}/blog`, label: 'Blog' },
     { href: `${siteUrl}/about`, label: 'About' },
