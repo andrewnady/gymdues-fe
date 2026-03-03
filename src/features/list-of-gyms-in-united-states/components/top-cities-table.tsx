@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, ChevronUp, Info } from 'lucide-react'
+import { ChevronDown, ChevronUp, /*Info*/ } from 'lucide-react'
 import type { LocationWithCount } from '@/types/gym'
 
 const INITIAL_VISIBLE = 3
@@ -18,7 +18,7 @@ export function TopCitiesTable({ cities }: TopCitiesTableProps) {
 
   return (
     <>
-      <details className='mb-3 [&::-webkit-details-marker]:hidden' aria-label='Table details'>
+      {/* <details className='mb-3 [&::-webkit-details-marker]:hidden' aria-label='Table details'>
         <summary className='inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-sm font-medium text-muted-foreground hover:border-input hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring'>
           <Info className='h-4 w-4 shrink-0' aria-hidden />
           <span>Details</span>
@@ -26,7 +26,7 @@ export function TopCitiesTable({ cities }: TopCitiesTableProps) {
         <p id='top-cities-table-details' className='mt-2 text-sm text-muted-foreground max-w-2xl' role='region' aria-label='Table description'>
           This table shows cities and metro areas with the most gyms in the United States. Columns: rank (#), city or location name (links to filtered gym list), and gym count. Use it to find the best cities for gym options and compare membership prices. Data is updated weekly.
         </p>
-      </details>
+      </details> */}
       <div className='overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm'>
         <table className='min-w-full text-left text-sm' aria-describedby='top-cities-table-details'>
           <thead className='bg-muted/50 border-b'>

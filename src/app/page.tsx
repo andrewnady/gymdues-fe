@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+//import Link from 'next/link'
 import {
   getTrendingGyms,
   getLatestGyms,
@@ -13,7 +13,7 @@ import { BlogPost } from '@/types/blog'
 import { Gym, ReviewWithGym } from '@/types/gym'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 import { HeroSection } from '@/components/hero-section'
-import { WhyChooseSection } from '@/components/why-choose-section'
+//import { WhyChooseSection } from '@/components/why-choose-section'
 import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
@@ -266,7 +266,7 @@ export default async function Home() {
       )}
       <RedirectGymsHash />
       <HeroSection popularGyms={popularGyms} />
-      <WhyChooseSection />
+      {/* <WhyChooseSection /> */}
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
       <RatedGymsSection gyms={ratedGyms} />
@@ -284,7 +284,7 @@ export default async function Home() {
       <BlogSection posts={recentPosts} />
 
       {/* Data & use cases – link to gym database and tools (relates to main page) */}
-      <section className='py-16 md:py-20 border-t bg-muted/20' aria-labelledby='data-tools-heading'>
+      {/* <section className='py-16 md:py-20 border-t bg-muted/20' aria-labelledby='data-tools-heading'>
         <div className='container mx-auto px-4'>
           <div className='max-w-4xl mx-auto text-center'>
             <h2 id='data-tools-heading' className='text-2xl md:text-3xl font-bold tracking-tight mb-2'>
@@ -312,7 +312,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Newsletter Section */}
       <section className='py-20 bg-primary/5'>

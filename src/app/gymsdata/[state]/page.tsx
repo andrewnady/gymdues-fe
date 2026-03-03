@@ -4,14 +4,14 @@ import { getListPageData, getCitiesByState } from '@/lib/gyms-api'
 import {
   getStateBySlug,
   getCitiesInState,
-  stateGymsdataPath,
+  //stateGymsdataPath,
   cityGymsdataPath,
   toSlug,
   getStateDerivedStats,
   formatDataDate,
 } from '@/lib/gymsdata-utils'
 import { getMockCitiesForState, getMockStateByCode } from '@/usa-list/data/mock-list-page-data'
-import { MapPin, Building2 } from 'lucide-react'
+import { MapPin, ShoppingCart } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { GymsdataMiniMap } from '../_components/gymsdata-mini-map'
 import { StateCitiesFilter } from '../_components/state-cities-filter'
@@ -70,7 +70,7 @@ export default async function GymsdataStatePage({ params }: Props) {
       : fromLocations
   const mockState = getMockStateByCode(state.state)
   const displayState = useMockData && mockState ? { ...state, count: mockState.count } : state
-  const statePath = stateGymsdataPath(state)
+  //const statePath = stateGymsdataPath(state)
   const stateStats = getStateDerivedStats(displayState.state, displayState.count, cities.length)
   const dateStr = formatDataDate()
   const topThreeCities = cities.slice(0, 3).map((loc) => ({
@@ -113,61 +113,61 @@ export default async function GymsdataStatePage({ params }: Props) {
             </div>
           </div>
 
-          {/* Interactive mini-map */}
-          <div className='mt-6'>
-            <GymsdataMiniMap state={displayState} />
+          {/* Map and Overview side by side */}
+          <div className='mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8'>
+            <div className='min-w-0'>
+              <GymsdataMiniMap state={displayState} />
+            </div>
+            <div className='min-w-0'>
+              <h2 className='text-2xl font-bold mb-4'>
+                Gyms in {displayState.stateName} – Overview
+              </h2>
+              <div className='prose prose-neutral dark:prose-invert max-w-none space-y-4 text-muted-foreground'>
+                <p>
+                  There are <strong className='text-foreground'>{displayState.count.toLocaleString('en-US')}</strong> gyms
+                  in <strong className='text-foreground'>{displayState.stateName}</strong> as of {dateStr}.
+                </p>
+                {topThreeCities.length >= 3 ? (
+                  <p>
+                    The top 3 cities are <strong className='text-foreground'>{topThreeCities[0].name}</strong> with{' '}
+                    {topThreeCities[0].gyms.toLocaleString('en-US')} gyms,{' '}
+                    <strong className='text-foreground'>{topThreeCities[1].name}</strong> with{' '}
+                    {topThreeCities[1].gyms.toLocaleString('en-US')} gyms, and{' '}
+                    <strong className='text-foreground'>{topThreeCities[2].name}</strong> with{' '}
+                    {topThreeCities[2].gyms.toLocaleString('en-US')} gyms.
+                  </p>
+                ) : topThreeCities.length > 0 ? (
+                  <p>
+                    Top {topThreeCities.length} cit{topThreeCities.length === 1 ? 'y' : 'ies'}:{' '}
+                    {topThreeCities.map((c, i) => (
+                      <span key={c.name}>
+                        <strong className='text-foreground'>{c.name}</strong> ({c.gyms.toLocaleString('en-US')} gyms)
+                        {i < topThreeCities.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}.
+                  </p>
+                ) : null}
+                <ul className='list-disc pl-6 space-y-1'>
+                  <li>{stateStats.pctEmail}% have email addresses</li>
+                  <li>{stateStats.pctPhone}% have verified phone numbers</li>
+                  <li>{stateStats.pctSocial}% maintain active social media</li>
+                  <li>Average rating: {stateStats.avgRating} stars</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           {/* Download CTA */}
           <div className='mt-6 flex flex-wrap gap-3'>
             <DownloadSampleButton variant='primary' />
             <Link
-              href='/gymsdata/'
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted'
+              href='/gymsdata/dataset'
+              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/30'
             >
-              <Building2 className='h-4 w-4' />
-              List of Gyms in United States
+              <ShoppingCart className='h-4 w-4' />
+              Buy data
             </Link>
           </div>
-        </div>
-      </div>
-
-      {/* Body: SEO content – gym count, top cities, contact stats */}
-      <div className='container mx-auto px-4 py-10 max-w-3xl'>
-        <h2 className='text-2xl font-bold mb-4'>
-          Gyms in {displayState.stateName} – Overview
-        </h2>
-        <div className='prose prose-neutral dark:prose-invert max-w-none space-y-4 text-muted-foreground'>
-          <p>
-            There are <strong className='text-foreground'>{displayState.count.toLocaleString('en-US')}</strong> gyms
-            in <strong className='text-foreground'>{displayState.stateName}</strong> as of {dateStr}.
-          </p>
-          {topThreeCities.length >= 3 ? (
-            <p>
-              The top 3 cities are <strong className='text-foreground'>{topThreeCities[0].name}</strong> with{' '}
-              {topThreeCities[0].gyms.toLocaleString('en-US')} gyms,{' '}
-              <strong className='text-foreground'>{topThreeCities[1].name}</strong> with{' '}
-              {topThreeCities[1].gyms.toLocaleString('en-US')} gyms, and{' '}
-              <strong className='text-foreground'>{topThreeCities[2].name}</strong> with{' '}
-              {topThreeCities[2].gyms.toLocaleString('en-US')} gyms.
-            </p>
-          ) : topThreeCities.length > 0 ? (
-            <p>
-              Top {topThreeCities.length} cit{topThreeCities.length === 1 ? 'y' : 'ies'}:{' '}
-              {topThreeCities.map((c, i) => (
-                <span key={c.name}>
-                  <strong className='text-foreground'>{c.name}</strong> ({c.gyms.toLocaleString('en-US')} gyms)
-                  {i < topThreeCities.length - 1 ? ', ' : ''}
-                </span>
-              ))}.
-            </p>
-          ) : null}
-          <ul className='list-disc pl-6 space-y-1'>
-            <li>{stateStats.pctEmail}% have email addresses</li>
-            <li>{stateStats.pctPhone}% have verified phone numbers</li>
-            <li>{stateStats.pctSocial}% maintain active social media</li>
-            <li>Average rating: {stateStats.avgRating} stars</li>
-          </ul>
         </div>
       </div>
 
@@ -220,7 +220,7 @@ export default async function GymsdataStatePage({ params }: Props) {
             </div>
 
             {/* Link to state page */}
-            <div>
+            {/* <div>
               <h3 className='font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2'>
                 State & directory
               </h3>
@@ -241,10 +241,10 @@ export default async function GymsdataStatePage({ params }: Props) {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
 
             {/* Link to gym type pages */}
-            <div>
+            {/* <div>
               <h3 className='font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2'>
                 Gym type pages
               </h3>
@@ -265,7 +265,8 @@ export default async function GymsdataStatePage({ params }: Props) {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
+
           </div>
         </section>
       </div>

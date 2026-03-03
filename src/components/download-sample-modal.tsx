@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Download } from 'lucide-react'
 
-const USE_CASES = [
+/* const USE_CASES = [
   'Marketing / Lead generation',
   'Software / SaaS sales',
   'Equipment supply',
   'Franchise development',
   'Research / Other',
-]
+] */
 
 export interface DownloadSampleFormData {
   name: string
@@ -109,7 +109,7 @@ export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleM
               placeholder="you@company.com"
             />
           </div>
-          <div>
+          {/* <div>
             <label htmlFor="dm-company" className="block text-sm font-medium text-muted-foreground mb-1">
               Company
             </label>
@@ -137,7 +137,7 @@ export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleM
                 <option key={uc} value={uc}>{uc}</option>
               ))}
             </select>
-          </div>
+          </div> */}
           <div className="flex gap-2 pt-2">
             <button
               type="button"

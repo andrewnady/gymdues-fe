@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { BarChart2, ChevronDown, Trophy, MapPin, Info } from 'lucide-react'
+import { BarChart2, ChevronDown, Trophy, MapPin } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
 
@@ -103,7 +103,7 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
         <h2 id='state-comparison-heading' className='text-2xl md:text-3xl font-semibold'>
           State Comparison Tool
         </h2>
-        <details className='[&::-webkit-details-marker]:hidden' aria-label='Table details'>
+        {/* <details className='[&::-webkit-details-marker]:hidden' aria-label='Table details'>
           <summary className='inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-sm font-medium text-muted-foreground hover:border-input hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring'>
             <Info className='h-4 w-4 shrink-0' aria-hidden />
             <span>Details</span>
@@ -111,7 +111,7 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
           <p id='state-comparison-details' className='mt-2 text-sm text-muted-foreground max-w-2xl' role='region' aria-label='Table description'>
             This comparison table lets you compare up to three states on total gyms, gyms with email, gyms with phone, average rating, and gyms per 100,000 people. The best value in each row is marked. Use it to see which state has the most gym options or best contact coverage.
           </p>
-        </details>
+        </details> */}
       </div>
       <p className='text-sm text-muted-foreground mb-6 max-w-2xl'>
         Compare gym counts and metrics across three states. Pick states below to see side-by-side
@@ -119,41 +119,55 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
       </p>
 
       <div className='rounded-2xl border border-border/80 bg-card shadow-sm overflow-hidden'>
+        {/* Select row: grid aligned with table columns (Metric | CA | TX | FL) */}
         <div className='p-4 md:p-6 border-b bg-muted/20'>
-          <div className='flex flex-wrap items-center gap-2 md:gap-3'>
-            <span className='text-sm font-medium text-muted-foreground shrink-0'>Compare:</span>
+          <div
+            className='grid items-center gap-x-3 gap-y-2'
+            style={{ gridTemplateColumns: '9rem 1fr 1fr 1fr' }}
+          >
+            <span className='text-sm font-medium text-muted-foreground'>Compare:</span>
+            <div className='flex justify-center'>
             <SelectState
               value={stateA}
               onChange={setStateA}
               sortedStates={sortedStates}
               aria-label='First state'
             />
-            <span className='text-muted-foreground text-sm shrink-0'>vs</span>
+            </div>
+            <div className='flex justify-center'>
             <SelectState
               value={stateB}
               onChange={setStateB}
               sortedStates={sortedStates}
               aria-label='Second state'
             />
-            <span className='text-muted-foreground text-sm shrink-0'>vs</span>
+            </div>
+            <div className='flex justify-center'>
             <SelectState
               value={stateC}
               onChange={setStateC}
               sortedStates={sortedStates}
               aria-label='Third state'
             />
+            </div>
           </div>
         </div>
 
         <div className='overflow-x-auto'>
-          <table className='min-w-full text-sm'>
+          <table className='min-w-full text-sm table-fixed'>
+            <colgroup>
+              <col className='w-36' />
+              <col />
+              <col />
+              <col />
+            </colgroup>
             <thead>
               <tr className='border-b border-border/60 bg-muted/40'>
-                <th className='text-left py-3.5 pl-4 pr-2 font-medium text-muted-foreground w-36'>
+                <th className='text-left py-3.5 pl-4 pr-2 font-medium text-muted-foreground'>
                   Metric
                 </th>
                 {cols.map((s, i) => (
-                  <th key={i} className='py-3.5 px-4 font-semibold text-center text-foreground min-w-[5rem]'>
+                  <th key={i} className='py-3.5 px-4 font-semibold text-center text-foreground'>
                     {s ? s.state : '—'}
                   </th>
                 ))}
@@ -193,40 +207,48 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
                 )
               })}
             </tbody>
+            {(a || b || c) && (
+              <tfoot>
+                <tr className='border-t-2 border-border bg-muted/20'>
+                  <td className='py-4 pl-4 pr-2' />
+                  <td className='py-4 px-4 text-center'>
+                    {a && (
+                      <Link
+                        href={stateGymsdataPath(a)}
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
+                      >
+                        <MapPin className='h-4 w-4 shrink-0' />
+                        Browse {a.stateName}
+                      </Link>
+                    )}
+                  </td>
+                  <td className='py-4 px-4 text-center'>
+                    {b && (
+                      <Link
+                        href={stateGymsdataPath(b)}
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
+                      >
+                        <MapPin className='h-4 w-4 shrink-0' />
+                        Browse {b.stateName}
+                      </Link>
+                    )}
+                  </td>
+                  <td className='py-4 px-4 text-center'>
+                    {c && (
+                      <Link
+                        href={stateGymsdataPath(c)}
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
+                      >
+                        <MapPin className='h-4 w-4 shrink-0' />
+                        Browse {c.stateName}
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
-
-        {(a || b || c) && (
-          <div className='p-4 md:p-6 border-t bg-muted/20 flex flex-wrap justify-center gap-2'>
-            {a && (
-              <Link
-                href={stateGymsdataPath(a)}
-                className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors'
-              >
-                <MapPin className='h-4 w-4' />
-                Browse {a.stateName}
-              </Link>
-            )}
-            {b && (
-              <Link
-                href={stateGymsdataPath(b)}
-                className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors'
-              >
-                <MapPin className='h-4 w-4' />
-                Browse {b.stateName}
-              </Link>
-            )}
-            {c && (
-              <Link
-                href={stateGymsdataPath(c)}
-                className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors'
-              >
-                <MapPin className='h-4 w-4' />
-                Browse {c.stateName}
-              </Link>
-            )}
-          </div>
-        )}
       </div>
     </section>
   )

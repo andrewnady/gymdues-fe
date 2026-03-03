@@ -1,7 +1,8 @@
 'use client'
 
-import { ArrowRightCircle, CheckCircle2 } from 'lucide-react'
-import { DownloadSampleButton } from '@/components/download-sample-button'
+import Link from 'next/link'
+import { ArrowRightCircle } from 'lucide-react'
+
 
 export function GymsdataHeroBanner() {
   return (
@@ -25,37 +26,18 @@ export function GymsdataHeroBanner() {
           </p>
 
           <div className="flex flex-wrap items-center gap-3.5 mb-5">
-            <DownloadSampleButton
-              variant="primary"
-              className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            <Link
+              href=""
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all"
             >
-              Request a Sample Dataset
+              Contact me
               <ArrowRightCircle className="h-4 w-4" aria-hidden />
-            </DownloadSampleButton>
+            </Link>
 
-            <p className="text-[11px] text-muted-foreground">
-              No spam. We only send a sample of real gyms in your target segment.
-            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground border-t border-border/60 pt-4 mt-1">
-            <div className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-              <span>Owner / GM contact details where available</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-              <span>Equipment + software signals for smarter targeting</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-              <span>Updated weekly so your lists don&apos;t go stale</span>
-            </div>
-          </div>
-
-          <p className="mt-3 text-[11px] text-muted-foreground/90">
-            Trusted by data, sales, and growth teams at equipment brands, SaaS companies, and supplement suppliers.
-          </p>
         </div>
 
         <div className="relative flex items-center justify-center px-6 pb-8 lg:px-10 lg:pb-10">
@@ -68,9 +50,6 @@ export function GymsdataHeroBanner() {
             />
 
             <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-r from-black/70 via-black/55 to-black/0 px-5 py-3 backdrop-blur-sm">
-              <div className="h-8 w-8 rounded-full bg-emerald-100/90 ring-2 ring-emerald-300/90 flex items-center justify-center text-[11px] font-semibold text-emerald-950">
-                AN
-              </div>
               <div className="leading-tight">
                 <p className="text-xs font-semibold text-white">Andrew Nady</p>
                 <p className="text-[11px] text-white/80">GymDues Product Lead</p>

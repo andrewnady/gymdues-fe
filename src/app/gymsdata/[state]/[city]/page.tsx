@@ -126,9 +126,36 @@ export default async function GymsdataCityPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Interactive mini-map */}
-          <div className='mt-6'>
-            <GymsdataMiniMap state={state} />
+          {/* Map and Overview side by side */}
+          <div className='mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8'>
+            <div className='min-w-0'>
+              <GymsdataMiniMap state={state} />
+            </div>
+            <div className='min-w-0'>
+              <h2 className='text-2xl font-bold mb-4'>
+                Gyms in {cityName} – Complete Contact Database
+              </h2>
+              <div className='prose prose-neutral dark:prose-invert max-w-none space-y-4 text-muted-foreground'>
+                <p>
+                  There are <strong className='text-foreground'>{count.toLocaleString('en-US')}</strong> gyms
+                  in <strong className='text-foreground'>{cityName}, {state.stateName}</strong> as of {dateStr}.
+                </p>
+                <p>
+                  The top 3 areas are <strong className='text-foreground'>{neighborhoods[0].name}</strong> with{' '}
+                  {neighborhoods[0].gyms.toLocaleString('en-US')} gyms,{' '}
+                  <strong className='text-foreground'>{neighborhoods[1].name}</strong> with{' '}
+                  {neighborhoods[1].gyms.toLocaleString('en-US')} gyms, and{' '}
+                  <strong className='text-foreground'>{neighborhoods[2].name}</strong> with{' '}
+                  {neighborhoods[2].gyms.toLocaleString('en-US')} gyms.
+                </p>
+                <ul className='list-disc pl-6 space-y-1'>
+                  <li>{stats.pctEmail}% have email addresses</li>
+                  <li>{stats.pctPhone}% have verified phone numbers</li>
+                  <li>{stats.pctSocial}% maintain active social media</li>
+                  <li>Average rating: {stats.avgRating} stars</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           {/* Download CTA */}
@@ -145,33 +172,8 @@ export default async function GymsdataCityPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Body: Auto-generated SEO content */}
+      {/* Internal linking: nearby cities, state page */}
       <div className='container mx-auto px-4 py-10 max-w-3xl'>
-        <h2 className='text-2xl font-bold mb-4'>
-          Gyms in {cityName} – Complete Contact Database
-        </h2>
-        <div className='prose prose-neutral dark:prose-invert max-w-none space-y-4 text-muted-foreground'>
-          <p>
-            There are <strong className='text-foreground'>{count.toLocaleString('en-US')}</strong> gyms
-            in <strong className='text-foreground'>{cityName}, {state.stateName}</strong> as of {dateStr}.
-          </p>
-          <p>
-            The top 3 areas are <strong className='text-foreground'>{neighborhoods[0].name}</strong> with{' '}
-            {neighborhoods[0].gyms.toLocaleString('en-US')} gyms,{' '}
-            <strong className='text-foreground'>{neighborhoods[1].name}</strong> with{' '}
-            {neighborhoods[1].gyms.toLocaleString('en-US')} gyms, and{' '}
-            <strong className='text-foreground'>{neighborhoods[2].name}</strong> with{' '}
-            {neighborhoods[2].gyms.toLocaleString('en-US')} gyms.
-          </p>
-          <ul className='list-disc pl-6 space-y-1'>
-            <li>{stats.pctEmail}% have email addresses</li>
-            <li>{stats.pctPhone}% have verified phone numbers</li>
-            <li>{stats.pctSocial}% maintain active social media</li>
-            <li>Average rating: {stats.avgRating} stars</li>
-          </ul>
-        </div>
-
-        {/* Internal linking: nearby cities, state page */}
         <section className='mt-10 pt-8 border-t' aria-label='Related pages'>
           <h3 className='font-semibold text-lg mb-3'>Nearby cities</h3>
           <ul className='flex flex-wrap gap-2'>
@@ -187,7 +189,7 @@ export default async function GymsdataCityPage({ params }: Props) {
               </li>
             ))}
           </ul>
-          <p className='mt-4'>
+          {/* <p className='mt-4'>
             <Link href={statePath} className='text-primary hover:underline font-medium'>
               ← Back to all cities in {state.stateName}
             </Link>
@@ -196,7 +198,7 @@ export default async function GymsdataCityPage({ params }: Props) {
             <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
               Browse all gyms
             </Link>
-          </p>
+          </p> */}
         </section>
       </div>
     </main>
