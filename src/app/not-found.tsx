@@ -32,7 +32,7 @@ export default function NotFound() {
                 </Link>
               </Button>
               <Button asChild variant='outline' size='lg' className='w-full sm:w-auto'>
-                <Link href='/gymsdata'>
+                <Link href='/gyms'>
                   <Search className='mr-2 h-4 w-4' />
                   Browse Gyms
                 </Link>
