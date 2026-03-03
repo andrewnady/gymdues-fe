@@ -2,7 +2,7 @@ import { getBestGymPageSitemap } from '@/lib/gyms-api'
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL ||
-  'https://bestgyms.gymdues.com'
+  'https://bestgyms.gymdues.com/'
 
 const URLS_PER_SITEMAP = 100
 
@@ -19,7 +19,7 @@ export async function GET() {
 ${entries
   .map(
     (i) => `  <sitemap>
-    <loc>${BASE_URL}/sitemaps/best-gyms/${i}.xml</loc>
+    <loc>${BASE_URL}sitemap/best-gyms/${i}.xml</loc>
   </sitemap>`
   )
   .join('\n')}
