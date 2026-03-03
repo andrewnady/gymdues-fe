@@ -142,12 +142,12 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                   </td>
                   <td className='px-4 py-3 text-right'>
                     <Link
-                      href={`/gymsdata#state=${encodeURIComponent(state.state)}`}
+                      href={stateGymsdataPath(state)}
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'
                     >
-                      <ExternalLink className='h-3.5 w-3.5 shrink-0' />
+                      <ExternalLink className='h-3.5 w-3.5 shrink-0' aria-hidden />
                       <span className='hidden sm:inline'>View gyms</span>
-                      <ChevronRight className='h-3.5 w-3.5 sm:hidden' />
+                      <ChevronRight className='h-3.5 w-3.5 sm:hidden' aria-hidden />
                     </Link>
                   </td>
                 </tr>

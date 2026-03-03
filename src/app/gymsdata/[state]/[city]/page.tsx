@@ -73,7 +73,7 @@ export default async function GymsdataCityPage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>City not found</h1>
-        <Link href={state ? stateGymsdataPath(state) : '/gymsdata'} className='text-primary hover:underline'>
+        <Link href={state ? stateGymsdataPath(state) : '/gymsdata/'} className='text-primary hover:underline'>
           Back to {state?.stateName ?? 'states'}
         </Link>
       </main>
@@ -96,7 +96,7 @@ export default async function GymsdataCityPage({ params }: Props) {
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <Link href='/' className='hover:text-primary'>Home</Link>
             <span className='mx-2'>/</span>
-            <Link href='/list-of-gyms-in-united-states' className='hover:text-primary'>List of Gyms in United States</Link>
+            <Link href='/gymsdata/' className='hover:text-primary'>List of Gyms in United States</Link>
             <span className='mx-2'>/</span>
             <Link href={statePath} className='hover:text-primary'>{state.stateName}</Link>
             <span className='mx-2'>/</span>
@@ -135,7 +135,7 @@ export default async function GymsdataCityPage({ params }: Props) {
           <div className='mt-6 flex flex-wrap gap-3'>
             <DownloadSampleButton variant='primary' />
             <Link
-              href={`/gymsdata#location=${encodeURIComponent(loc.label ?? `${cityName}, ${state.state}`)}`}
+              href={`/gymsdata/#location=${encodeURIComponent(loc.label ?? `${cityName}, ${state.state}`)}`}
               className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted'
             >
               <Building2 className='h-4 w-4' />
@@ -193,7 +193,7 @@ export default async function GymsdataCityPage({ params }: Props) {
             </Link>
           </p>
           <p className='mt-2'>
-            <Link href='/gymsdata' className='text-primary hover:underline font-medium'>
+            <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
               Browse all gyms
             </Link>
           </p>

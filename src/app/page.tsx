@@ -295,7 +295,7 @@ export default async function Home() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
-                href='/dataset'
+                href='/gymsdata/dataset'
                 className='inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md transition-all'
               >
                 Buy dataset

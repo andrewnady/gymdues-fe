@@ -19,7 +19,7 @@ export function RedirectGymsHash() {
     const hasLocation = params.has('location')
     const hasName = params.has('name')
     if (hasLocation || hasName) {
-      router.replace(`/gymsdata#${hash}`)
+      router.replace(`/gymsdata/#${hash}`)
     }
   }, [pathname, router])
 

@@ -153,8 +153,8 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                       <td className='px-4 py-3 text-right text-muted-foreground hidden md:table-cell tabular-nums'>{pct}%</td>
                       <td className='px-4 py-3 text-right'>
                         <Link
-                          href={`/gymsdata#state=${encodeURIComponent(state.state)}`}
-                          className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground'
+                          href={stateGymsdataPath(state)}
+                          className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'
                         >
                           View gyms
                         </Link>

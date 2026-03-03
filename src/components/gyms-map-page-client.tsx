@@ -204,7 +204,7 @@ export function GymsMapPageClient() {
     (updates: { location?: string; name?: string }) => {
       const newHash = buildHash(updates)
       const targetUrl = `/gyms${newHash}`
-      if (pathname !== '/gymsdata') {
+      if (pathname !== '/gymsdata' && pathname !== '/gymsdata/') {
         router.push(targetUrl)
       } else {
         window.history.replaceState(null, '', targetUrl)

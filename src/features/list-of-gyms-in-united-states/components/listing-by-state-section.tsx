@@ -83,7 +83,7 @@ export function ListingByStateSection({ states }: ListingByStateSectionProps) {
             </ReadMoreText>
           </div>
           <Link
-            href='/gymsdata'
+            href='/gymsdata/'
             className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md transition-all shrink-0'
           >
             Explore all gyms

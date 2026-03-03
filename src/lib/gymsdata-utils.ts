@@ -1,5 +1,8 @@
 import type { LocationWithCount, StateWithCount } from '@/types/gym'
 
+/** Base path for all gymsdata pages. Use this prefix for any action/link from /gymsdata. */
+export const GYMSDATA_BASE = '/gymsdata/'
+
 /** Convert "Los Angeles" → "los-angeles", "New York" → "new-york" */
 export function toSlug(name: string): string {
   return name
@@ -53,15 +56,15 @@ export function getCityBySlug(
 
 /** Build path for state: /gymsdata/california */
 export function stateGymsdataPath(state: StateWithCount): string {
-  return `/gymsdata/${toSlug(state.stateName)}`
+  return `${GYMSDATA_BASE}${toSlug(state.stateName)}`
 }
 
 /** Build path for city: /gymsdata/california/los-angeles */
 export function cityGymsdataPath(stateSlug: string, cityName: string): string {
   const s = stateSlug.toLowerCase().trim()
   const c = cityName ? toSlug(cityName) : ''
-  if (!s || !c) return '/gymsdata'
-  return `/gymsdata/${s}/${c}`
+  if (!s || !c) return GYMSDATA_BASE
+  return `${GYMSDATA_BASE}${s}/${c}`
 }
 
 /** Derived stats for a state page (until API provides). */

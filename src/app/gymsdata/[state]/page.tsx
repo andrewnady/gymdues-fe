@@ -53,7 +53,7 @@ export default async function GymsdataStatePage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>State not found</h1>
-        <Link href='/gymsdata' className='text-primary hover:underline'>
+        <Link href='/gymsdata/' className='text-primary hover:underline'>
           View all states
         </Link>
       </main>
@@ -85,7 +85,7 @@ export default async function GymsdataStatePage({ params }: Props) {
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <Link href='/' className='hover:text-primary'>Home</Link>
             <span className='mx-2'>/</span>
-            <Link href='/list-of-gyms-in-united-states' className='hover:text-primary'>List of Gyms in United States</Link>
+            <Link href='/gymsdata/' className='hover:text-primary'>List of Gyms in United States</Link>
             <span className='mx-2'>/</span>
             <span className='text-foreground font-medium'>{displayState.stateName}</span>
           </nav>
@@ -122,7 +122,7 @@ export default async function GymsdataStatePage({ params }: Props) {
           <div className='mt-6 flex flex-wrap gap-3'>
             <DownloadSampleButton variant='primary' />
             <Link
-              href={`/gymsdata`}
+              href='/gymsdata/'
               className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted'
             >
               <Building2 className='h-4 w-4' />
@@ -181,7 +181,7 @@ export default async function GymsdataStatePage({ params }: Props) {
         ) : (
           <p className='text-muted-foreground'>
             City-level data for {state.stateName} is being updated. You can still{' '}
-            <Link href={`/gymsdata#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+            <Link href={`/gymsdata/#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
               browse all gyms in {state.stateName}
             </Link>.
           </p>
@@ -212,7 +212,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               </ul>
               {cities.length === 0 && (
                 <p className='text-sm text-muted-foreground'>
-                  <Link href={`/gymsdata#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+                  <Link href={`/gymsdata/#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
                     View gyms in {state.stateName}
                   </Link>
                 </p>
@@ -226,7 +226,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <Link href='/list-of-gyms-in-united-states' className='text-primary hover:underline font-medium'>
+                  <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
                     List of Gyms in United States
                   </Link>
                 </li>
@@ -236,7 +236,7 @@ export default async function GymsdataStatePage({ params }: Props) {
                   </Link>
                 </li>
                 <li>
-                  <Link href={`/gymsdata#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
+                  <Link href={`/gymsdata/#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
                     View gyms in {state.stateName}
                   </Link>
                 </li>
@@ -250,7 +250,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <Link href='/gymsdata' className='text-primary hover:underline font-medium'>
+                  <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
                     Browse all gyms
                   </Link>
                 </li>

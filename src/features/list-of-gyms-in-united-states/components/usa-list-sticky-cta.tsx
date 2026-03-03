@@ -34,7 +34,7 @@ export function UsaListStickyCta({ totalGyms }: UsaListStickyCtaProps) {
       <div className="container mx-auto px-4 py-2.5">
         <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
           <Link
-            href="/gymsdata"
+            href="/gymsdata/"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             Browse {browseLabel} Gyms

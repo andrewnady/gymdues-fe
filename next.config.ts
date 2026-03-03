@@ -10,14 +10,6 @@ const nextConfig: NextConfig = {
   // Allow trailing slashes in URLs
   trailingSlash: true,
 
-  // Redirect legacy list page URL to gymsdata
-  async redirects() {
-    return [
-      { source: '/list-of-gyms-in-united-states', destination: '/gymsdata', permanent: true },
-      { source: '/list-of-gyms-in-united-states/', destination: '/gymsdata/', permanent: true },
-    ]
-  },
-
   // Sitemap indexes (Next.js does not create these when using generateSitemaps)
   async rewrites() {
     return [
