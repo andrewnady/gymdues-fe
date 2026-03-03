@@ -206,7 +206,6 @@ export async function getPaginatedGyms(options: {
   fields?: 'sitemap' | string
 }): Promise<PaginatedGymsResponse> {
   const { search, state, city, slug, trending, page, perPage, fields } = options
-  console.log(options);
 
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms`)
