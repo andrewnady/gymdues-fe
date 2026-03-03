@@ -1,9 +1,23 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { BestGymCityCard } from './city-card'
 import { filterTopGyms, GymsPaginationMeta } from '@/lib/gyms-api'
 import { gymCities } from '@/types/gym'
+
+const TOP_CITIES = [
+  { label: 'New York, NY', href: '/best-new-york-gyms' },
+  { label: 'Los Angeles, CA', href: '/best-los-angeles-gyms' },
+  { label: 'Chicago, IL', href: '/best-chicago-gyms' },
+  { label: 'Houston, TX', href: '/best-houston-gyms' },
+  { label: 'Phoenix, AZ', href: '/best-phoenix-gyms' },
+  { label: 'Philadelphia, PA', href: '/best-philadelphia-gyms' },
+  { label: 'San Antonio, TX', href: '/best-san-antonio-gyms' },
+  { label: 'San Diego, CA', href: '/best-san-diego-gyms' },
+  { label: 'Dallas, TX', href: '/best-dallas-gyms' },
+  { label: 'San Jose, CA', href: '/best-san-jose-gyms' },
+]
 
 interface BestGymCityResultProps {
   initialGyms: gymCities[]
@@ -68,6 +82,21 @@ export function BestGymCityResult({
           Discover the best gyms across the country. Use the filters to narrow down by state or city
           and find top-rated gyms near you.
         </p>
+      </div>
+
+      <div>
+        <p className='font-semibold mb-3'>Can&apos;t decide? start here:</p>
+        <div className='flex flex-wrap gap-2'>
+          {TOP_CITIES.map((city) => (
+            <Link
+              key={city.href}
+              href={city.href}
+              className='inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary hover:bg-primary/10 transition-colors'
+            >
+              {city.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className='flex items-center justify-between'>
