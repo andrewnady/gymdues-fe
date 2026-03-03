@@ -184,6 +184,30 @@ export async function getAllGyms(
 }
 
 /**
+ * Gets states with gym counts from the database (GET /api/v1/gyms/cities-and-states).
+ * Use for state filter autocomplete.
+ */
+export async function getBestGymPageSitemap(): Promise<{ data: []}> {
+  try {
+     const url = new URL(`${API_BASE_URL}/api/v1/best-gyms-sitemaps`)
+    
+      const response = await fetch(url.toString(), {
+        next: { revalidate: 300 },
+      })
+      if (!response.ok) {
+        throw new Error(`Failed to fetch states: ${response.status} ${response.statusText}`)
+      }
+      const data = await response.json()
+      console.log('Best gyms total:', data?.length)
+
+      return data;
+  } catch (error) {
+    console.error('Error fetching states:', error)
+    return { data: [] }
+  }
+}
+
+/**
  * Minimal gym shape for sitemap (when options.fields === 'sitemap').
  * API returns only id, slug, updated_at to reduce payload.
  */
