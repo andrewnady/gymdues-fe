@@ -4,6 +4,9 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Gym } from '@/types/gym'
+
+/** Main domain base URL so /gyms/* links work from subdomains (e.g. bestgyms). */
+const MAIN_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 import {
   Card,
   CardContent,
@@ -68,7 +71,7 @@ export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardPr
               <div className='flex items-center gap-2 text-sm text-muted-foreground mb-2'>
                 <MapPin className='h-4 w-4 flex-shrink-0' />
                 <span>
-                  {gym.city}, {gym.state}
+                  {typeof gym.address === 'object' && `${gym.address.city}, ${gym.address.state}`}
                 </span>
               </div>
             </div>
@@ -105,7 +108,7 @@ export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardPr
       </CardContent>
       <CardFooter>
         {selectMode ? (
-          <Link href={`/gyms/${gym.slug}`} className='block' onClick={(e) => e.stopPropagation()}>
+          <Link href={`${MAIN_SITE_URL}/gyms/${gym.slug}`} className='block' onClick={(e) => e.stopPropagation()}>
             <Button className='w-full'>{gym.name} Details</Button>
           </Link>
         ) : (
@@ -123,5 +126,5 @@ export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardPr
     )
   }
 
-  return <Link href={`/gyms/${gym.slug}`} className='block'>{cardContent}</Link>
+  return <Link href={`${MAIN_SITE_URL}/gyms/${gym.slug}`} className='block'>{cardContent}</Link>
 }

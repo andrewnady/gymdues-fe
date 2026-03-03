@@ -1505,7 +1505,9 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </div>
 
           <div className='rounded-3xl border border-border/70 bg-card/95 px-2 py-4 sm:px-4 sm:py-6 shadow-[0_18px_45px_rgba(15,23,42,0.14)]'>
-            <Carousel
+            {/* With JS: carousel (one card, arrows) */}
+            <div className='js-only'>
+              <Carousel
               opts={{
                 align: 'center',
                 loop: true,
@@ -1562,6 +1564,53 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               <CarouselPrevious className='-left-4 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full border-2 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hidden md:flex' />
               <CarouselNext className='-right-4 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full border-2 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hidden md:flex' />
             </Carousel>
+            </div>
+            {/* No-JS: show all testimonials in a list */}
+            <div className='no-js-only space-y-4 px-2'>
+              {[
+                {
+                  quote:
+                    'We used GymDues to source gym contacts for a national outreach campaign, and the results were night and day compared to generic lists. The data was fresh, verified, and instantly usable—our team reached thousands of gyms in just a few days.',
+                  name: 'Jordan Lee',
+                  role: 'Growth Lead, FitStack Analytics',
+                },
+                {
+                  quote:
+                    'GymDues saved our sales reps hours per week. Instead of cleaning spreadsheets, they spend time talking to gym owners who actually fit our ICP.',
+                  name: 'Morgan Patel',
+                  role: 'Head of Sales, IronStack CRM',
+                },
+                {
+                  quote:
+                    'We layered GymDues data on top of our ad audiences and immediately saw higher CTR and reply rates from gyms that were actively investing in equipment and software.',
+                  name: 'Alex Rivera',
+                  role: 'Performance Marketer, LiftLabs',
+                },
+              ].map((t) => (
+                <figure
+                  key={t.name}
+                  className='grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center rounded-3xl border border-border/60 bg-background px-5 py-5 md:px-8 md:py-7'
+                >
+                  <div className='relative'>
+                    <div className='mb-3 flex items-center gap-1'>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
+                      ))}
+                    </div>
+                    <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
+                      &quot;{t.quote}&quot;
+                    </p>
+                  </div>
+                  <figcaption className='flex items-center justify-start md:justify-end gap-4'>
+                    <div className='hidden sm:block h-14 w-14 rounded-full bg-gradient-to-br from-emerald-200 via-emerald-50 to-sky-100 shadow-md' />
+                    <div className='text-left'>
+                      <p className='text-sm font-semibold text-foreground'>{t.name}</p>
+                      <p className='text-xs text-muted-foreground'>{t.role}</p>
+                    </div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
         </section>
 

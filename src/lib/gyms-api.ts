@@ -29,6 +29,7 @@ export interface GymsPaginationMeta {
   next_page_url?: string | null
   prev_page_url?: string | null
   filterType?: string
+  filterValue?: string
 }
 
 export interface PaginatedGymsResponse {
@@ -330,6 +331,7 @@ export async function getPaginatedGyms(options: {
       next_page_url: null,
       prev_page_url: null,
       filterType: data.page.filterType,
+      filterValue: data.page.filterType === 'state' ? data.page.state : data.page.city,
     }
 
     return { gyms, meta }

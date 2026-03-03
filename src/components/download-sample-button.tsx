@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Download } from 'lucide-react'
 import { DownloadSampleModal, type DownloadSampleFormData } from './download-sample-modal'
 
 const ALERT_MESSAGE = 'Download is not available right now.'
+const SAMPLE_DATA_HREF = '/gymsdata/sample-data'
 
 interface DownloadSampleButtonProps {
   className?: string
@@ -13,6 +15,7 @@ interface DownloadSampleButtonProps {
   variant?: 'primary' | 'outline'
 }
 
+/** With JS: opens modal. Without JS: link goes to sample data page. */
 export function DownloadSampleButton({
   className = '',
   children,
@@ -21,7 +24,6 @@ export function DownloadSampleButton({
   const [modalOpen, setModalOpen] = useState(false)
 
   const handleSubmit = (_data: DownloadSampleFormData) => {
-    // In production: send data to API, then trigger download or email
     if (typeof window !== 'undefined') {
       window.alert(ALERT_MESSAGE)
     }
@@ -36,12 +38,14 @@ export function DownloadSampleButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setModalOpen(true)}
+      <Link
+        href={SAMPLE_DATA_HREF}
         className={`${baseClass} ${variantClass} ${className}`.trim()}
-        aria-label="Download sample"
-        aria-haspopup="dialog"
+        aria-label="Download sample (opens form)"
+        onClick={(e) => {
+          e.preventDefault()
+          setModalOpen(true)
+        }}
       >
         {children ?? (
           <>
@@ -49,7 +53,7 @@ export function DownloadSampleButton({
             Download sample
           </>
         )}
-      </button>
+      </Link>
       <DownloadSampleModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
