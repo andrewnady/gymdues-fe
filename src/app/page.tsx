@@ -20,6 +20,7 @@ import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
 import { RatedGymsSection } from '@/components/rated-gyms-section'
 import { BestGymsLocationSection } from '@/components/best-gyms-location-section'
+import { PopularCitiesSlider } from '@/components/popular-cities-slider'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -280,6 +281,7 @@ export default async function Home() {
         description="Searching for the best gyms in California? From Los Angeles and San Diego to San Francisco and beyond, California has an incredible range of gyms—high-end health clubs, CrossFit boxes, Pilates and yoga studios, and budget-friendly chains with multiple locations. On GymDues, you can compare gym memberships, amenities, hours, ratings, and reviews to choose the right gym for your lifestyle—whether you want serious strength training, group classes, or a flexible monthly plan."
         gyms={caBestGyms}
       />
+      <PopularCitiesSlider />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 
