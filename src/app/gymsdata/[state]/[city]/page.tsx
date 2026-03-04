@@ -12,7 +12,7 @@ import {
   formatDataDate,
   toSlug,
 } from '@/lib/gymsdata-utils'
-import { MapPin, Building2 } from 'lucide-react'
+import { MapPin, ShoppingCart } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 
@@ -162,11 +162,11 @@ export default async function GymsdataCityPage({ params }: Props) {
           <div className='mt-6 flex flex-wrap gap-3'>
             <DownloadSampleButton variant='primary' />
             <Link
-              href={`/gymsdata/#location=${encodeURIComponent(loc.label ?? `${cityName}, ${state.state}`)}`}
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted'
+              href='/gymsdata/checkout'
+              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/40'
             >
-              <Building2 className='h-4 w-4' />
-              View gyms & map in {cityName}
+              <ShoppingCart className='h-4 w-4' />
+              Buy data
             </Link>
           </div>
         </div>

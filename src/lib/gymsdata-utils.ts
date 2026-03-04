@@ -67,6 +67,21 @@ export function cityGymsdataPath(stateSlug: string, cityName: string): string {
   return `${GYMSDATA_BASE}${s}/${c}`
 }
 
+/** City page path from a location (e.g. top-cities list). Returns path or null if state/city cannot be resolved. */
+export function cityPagePathForLocation(
+  loc: LocationWithCount,
+  states: StateWithCount[]
+): string | null {
+  const stateRef = loc.state?.trim()
+  const cityName = loc.city ?? (loc.label ? loc.label.split(',')[0]?.trim() : null)
+  if (!stateRef || !cityName) return null
+  const state =
+    states.find((s) => s.state?.toUpperCase() === stateRef.toUpperCase()) ??
+    states.find((s) => s.stateName && toSlug(s.stateName) === toSlug(stateRef))
+  if (!state?.stateName) return null
+  return cityGymsdataPath(toSlug(state.stateName), cityName)
+}
+
 /** Derived stats for a state page (until API provides). */
 export function getStateDerivedStats(stateCode: string, _totalGyms: number, _citiesCount: number) {
   const seed = stateCode.split('').reduce((a, c) => a + c.charCodeAt(0), 0)

@@ -190,12 +190,12 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
               )}
             </button>
           )}
-          <Link
+          {/* <Link
             href='#states-table'
             className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'
           >
             Show all data →
-          </Link>
+          </Link> */}
         </div>
       </div>
     </section>

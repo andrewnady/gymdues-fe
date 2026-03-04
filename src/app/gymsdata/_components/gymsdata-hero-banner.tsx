@@ -41,18 +41,20 @@ export function GymsdataHeroBanner() {
         </div>
 
         <div className="relative flex items-center justify-center px-6 pb-8 lg:px-10 lg:pb-10">
-          <div className="relative h-[260px] w-full max-w-sm lg:h-[340px] lg:max-w-md overflow-hidden rounded-[32px] border border-emerald-50/80 bg-gradient-to-br from-emerald-50 via-white to-sky-50 shadow-[0_18px_40px_rgba(15,23,42,0.16)]">
+          <div className="relative w-fit overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-[0_24px_48px_rgba(15,23,42,0.12),0_12px_24px_rgba(15,23,42,0.08)]">
+            {/* Soft gradient behind image for depth */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none z-[1]" aria-hidden />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/hero-banner-person.png"
+              src="/images/Andrew-Nady.jpg"
               alt="Andrew Nady — GymDues Product Lead"
-              className="h-full w-full object-contain object-center"
+              className="block w-[240px] h-auto sm:w-[280px] lg:w-[320px] object-cover object-center"
             />
 
-            <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-r from-black/70 via-black/55 to-black/0 px-5 py-3 backdrop-blur-sm">
+            <div className="absolute inset-x-0 bottom-0 z-10 flex items-center gap-3 bg-gradient-to-t from-black/85 via-black/60 to-transparent px-5 py-4 backdrop-blur-[2px]">
               <div className="leading-tight">
-                <p className="text-xs font-semibold text-white">Andrew Nady</p>
-                <p className="text-[11px] text-white/80">GymDues Product Lead</p>
+                <p className="text-sm font-semibold text-white tracking-tight">Andrew Nady</p>
+                <p className="text-xs text-white/90">GymDues Product Lead</p>
               </div>
             </div>
           </div>

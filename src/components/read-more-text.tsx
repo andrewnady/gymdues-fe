@@ -6,10 +6,12 @@ import { cn } from '@/lib/utils'
 
 interface ReadMoreTextProps {
   children: React.ReactNode
+  /** Number of lines to show when collapsed (default 3). */
+  lines?: number
   className?: string
 }
 
-export function ReadMoreText({ children, className = '' }: ReadMoreTextProps) {
+export function ReadMoreText({ children, lines = 3, className = '' }: ReadMoreTextProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [canExpand, setCanExpand] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -53,13 +55,12 @@ export function ReadMoreText({ children, className = '' }: ReadMoreTextProps) {
       <div
         ref={contentRef}
         // "clamped-content" is our target for the noscript override
-        // "line-clamp-3" is the default state for everyone
-        className={`clamped-content relative transition-all duration-300 ${isExpanded ? '' : 'line-clamp-3'
-          }`}
+        // line-clamp is set via style for dynamic "lines" prop
+        className="clamped-content relative transition-all duration-300"
         style={{
           display: isExpanded ? 'block' : '-webkit-box',
           WebkitBoxOrient: 'vertical',
-          WebkitLineClamp: isExpanded ? 'none' : 3,
+          WebkitLineClamp: isExpanded ? 'none' : lines,
           overflow: 'hidden',
         }}
       >

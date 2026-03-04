@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { BarChart2, ChevronDown, Trophy, MapPin } from 'lucide-react'
+import { BarChart2, ChevronDown, Trophy, MapPin, Search } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
 
@@ -45,6 +45,14 @@ function getMetricValue(s: StateWithCount | null, key: MetricKey): number {
   return d[key as keyof typeof d] ?? 0
 }
 
+function matchState(query: string, s: StateWithCount): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const name = (s.stateName ?? '').toLowerCase()
+  const code = (s.state ?? '').toLowerCase()
+  return name.includes(q) || code.includes(q)
+}
+
 function SelectState({
   value,
   onChange,
@@ -56,21 +64,96 @@ function SelectState({
   sortedStates: StateWithCount[]
   'aria-label': string
 }) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const selected = sortedStates.find((s) => s.state === value)
+  const filtered = useMemo(
+    () => sortedStates.filter((s) => matchState(query, s)),
+    [sortedStates, query],
+  )
+
+  useEffect(() => {
+    if (!open) return
+    setQuery('')
+    inputRef.current?.focus()
+  }, [open])
+
+  useEffect(() => {
+    const handler = (e: FocusEvent) => {
+      if (containerRef.current?.contains(e.relatedTarget as Node)) return
+      setTimeout(() => setOpen(false), 150)
+    }
+    document.addEventListener('focusout', handler)
+    return () => document.removeEventListener('focusout', handler)
+  }, [])
+
   return (
-    <div className='relative min-w-0 flex-1 max-w-[200px]'>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+    <div
+      ref={containerRef}
+      className='relative min-w-0 flex-1 max-w-[200px]'
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') setOpen(false)
+      }}
+    >
+      <button
+        type='button'
+        onClick={() => setOpen((o) => !o)}
         aria-label={ariaLabel}
-        className='w-full rounded-lg border border-input bg-background pl-3 pr-8 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 appearance-none cursor-pointer'
+        aria-expanded={open}
+        aria-haspopup='listbox'
+        className='w-full rounded-lg border border-input bg-background pl-3 pr-8 py-2 text-sm font-medium text-left focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer flex items-center gap-2'
       >
-        {sortedStates.map((s) => (
-          <option key={s.state} value={s.state}>
-            {s.stateName}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className='absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none' />
+        <span className='truncate'>{selected?.stateName ?? 'Select state'}</span>
+        <ChevronDown className='absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground shrink-0' />
+      </button>
+      {open && (
+        <div
+          className='absolute z-50 mt-1 w-full min-w-[180px] rounded-lg border border-border bg-popover shadow-lg overflow-hidden'
+          role='listbox'
+        >
+          <div className='p-2 border-b border-border/60'>
+            <div className='flex items-center gap-2 rounded-md border border-input bg-background px-2 py-1.5'>
+              <Search className='h-3.5 w-3.5 text-muted-foreground shrink-0' aria-hidden />
+              <input
+                ref={inputRef}
+                type='text'
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder='Search states...'
+                className='flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground'
+                aria-label='Search states'
+              />
+            </div>
+          </div>
+          <ul className='max-h-[220px] overflow-y-auto py-1' role='listbox'>
+            {filtered.length === 0 ? (
+              <li className='px-3 py-2 text-sm text-muted-foreground'>No states match</li>
+            ) : (
+              filtered.map((s) => (
+                <li key={s.state} role='option' aria-selected={s.state === value}>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      onChange(s.state)
+                      setOpen(false)
+                    }}
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                      s.state === value
+                        ? 'bg-primary/15 text-primary font-medium'
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {s.stateName}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }
