@@ -1169,8 +1169,7 @@ const LIST_PAGE_FETCH_TIMEOUT_MS = 18_000
 export async function getListPageData(): Promise<ListPageData> {
   const useMock =
     process.env.USE_LIST_PAGE_MOCK === 'true' ||
-    process.env.USE_LIST_PAGE_MOCK === '1' ||
-    process.env.CI === 'true'
+    process.env.USE_LIST_PAGE_MOCK === '1' 
   if (useMock) {
     const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
     return getMockListPageData()
