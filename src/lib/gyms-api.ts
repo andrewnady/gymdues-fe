@@ -1254,3 +1254,39 @@ export async function getDatasetMetrics(): Promise<DatasetMetrics> {
     return empty
   }
 }
+
+export interface PopularCityItem {
+  title: string
+  slug: string
+  featured_image: string
+}
+
+export async function getPopularGymsStateCities(): Promise<PopularCityItem[]> {
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/popular-gyms-state-city`)
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch popular gyms state/city: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+    data = transformApiResponse(data)
+
+    if (typeof data === 'object' && data !== null && 'data' in data && Array.isArray(data.data)) {
+      return data.data as PopularCityItem[]
+    }
+
+    if (Array.isArray(data)) {
+      return data as PopularCityItem[]
+    }
+
+    return []
+  } catch (error) {
+    console.warn('getPopularGymsStateCities: endpoint unavailable, slider will be hidden.', error instanceof Error ? error.message : error)
+    return []
+  }
+}

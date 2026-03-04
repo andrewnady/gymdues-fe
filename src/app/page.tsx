@@ -6,6 +6,7 @@ import {
   getAllGyms,
   getRatedGyms,
   getBestGymsByState,
+  getPopularGymsStateCities,
 } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
@@ -119,6 +120,7 @@ export default async function Home() {
     caBestResult,
     reviewsResult,
     postsResult,
+    popularCitiesResult,
   ] = await Promise.allSettled([
     getTrendingGyms(),
     getAllGyms(undefined, undefined, undefined, undefined, true),
@@ -127,6 +129,7 @@ export default async function Home() {
     getBestGymsByState('California', 20),
     getAllReviews(12),
     getRecentBlogPosts(3),
+    getPopularGymsStateCities(),
   ])
 
   let trendingGyms: Gym[] = []
@@ -172,6 +175,8 @@ export default async function Home() {
   } else {
     console.error('Failed to load California best gyms:', caBestResult.reason)
   }
+
+  const popularCities = popularCitiesResult.status === 'fulfilled' ? popularCitiesResult.value : []
 
   let reviews: ReviewWithGym[] = []
   if (reviewsResult.status === 'fulfilled') {
@@ -281,7 +286,7 @@ export default async function Home() {
         description="Searching for the best gyms in California? From Los Angeles and San Diego to San Francisco and beyond, California has an incredible range of gyms—high-end health clubs, CrossFit boxes, Pilates and yoga studios, and budget-friendly chains with multiple locations. On GymDues, you can compare gym memberships, amenities, hours, ratings, and reviews to choose the right gym for your lifestyle—whether you want serious strength training, group classes, or a flexible monthly plan."
         gyms={caBestGyms}
       />
-      <PopularCitiesSlider />
+      <PopularCitiesSlider cities={popularCities} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 
