@@ -109,9 +109,13 @@ function normalizeBlogPosts(posts: Record<string, unknown>[]): BlogPost[] {
 }
 
 /**
- * Fetches all blog posts from the API
+ * Fetches all blog posts from the API.
+ * In CI/build returns [] so static generation does not require the CMS.
  */
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  if (process.env.CI === 'true') {
+    return []
+  }
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/posts`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
@@ -153,9 +157,13 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 /**
- * Fetches a single blog post by slug from the API
+ * Fetches a single blog post by slug from the API.
+ * In CI/build returns null so static generation does not require the CMS.
  */
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  if (process.env.CI === 'true') {
+    return null
+  }
   try {
     // Try the slug endpoint first
     try {

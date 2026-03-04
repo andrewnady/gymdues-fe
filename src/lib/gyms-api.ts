@@ -372,6 +372,27 @@ export async function filterTopGyms(options: {
 }): Promise<PaginatedGymsResponse> {
   const { state, city, page, perPage } = options
 
+  // In CI/build, skip API so static generation does not require the CMS (e.g. /best-gyms).
+  if (
+    process.env.CI === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1'
+  ) {
+    return {
+      gyms: [],
+      meta: {
+        current_page: 1,
+        from: null,
+        last_page: 1,
+        per_page: 12,
+        to: null,
+        total: 0,
+        next_page_url: null,
+        prev_page_url: null,
+      },
+    }
+  }
+
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms/filtered-top-gyms`)
 
@@ -636,6 +657,14 @@ const FETCH_TIMEOUT_MS = 15_000
  */
 export async function getCitiesByState(stateCode: string): Promise<LocationWithCount[]> {
   if (!stateCode || !String(stateCode).trim()) return []
+  // In CI/build, skip API so static generation does not depend on CMS (caller uses getListPageData locations).
+  if (
+    process.env.CI === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1'
+  ) {
+    return []
+  }
   const code = String(stateCode).trim().toUpperCase()
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities`)
@@ -998,6 +1027,14 @@ export async function getStates(): Promise<StateWithCount[]> {
  * Use for state filter autocomplete.
  */
 export async function getCityStates(fields?: string): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
+  // In CI/build, skip API so static generation does not require the CMS.
+  if (
+    process.env.CI === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1'
+  ) {
+    return { states: [], cities: [] }
+  }
   try {
      const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
     if (fields && fields.trim()) {
