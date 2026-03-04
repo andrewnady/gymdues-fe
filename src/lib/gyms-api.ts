@@ -440,7 +440,19 @@ export async function filterTopGyms(options: {
     }
   } catch (error) {
     console.error('Error fetching filtered top gyms:', error)
-    throw error
+    return {
+      gyms: [],
+      meta: {
+        current_page: 1,
+        from: null,
+        last_page: 1,
+        per_page: perPage ?? 12,
+        to: null,
+        total: 0,
+        next_page_url: null,
+        prev_page_url: null,
+      },
+    }
   }
 }
 
@@ -671,7 +683,7 @@ export async function getLocations(q?: string): Promise<LocationWithCount[]> {
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
     const response = await fetch(url.toString(), {
-      cache: 'no-store',
+      next: { revalidate: 300 },
       signal: controller.signal,
     })
     clearTimeout(timeoutId)
