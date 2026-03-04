@@ -32,7 +32,7 @@ import { UsaListStateComparison } from '@/usa-list/components/usa-list-state-com
 import { TopCitiesTable } from '@/usa-list/components/top-cities-table'
 //import { DistributionByLocationChips } from '@/usa-list/components/distribution-by-location-chips'
 import { CheckCircle2, Download, Zap } from 'lucide-react'
-import { stateGymsdataPath } from '@/lib/gymsdata-utils'
+import { stateGymsdataPath, cityPagePathForLocation } from '@/lib/gymsdata-utils'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { ExitIntentPopup } from '@/components/exit-intent-popup'
 import {
@@ -48,6 +48,36 @@ import { GymsdataHeroBanner } from './_components/gymsdata-hero-banner'
 import { DatasetPreviewTable } from './_components/dataset-preview-table'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
+const GYMSDATA_TESTIMONIALS = [
+  {
+    quote:
+      'We used GymDues to source gym contacts for a national outreach campaign, and the results were night and day compared to generic lists. The data was fresh, verified, and instantly usable—our team reached thousands of gyms in just a few days.',
+    name: 'Jordan Lee',
+    role: 'Growth Lead, FitStack Analytics',
+  },
+  {
+    quote:
+      'GymDues saved our sales reps hours per week. Instead of cleaning spreadsheets, they spend time talking to gym owners who actually fit our ICP.',
+    name: 'Morgan Patel',
+    role: 'Head of Sales, IronStack CRM',
+  },
+  {
+    quote:
+      'We layered GymDues data on top of our ad audiences and immediately saw higher CTR and reply rates from gyms that were actively investing in equipment and software.',
+    name: 'Alex Rivera',
+    role: 'Performance Marketer, LiftLabs',
+  },
+] as const
+
+function testimonialInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const canonicalUrl = new URL('/gymsdata/', siteUrl).toString()
@@ -226,38 +256,40 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               </ul>
             </div>
 
-            <p className='text-sm text-muted-foreground mb-1'>
+            <p className='text-sm text-muted-foreground mb-4'>
               Have trouble, confusion, or just need help? <Link href='/contact' className='text-primary underline hover:no-underline'>Contact us</Link>, and we&apos;ll sort it out!
             </p>
-            <p className='text-xs text-muted-foreground mb-4'>
-              Data updated on {lastMonday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
 
-            <div className='flex flex-wrap items-baseline gap-2 mb-3'>
-              <span className='text-2xl sm:text-3xl font-bold text-foreground'>$299</span>
-              <span className='text-lg text-muted-foreground line-through'>$598</span>
-              <span className='text-sm text-muted-foreground'>(Discount: 50% OFF)</span>
+            {/* Price & CTAs – enhanced block */}
+            <div className='rounded-2xl border border-border/80 bg-card/50 px-5 py-5 sm:px-6 sm:py-6 shadow-sm'>
+              <p className='text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2'>
+                Data updated on {lastMonday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+              <div className='flex flex-wrap items-baseline gap-2 mb-4'>
+                <span className='text-3xl sm:text-4xl font-bold tracking-tight text-foreground'>$299</span>
+                <span className='text-sm text-muted-foreground'>one-time</span>
+              </div>
+              <div className='flex flex-wrap items-center gap-3'>
+                <Link
+                  href='/gymsdata/checkout'
+                  className='inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg transition-all'
+                >
+                  <Package className='h-4 w-4' aria-hidden />
+                  Purchase The Data
+                </Link>
+                <DownloadSampleButton
+                  variant='outline'
+                  className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-6 py-3.5 text-sm font-semibold hover:bg-muted hover:border-primary/40 transition-all'
+                >
+                  <Download className='h-4 w-4' aria-hidden />
+                  Free Sample List
+                </DownloadSampleButton>
+              </div>
+              <p className='mt-4 flex items-center gap-2 text-sm font-medium text-primary'>
+                <Zap className='h-4 w-4' aria-hidden />
+                Instant Delivery
+              </p>
             </div>
-            <div className='flex flex-wrap items-center gap-3'>
-              <Link
-                href='/gymsdata/dataset'
-                className='inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-3 text-sm font-semibold text-background hover:bg-foreground/90 transition-all'
-              >
-                <Package className='h-4 w-4' aria-hidden />
-                Purchase The Data
-              </Link>
-              <DownloadSampleButton
-                variant='outline'
-                className='inline-flex items-center gap-2 rounded-xl border-2 border-foreground bg-transparent px-5 py-3 text-sm font-semibold hover:bg-muted'
-              >
-                <Download className='h-4 w-4' aria-hidden />
-                Free Sample List
-              </DownloadSampleButton>
-            </div>
-            <p className='mt-2 flex items-center gap-1.5 text-xs text-muted-foreground'>
-              <Zap className='h-3.5 w-3.5 text-primary' aria-hidden />
-              Instant Delivery
-            </p>
           </div>
 
           <div className='relative flex items-center justify-center lg:justify-end'>
@@ -438,58 +470,58 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </div>
 
           <div>
-            <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3'>Guides by role</p>
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-              <div className='flex flex-col rounded-xl border border-border/80 bg-card p-5 shadow-sm'>
-                <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary mb-3'>
-                  <Megaphone className='h-4 w-4' aria-hidden />
+            <h3 className='text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4'>Guides by role</h3>
+            <div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-4'>
+              <div className='group flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary mb-4 transition-colors group-hover:bg-primary/25'>
+                  <Megaphone className='h-5 w-5' aria-hidden />
                 </div>
-                <h3 className='font-semibold text-foreground mb-1'>For marketing agencies</h3>
-                <p className='text-xs text-muted-foreground mb-3'>Email campaigns, cold calling, direct mail. Testimonials and bulk pricing.</p>
-                <ul className='text-[11px] text-muted-foreground space-y-1 list-disc list-inside'>
-                  <li>Email campaigns — verified contacts, segment by location/size</li>
-                  <li>Cold calling — phone numbers updated weekly</li>
-                  <li>Direct mail — physical addresses for postcards &amp; flyers</li>
-                  <li>Bulk pricing — volume discounts; contact for quotes</li>
+                <h4 className='font-semibold text-foreground text-base mb-2'>For marketing agencies</h4>
+                <p className='text-sm text-muted-foreground mb-4 leading-relaxed'>Email campaigns, cold calling, direct mail. Testimonials and bulk pricing.</p>
+                <ul className='space-y-2 text-xs text-muted-foreground leading-relaxed' role='list'>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Email campaigns — verified contacts, segment by location/size</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Cold calling — phone numbers updated weekly</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Direct mail — physical addresses for postcards &amp; flyers</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Bulk pricing — volume discounts; contact for quotes</span></li>
                 </ul>
               </div>
-              <div className='flex flex-col rounded-xl border border-border/80 bg-card p-5 shadow-sm'>
-                <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary mb-3'>
-                  <Code className='h-4 w-4' aria-hidden />
+              <div className='group flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary mb-4 transition-colors group-hover:bg-primary/25'>
+                  <Code className='h-5 w-5' aria-hidden />
                 </div>
-                <h3 className='font-semibold text-foreground mb-1'>For software companies</h3>
-                <p className='text-xs text-muted-foreground mb-3'>Sell gym management software. Filter gyms without websites, integration guides.</p>
-                <ul className='text-[11px] text-muted-foreground space-y-1 list-disc list-inside'>
-                  <li>Filter gyms without websites — high intent for tech</li>
-                  <li>Decision-maker contacts — owners &amp; managers</li>
-                  <li>CRM-ready exports — HubSpot, Salesforce, Pipedrive</li>
-                  <li>Email platforms — Mailchimp, SendGrid, outreach tools</li>
+                <h4 className='font-semibold text-foreground text-base mb-2'>For software companies</h4>
+                <p className='text-sm text-muted-foreground mb-4 leading-relaxed'>Sell gym management software. Filter gyms without websites, integration guides.</p>
+                <ul className='space-y-2 text-xs text-muted-foreground leading-relaxed' role='list'>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Filter gyms without websites — high intent for tech</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Decision-maker contacts — owners &amp; managers</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>CRM-ready exports — HubSpot, Salesforce, Pipedrive</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Email platforms — Mailchimp, SendGrid, outreach tools</span></li>
                 </ul>
               </div>
-              <div className='flex flex-col rounded-xl border border-border/80 bg-card p-5 shadow-sm'>
-                <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary mb-3'>
-                  <Package className='h-4 w-4' aria-hidden />
+              <div className='group flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary mb-4 transition-colors group-hover:bg-primary/25'>
+                  <Package className='h-5 w-5' aria-hidden />
                 </div>
-                <h3 className='font-semibold text-foreground mb-1'>For equipment suppliers</h3>
-                <p className='text-xs text-muted-foreground mb-3'>Reach gym owners upgrading equipment. Gym age, seasonal buying patterns.</p>
-                <ul className='text-[11px] text-muted-foreground space-y-1 list-disc list-inside'>
-                  <li>Filter by gym age — older gyms more likely to upgrade</li>
-                  <li>Seasonal patterns — New Year, post-summer, pre–fiscal</li>
-                  <li>Regional targeting — export by state/city for reps</li>
-                  <li>Data updated weekly — avoid stale contacts</li>
+                <h4 className='font-semibold text-foreground text-base mb-2'>For equipment suppliers</h4>
+                <p className='text-sm text-muted-foreground mb-4 leading-relaxed'>Reach gym owners upgrading equipment. Gym age, seasonal buying patterns.</p>
+                <ul className='space-y-2 text-xs text-muted-foreground leading-relaxed' role='list'>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Filter by gym age — older gyms more likely to upgrade</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Seasonal patterns — New Year, post-summer, pre–fiscal</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Regional targeting — export by state/city for reps</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Data updated weekly — avoid stale contacts</span></li>
                 </ul>
               </div>
-              <div className='flex flex-col rounded-xl border border-border/80 bg-card p-5 shadow-sm'>
-                <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary mb-3'>
-                  <MapPin className='h-4 w-4' aria-hidden />
+              <div className='group flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30'>
+                <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary mb-4 transition-colors group-hover:bg-primary/25'>
+                  <MapPin className='h-5 w-5' aria-hidden />
                 </div>
-                <h3 className='font-semibold text-foreground mb-1'>For franchise development</h3>
-                <p className='text-xs text-muted-foreground mb-3'>Underserved markets, market saturation and competitor gap analysis.</p>
-                <ul className='text-[11px] text-muted-foreground space-y-1 list-disc list-inside'>
-                  <li>Market saturation — gym density by state &amp; city</li>
-                  <li>Competitor gap analysis — find white space by geography</li>
-                  <li>Site selection — export lists for field research</li>
-                  <li>State-by-state comparison — rank markets by density</li>
+                <h4 className='font-semibold text-foreground text-base mb-2'>For franchise development</h4>
+                <p className='text-sm text-muted-foreground mb-4 leading-relaxed'>Underserved markets, market saturation and competitor gap analysis.</p>
+                <ul className='space-y-2 text-xs text-muted-foreground leading-relaxed' role='list'>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Market saturation — gym density by state &amp; city</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Competitor gap analysis — find white space by geography</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>Site selection — export lists for field research</span></li>
+                  <li className='flex gap-2'><span className='mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary' aria-hidden /><span>State-by-state comparison — rank markets by density</span></li>
                 </ul>
               </div>
             </div>
@@ -513,7 +545,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </p>
           <div className='flex justify-center'>
             <Link
-              href='/gymsdata/'
+              href={`${siteUrl}/gyms`}
               className='inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90'
             >
               Browse all U.S. gyms
@@ -552,11 +584,11 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                     ))}
                   </div>
                   <div className='mt-5 pt-4 border-t border-border/60 flex flex-wrap items-center gap-4'>
-                    <Link href='#states-table' className='inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline'>
+                    {/* <Link href='#states-table' className='inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline'>
                       <Table2 className='h-4 w-4' />
                       View full table
-                    </Link>
-                    <Link href='/gymsdata/' className='text-sm font-medium text-muted-foreground hover:text-primary hover:underline'>
+                    </Link> */}
+                    <Link href={`${siteUrl}/gyms`} className='text-sm font-medium text-muted-foreground hover:text-primary hover:underline'>
                       Browse all U.S. gyms
                     </Link>
                   </div>
@@ -782,13 +814,13 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               })}
             </div>
             <p className='mt-4 text-center flex flex-wrap justify-center gap-4'>
-              <Link href='#states-table' className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'>
+              {/* <Link href='#states-table' className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'>
                 <Table2 className='h-4 w-4 shrink-0' />
                 Read more — full table
               </Link>
               <Link href='#states-table' className='inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary hover:underline'>
                 Show all data →
-              </Link>
+              </Link> */}
             </p>
           </section>
         )}
@@ -799,7 +831,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             <div className='js-only'>
               <UsaListStateComparison sortedStates={sortedStates} />
             </div>
-            <div className='no-js-only max-w-4xl mx-auto mb-16'>
+            {/* <div className='no-js-only max-w-4xl mx-auto mb-16'>
               <div className='rounded-2xl border border-border/80 bg-card p-6 md:p-8 text-center'>
                 <h2 className='text-xl font-semibold mb-2'>Compare gym counts by state</h2>
                 <p className='text-sm text-muted-foreground mb-4'>
@@ -810,7 +842,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   View full table
                 </Link>
               </div>
-            </div>
+            </div> */}
           </>
         )}
 
@@ -828,7 +860,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               location and compare membership prices.
             </p>
             <div className='js-only'>
-              <TopCitiesTable cities={topCities} />
+              <TopCitiesTable cities={topCities} states={sortedStates} />
             </div>
             <div className='no-js-only rounded-2xl border border-border/80 bg-card shadow-sm overflow-hidden'>
               <div className='overflow-x-auto'>
@@ -845,7 +877,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                       <tr key={i} className='border-b border-border/60 last:border-0 hover:bg-muted/40'>
                         <td className='px-4 py-3 text-center text-muted-foreground font-medium tabular-nums'>{i + 1}</td>
                         <td className='px-4 py-3 font-medium'>
-                          <Link href={`/gymsdata/#location=${encodeURIComponent(loc.label)}`} className='text-primary hover:underline underline-offset-2'>
+                          <Link href={cityPagePathForLocation(loc, sortedStates) ?? `/gymsdata/#location=${encodeURIComponent(loc.label)}`} className='text-primary hover:underline underline-offset-2'>
                             {loc.label}
                           </Link>
                         </td>
@@ -855,10 +887,10 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   </tbody>
                 </table>
               </div>
-              <div className='px-4 py-3 border-t border-border/60 bg-muted/20 flex flex-wrap justify-center gap-4 text-sm'>
+              {/* <div className='px-4 py-3 border-t border-border/60 bg-muted/20 flex flex-wrap justify-center gap-4 text-sm'>
                 <Link href='#states-table' className='font-medium text-primary hover:underline'>Show all data →</Link>
                 <Link href='/gymsdata/' className='text-muted-foreground hover:text-primary hover:underline'>Browse all gyms</Link>
-              </div>
+              </div> */}
             </div>
           </section>
         )}
@@ -963,14 +995,14 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               </tbody>
             </table>
           </div>
-          <div className='mt-4 flex justify-center'>
+          {/* <div className='mt-4 flex justify-center'>
             <DownloadSampleButton
               variant='outline'
               className='rounded-xl border-2 border-primary bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/20'
             >
               Download complete chain data
             </DownloadSampleButton>
-          </div>
+          </div> */}
         </section>
 
         {/* Distribution by location – state chips (no-JS: same data, single section) */}
@@ -1031,10 +1063,10 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 <p className='text-sm text-muted-foreground mb-4'>
                   Use the browse-by-state links and map section above, or jump to the full table below.
                 </p>
-                <Link href='#states-table' className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90'>
+                {/* <Link href='#states-table' className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90'>
                   <Table2 className='h-4 w-4' />
                   View full table
-                </Link>
+                </Link> */}
               </div>
             </div>
           </section>
@@ -1117,56 +1149,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </div>
         )} */}
 
-        {/* Lead segments – high-intent filters */}
-        <section className='max-w-6xl mx-auto mb-16' aria-labelledby='lead-segments-heading'>
-          <div className='flex items-center gap-2 mb-2'>
-            <Filter className='h-6 w-6 text-primary shrink-0' />
-            <h2 id='lead-segments-heading' className='text-2xl md:text-3xl font-semibold'>
-              Lead segments
-            </h2>
-          </div>
-          <p className='text-sm text-muted-foreground mb-6 max-w-2xl'>
-            Target gyms by data completeness and reputation. Use these segments for marketing, software sales, or reputation management.
-          </p>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
-            <Link
-              href='/gymsdata/'
-              className='flex items-center gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30'
-            >
-              <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
-                <Globe2 className='h-5 w-5 text-amber-600' />
-              </div>
-              <div>
-                <p className='font-semibold'>Gyms without websites</p>
-                <p className='text-xs text-muted-foreground'>Tech-backward leads for software & web services</p>
-              </div>
-            </Link>
-            <Link
-              href='/gymsdata/'
-              className='flex items-center gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30'
-            >
-              <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10'>
-                <CheckCircle2 className='h-5 w-5 text-emerald-600' />
-              </div>
-              <div>
-                <p className='font-semibold'>Gyms with website + email</p>
-                <p className='text-xs text-muted-foreground'>Ready for email campaigns and outreach</p>
-              </div>
-            </Link>
-            <Link
-              href='/gymsdata/'
-              className='flex items-center gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/30'
-            >
-              <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10'>
-                <Star className='h-5 w-5 text-blue-600' />
-              </div>
-              <div>
-                <p className='font-semibold'>Low rating + high reviews</p>
-                <p className='text-xs text-muted-foreground'>Reputation management and review outreach</p>
-              </div>
-            </Link>
-          </div>
-        </section>
 
         {/* How this list helps you – use cases */}
         <section className='max-w-6xl mx-auto mb-16'>
@@ -1309,7 +1291,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </p>
             <div className='flex flex-wrap gap-3'>
               <Link
-                href='/gymsdata/dataset'
+                href='/gymsdata/checkout'
                 className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
               >
                 Buy dataset
@@ -1322,13 +1304,13 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 <Download className='h-4 w-4' aria-hidden />
                 Request sample
               </DownloadSampleButton>
-              <Link
+              {/* <Link
                 href='#states-table'
                 className='inline-flex items-center gap-2 rounded-xl border border-input bg-background px-5 py-3 text-sm font-medium hover:bg-muted transition-colors'
               >
                 <Table2 className='h-4 w-4' />
                 View full table
-              </Link>
+              </Link> */}
             </div>
           </div>
         </section>
@@ -1419,26 +1401,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               className='w-full relative'
             >
               <CarouselContent className='-ml-2'>
-                {[
-                  {
-                    quote:
-                      'We used GymDues to source gym contacts for a national outreach campaign, and the results were night and day compared to generic lists. The data was fresh, verified, and instantly usable—our team reached thousands of gyms in just a few days.',
-                    name: 'Jordan Lee',
-                    role: 'Growth Lead, FitStack Analytics',
-                  },
-                  {
-                    quote:
-                      'GymDues saved our sales reps hours per week. Instead of cleaning spreadsheets, they spend time talking to gym owners who actually fit our ICP.',
-                    name: 'Morgan Patel',
-                    role: 'Head of Sales, IronStack CRM',
-                  },
-                  {
-                    quote:
-                      'We layered GymDues data on top of our ad audiences and immediately saw higher CTR and reply rates from gyms that were actively investing in equipment and software.',
-                    name: 'Alex Rivera',
-                    role: 'Performance Marketer, LiftLabs',
-                  },
-                ].map((t) => (
+                {GYMSDATA_TESTIMONIALS.map((t, idx) => (
                   <CarouselItem
                     key={t.name}
                     className='pl-2 md:pl-4 basis-full'
@@ -1455,8 +1418,21 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                         </p>
                       </div>
                       <figcaption className='flex items-center justify-start md:justify-end gap-4'>
-                        <div className='hidden sm:block h-14 w-14 rounded-full bg-gradient-to-br from-emerald-200 via-emerald-50 to-sky-100 shadow-md' />
-                        <div className='text-left'>
+                        <div
+                          className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white shadow-md'
+                          style={{
+                            background:
+                              idx % 3 === 0
+                                ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+                                : idx % 3 === 1
+                                  ? 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)'
+                                  : 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
+                          }}
+                          aria-hidden
+                        >
+                          {testimonialInitials(t.name)}
+                        </div>
+                        <div className='text-left min-w-0'>
                           <p className='text-sm font-semibold text-foreground'>{t.name}</p>
                           <p className='text-xs text-muted-foreground'>{t.role}</p>
                         </div>
@@ -1471,26 +1447,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </div>
             {/* No-JS: show all testimonials in a list */}
             <div className='no-js-only space-y-4 px-2'>
-              {[
-                {
-                  quote:
-                    'We used GymDues to source gym contacts for a national outreach campaign, and the results were night and day compared to generic lists. The data was fresh, verified, and instantly usable—our team reached thousands of gyms in just a few days.',
-                  name: 'Jordan Lee',
-                  role: 'Growth Lead, FitStack Analytics',
-                },
-                {
-                  quote:
-                    'GymDues saved our sales reps hours per week. Instead of cleaning spreadsheets, they spend time talking to gym owners who actually fit our ICP.',
-                  name: 'Morgan Patel',
-                  role: 'Head of Sales, IronStack CRM',
-                },
-                {
-                  quote:
-                    'We layered GymDues data on top of our ad audiences and immediately saw higher CTR and reply rates from gyms that were actively investing in equipment and software.',
-                  name: 'Alex Rivera',
-                  role: 'Performance Marketer, LiftLabs',
-                },
-              ].map((t) => (
+              {GYMSDATA_TESTIMONIALS.map((t, idx) => (
                 <figure
                   key={t.name}
                   className='grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center rounded-3xl border border-border/60 bg-background px-5 py-5 md:px-8 md:py-7'
@@ -1506,8 +1463,21 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                     </p>
                   </div>
                   <figcaption className='flex items-center justify-start md:justify-end gap-4'>
-                    <div className='hidden sm:block h-14 w-14 rounded-full bg-gradient-to-br from-emerald-200 via-emerald-50 to-sky-100 shadow-md' />
-                    <div className='text-left'>
+                    <div
+                      className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white shadow-md'
+                      style={{
+                        background:
+                          idx % 3 === 0
+                            ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+                            : idx % 3 === 1
+                              ? 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)'
+                              : 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
+                      }}
+                      aria-hidden
+                    >
+                      {testimonialInitials(t.name)}
+                    </div>
+                    <div className='text-left min-w-0'>
                       <p className='text-sm font-semibold text-foreground'>{t.name}</p>
                       <p className='text-xs text-muted-foreground'>{t.role}</p>
                     </div>
@@ -1532,12 +1502,22 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             directory to filter by state, city, or ZIP code and see live membership price ranges,
             plans, and fees.
           </p>
-          <Link
-            href='/gymsdata/'
-            className='inline-flex items-center justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
-          >
-            Browse all U.S. gyms
-          </Link>
+          <div className='flex flex-wrap items-center gap-3'>
+            <Link
+              href='/gymsdata/checkout'
+              className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all'
+            >
+              <Package className='h-4 w-4' aria-hidden />
+              Buy data
+            </Link>
+            <DownloadSampleButton
+              variant='outline'
+              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/40 transition-all'
+            >
+              <Download className='h-4 w-4' aria-hidden />
+              Download sample
+            </DownloadSampleButton>
+          </div>
         </section>
       </div>
       <div className='js-only'>

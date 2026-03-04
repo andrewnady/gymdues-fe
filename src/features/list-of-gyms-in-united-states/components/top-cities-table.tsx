@@ -4,14 +4,18 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, /*Info*/ } from 'lucide-react'
 import type { LocationWithCount } from '@/types/gym'
+import type { StateWithCount } from '@/types/gym'
+import { cityPagePathForLocation } from '@/lib/gymsdata-utils'
 
 const INITIAL_VISIBLE = 3
 
 interface TopCitiesTableProps {
   cities: LocationWithCount[]
+  /** Pass states so city links go to /gymsdata/[state]/[city] page. */
+  states?: StateWithCount[]
 }
 
-export function TopCitiesTable({ cities }: TopCitiesTableProps) {
+export function TopCitiesTable({ cities, states }: TopCitiesTableProps) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? cities : cities.slice(0, INITIAL_VISIBLE)
   const hasMore = cities.length > INITIAL_VISIBLE
@@ -53,7 +57,7 @@ export function TopCitiesTable({ cities }: TopCitiesTableProps) {
                 </td>
                 <td className='px-4 py-3 font-medium'>
                   <Link
-                    href={`/gymsdata/#location=${encodeURIComponent(loc.label)}`}
+                    href={states ? (cityPagePathForLocation(loc, states) ?? `/gymsdata/#location=${encodeURIComponent(loc.label)}`) : `/gymsdata/#location=${encodeURIComponent(loc.label)}`}
                     className='text-primary hover:underline underline-offset-2'
                   >
                     {loc.label}
@@ -87,12 +91,12 @@ export function TopCitiesTable({ cities }: TopCitiesTableProps) {
             )}
           </button>
         )}
-        <a
+        {/* <a
           href='#states-table'
           className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'
         >
           Show all data →
-        </a>
+        </a> */}
       </div>
     </>
   )

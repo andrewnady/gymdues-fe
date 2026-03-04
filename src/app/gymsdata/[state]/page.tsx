@@ -113,11 +113,8 @@ export default async function GymsdataStatePage({ params }: Props) {
             </div>
           </div>
 
-          {/* Map and Overview side by side */}
+          {/* Overview left, Map right */}
           <div className='mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8'>
-            <div className='min-w-0'>
-              <GymsdataMiniMap state={displayState} />
-            </div>
             <div className='min-w-0'>
               <h2 className='text-2xl font-bold mb-4'>
                 Gyms in {displayState.stateName} – Overview
@@ -155,13 +152,16 @@ export default async function GymsdataStatePage({ params }: Props) {
                 </ul>
               </div>
             </div>
+            <div className='min-w-0'>
+              <GymsdataMiniMap state={displayState} />
+            </div>
           </div>
 
           {/* Download CTA */}
           <div className='mt-6 flex flex-wrap gap-3'>
             <DownloadSampleButton variant='primary' />
             <Link
-              href='/gymsdata/dataset'
+              href='/gymsdata/checkout'
               className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/30'
             >
               <ShoppingCart className='h-4 w-4' />
@@ -189,7 +189,7 @@ export default async function GymsdataStatePage({ params }: Props) {
 
         {/* Internal Linking Strategy */}
         <section className='mt-12 pt-8 border-t' aria-label='Internal linking'>
-          <h2 className='text-xl font-semibold mb-4'>Internal Linking</h2>
+          {/* <h2 className='text-xl font-semibold mb-4'>Internal Linking</h2> */}
 
           <div className='space-y-6'>
             {/* Link to nearby cities */}

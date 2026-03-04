@@ -52,8 +52,6 @@ export function CheckoutClient({ initialOrderFromCookie }: CheckoutClientProps) 
               <li aria-hidden>/</li>
               <li><Link href="/gymsdata" className="hover:text-primary">Gym database</Link></li>
               <li aria-hidden>/</li>
-              <li><Link href="/gymsdata/dataset" className="hover:text-primary">Dataset</Link></li>
-              <li aria-hidden>/</li>
               <li className="text-foreground font-medium">Checkout</li>
             </ol>
           </nav>
@@ -72,17 +70,9 @@ export function CheckoutClient({ initialOrderFromCookie }: CheckoutClientProps) 
                 <label htmlFor="checkout-email" className="block text-sm font-medium text-muted-foreground mb-1">Email *</label>
                 <input id="checkout-email" name="email" type="email" required className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="you@company.com" />
               </div>
-              <div>
-                <label htmlFor="checkout-company" className="block text-sm font-medium text-muted-foreground mb-1">Company *</label>
-                <input id="checkout-company" name="company" type="text" required className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" placeholder="Company name" />
-              </div>
-              <div>
-                <label htmlFor="checkout-message" className="block text-sm font-medium text-muted-foreground mb-1">Message (optional)</label>
-                <textarea id="checkout-message" name="message" rows={2} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none" placeholder="Use case or questions" />
-              </div>
               <div className="flex gap-3 pt-2">
-                <Link href="/gymsdata/dataset" className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted text-center">
-                  Back to dataset
+                <Link href="/gymsdata" className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted text-center">
+                  Back to gym database
                 </Link>
                 <button type="submit" className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
                   Proceed to checkout
@@ -99,12 +89,10 @@ export function CheckoutClient({ initialOrderFromCookie }: CheckoutClientProps) 
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-4xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-1">
+            <ol className="flex flex-wrap items-center gap-1">
             <li><Link href="/" className="hover:text-primary">Home</Link></li>
             <li aria-hidden>/</li>
             <li><Link href="/gymsdata" className="hover:text-primary">Gym database</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href="/gymsdata/dataset" className="hover:text-primary">Dataset</Link></li>
             <li aria-hidden>/</li>
             <li className="text-foreground font-medium">Checkout</li>
           </ol>
@@ -129,16 +117,6 @@ export function CheckoutClient({ initialOrderFromCookie }: CheckoutClientProps) 
                 <dt className="text-muted-foreground">Email</dt>
                 <dd className="font-medium">{resolvedOrder.email}</dd>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Company</dt>
-                <dd className="font-medium">{resolvedOrder.company}</dd>
-              </div>
-              {resolvedOrder.message && (
-                <div>
-                  <dt className="text-muted-foreground">Message</dt>
-                  <dd className="font-medium">{resolvedOrder.message}</dd>
-                </div>
-              )}
             </dl>
           </div>
 
@@ -161,10 +139,10 @@ export function CheckoutClient({ initialOrderFromCookie }: CheckoutClientProps) 
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
             <Link
-              href="/gymsdata/dataset"
+              href="/gymsdata"
               className="inline-flex items-center gap-2 rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium hover:bg-muted"
             >
-              Back to dataset
+              Back to gym database
             </Link>
           </div>
           <p className="mt-4 text-center text-sm text-muted-foreground">
