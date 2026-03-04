@@ -20,7 +20,7 @@ interface UsaMapOrTableSectionProps {
 
 export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps) {
   const [view, setView] = useState<View>('map')
-  const [layer, setLayer] = useState<MapLayer>('all')
+  const layer: MapLayer = 'all'
   const [showAllStates, setShowAllStates] = useState(false)
 
   const statesForLayer = useMemo(
@@ -38,31 +38,6 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
 
   return (
     <div className='space-y-6'>
-      {/* Toggle layers: All Gyms | Budget | 24-Hour | High-Rated (shared by map and table) */}
-      <div
-        className='flex flex-wrap items-center justify-center gap-2'
-        role='tablist'
-        aria-label='Map and table layers'
-      >
-        {LAYERS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type='button'
-            role='tab'
-            aria-selected={layer === id}
-            onClick={() => setLayer(id)}
-            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              layer === id
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <Icon className='h-4 w-4 shrink-0' />
-            {label}
-          </button>
-        ))}
-      </div>
-
       <div
         className='flex rounded-xl border border-border/80 bg-muted/30 p-1'
         role='tablist'
