@@ -1164,9 +1164,13 @@ const LIST_PAGE_FETCH_TIMEOUT_MS = 18_000
  * Fetches data for the gymsdata page.
  * Tries real API (getStatesWithCounts + getLocations); on failure or empty states uses mock.
  * Set USE_LIST_PAGE_MOCK=true to always use mock (e.g. until backend endpoint is ready).
+ * In CI (e.g. GitHub Actions) we use mock by default so the build completes without needing the CMS.
  */
 export async function getListPageData(): Promise<ListPageData> {
-  const useMock = process.env.USE_LIST_PAGE_MOCK === 'true' || process.env.USE_LIST_PAGE_MOCK === '1'
+  const useMock =
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1' ||
+    process.env.CI === 'true'
   if (useMock) {
     const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
     return getMockListPageData()
