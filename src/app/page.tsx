@@ -5,7 +5,7 @@ import {
   getLatestGyms,
   getAllGyms,
   getRatedGyms,
-  getBestGymsByState,
+  getBestGymsBySlug,
   getPopularGymsStateCities,
 } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
@@ -125,8 +125,8 @@ export default async function Home() {
     getTrendingGyms(),
     getAllGyms(undefined, undefined, undefined, undefined, true),
     getRatedGyms(20),
-    getBestGymsByState('New York', 20),
-    getBestGymsByState('California', 20),
+    getBestGymsBySlug('best-new-york-gyms', 20),
+    getBestGymsBySlug('best-california-gyms', 20),
     getAllReviews(12),
     getRecentBlogPosts(3),
     getPopularGymsStateCities(),
