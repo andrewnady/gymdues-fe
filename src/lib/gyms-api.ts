@@ -848,16 +848,16 @@ export async function getRatedGyms(limit?: number): Promise<Gym[]> {
 
 /**
  * Fetches best gyms for a given state from the API.
- * Uses endpoint: GET /api/v1/gyms/filter-state/{stateName}
+ * Uses endpoint: GET /api/v1/gyms/filter-state?slug=
  * (server is expected to already apply rating/quality filters).
  */
-export async function getBestGymsByState(stateName: string, limit?: number): Promise<Gym[]> {
-  if (!stateName || !stateName.trim()) {
+export async function getBestGymsBySlug(slug: string, limit?: number): Promise<Gym[]> {
+  if (!slug || !slug.trim()) {
     return []
   }
 
   try {
-    const url = `${API_BASE_URL}/api/v1/gyms/filter-state/${encodeURIComponent(stateName.trim())}`
+    const url = `${API_BASE_URL}/api/v1/gyms/filter-state?slug=${encodeURIComponent(slug)}`
 
     const response = await fetch(url, {
       next: { revalidate: 60 },
@@ -865,7 +865,7 @@ export async function getBestGymsByState(stateName: string, limit?: number): Pro
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch best gyms for state ${stateName}: ${response.status} ${response.statusText}`,
+        `Failed to fetch best gyms for slug ${slug}: ${response.status} ${response.statusText}`,
       )
     }
 
@@ -895,7 +895,7 @@ export async function getBestGymsByState(stateName: string, limit?: number): Pro
 
     return normalizedGyms
   } catch (error) {
-    console.error(`Error fetching best gyms for state ${stateName}:`, error)
+    console.error(`Error fetching best gyms for slug ${slug}:`, error)
     return []
   }
 }
