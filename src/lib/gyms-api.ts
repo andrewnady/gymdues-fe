@@ -1328,12 +1328,28 @@ export async function getPopularGymsStateCities(): Promise<PopularCityItem[]> {
     let data = await response.json()
     data = transformApiResponse(data)
 
+    const resolveImageUrl = (raw: string): string => {
+      if (!raw) return raw
+      if (raw.startsWith('http://') || raw.startsWith('https://')) {
+        return transformApiUrl(raw)
+      }
+      const base = API_BASE_URL.replace(/\/$/, '')
+      if (raw.startsWith('/storage/')) return `${base}${raw}`
+      const sep = raw.startsWith('/') ? '' : '/'
+      return `${base}/storage/app/media${sep}${raw}`
+    }
+
+    const normalizeItem = (item: PopularCityItem): PopularCityItem => ({
+      ...item,
+      featured_image: resolveImageUrl(item.featured_image),
+    })
+
     if (typeof data === 'object' && data !== null && 'data' in data && Array.isArray(data.data)) {
-      return data.data as PopularCityItem[]
+      return (data.data as PopularCityItem[]).map(normalizeItem)
     }
 
     if (Array.isArray(data)) {
-      return data as PopularCityItem[]
+      return (data as PopularCityItem[]).map(normalizeItem)
     }
 
     return []
