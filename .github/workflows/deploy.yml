@@ -47,10 +47,7 @@ jobs:
         run: pnpm run build:production
         env:
           NODE_ENV: production
-          CI: "true"
           NEXT_PUBLIC_API_BASE_URL: https://cms.gymdues.com
-          # Use mock list data so build completes when CMS is unreachable in CI
-          USE_LIST_PAGE_MOCK: "true"
 
       - name: Create deployment package
         run: |

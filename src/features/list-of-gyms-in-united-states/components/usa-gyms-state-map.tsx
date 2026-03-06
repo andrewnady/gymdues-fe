@@ -70,6 +70,7 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
   const [hoverCode, setHoverCode] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
   const [hoverPoint, setHoverPoint] = useState<{ x: number; y: number } | null>(null)
+  const [wrapperWidth, setWrapperWidth] = useState(0)
   const mapWrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -204,7 +205,7 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
           compact ? 'px-2 py-3' : 'px-3 py-5 md:px-6 md:py-7'
         } ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       >
-        <div className='w-full overflow-x-auto'>
+        <div className={`w-full ${compact ? 'overflow-visible' : 'overflow-x-auto'}`}>
           <div
             ref={mapWrapperRef}
             className={`usa-gyms-map-wrapper mx-auto relative ${compact ? 'max-w-[420px] min-h-[260px] [&_svg]:w-full [&_svg]:h-auto [&_svg]:min-h-[240px]' : 'max-w-5xl'}`}
@@ -213,7 +214,7 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
               const x = event.clientX - rect.left
               const y = event.clientY - rect.top
 
-              // Update tooltip position
+              setWrapperWidth(rect.width)
               setHoverPoint({ x, y })
 
               // Detect which state the cursor is over by reading the underlying SVG path
@@ -238,7 +239,11 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
             {/* Floating tooltip near cursor: state name + count (desktop) */}
             {hoverState && hoverPoint && (
               <div
-                className='hidden md:flex absolute z-20 -translate-y-full translate-x-3'
+                className={`hidden md:flex absolute z-20 ${
+                  compact && wrapperWidth > 0 && hoverPoint.x > wrapperWidth * 0.55
+                    ? '-translate-y-full -translate-x-full -translate-x-2'
+                    : '-translate-y-full translate-x-3'
+                }`}
                 style={{
                   left: hoverPoint.x,
                   top: hoverPoint.y,

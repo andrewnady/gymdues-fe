@@ -11,12 +11,17 @@ import {
 } from 'recharts'
 import { NEW_GYMS_BY_MONTH } from '../_data/growth-trends-data'
 
-const data = NEW_GYMS_BY_MONTH.map((d) => ({
-  name: d.month + ' ' + d.year,
-  count: d.count,
-}))
+type NewGymsByMonthItem = { month: string; monthKey: string; count: number }
 
-export function NewGymsTimelineChart() {
+interface NewGymsTimelineChartProps {
+  data?: NewGymsByMonthItem[] | null
+}
+
+export function NewGymsTimelineChart({ data: apiData }: NewGymsTimelineChartProps) {
+  const data = (apiData?.length
+    ? apiData.map((d) => ({ name: d.month, count: d.count }))
+    : NEW_GYMS_BY_MONTH.map((d) => ({ name: d.month + ' ' + d.year, count: d.count }))
+  ) as Array<{ name: string; count: number }>
   return (
     <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">

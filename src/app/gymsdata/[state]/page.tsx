@@ -1,16 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getListPageData, getCitiesByState } from '@/lib/gyms-api'
-import {
-  getStateBySlug,
-  getCitiesInState,
-  //stateGymsdataPath,
-  cityGymsdataPath,
-  toSlug,
-  getStateDerivedStats,
-  formatDataDate,
-} from '@/lib/gymsdata-utils'
-import { getMockCitiesForState, getMockStateByCode } from '@/usa-list/data/mock-list-page-data'
+import { getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
+import { getStateBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
 import { MapPin, ShoppingCart } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { GymsdataMiniMap } from '../_components/gymsdata-mini-map'
@@ -21,17 +12,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 type Props = { params: Promise<{ state: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { state: stateSlug } = await params
+  const { state: stateSegment } = await params
+  const stateParam = (stateSegment ?? '').trim()
   const { states } = await getListPageData()
-  const state = getStateBySlug(states, stateSlug)
+  const state = getStateBySlug(states, stateParam)
   if (!state) return { title: 'State Not Found | Gymdues' }
-  const citiesFromApi = await getCitiesByState(state.state)
-  const useMockMeta = citiesFromApi.length === 0
-  const mockState = useMockMeta ? getMockStateByCode(state.state) : null
-  const displayCount = useMockMeta && mockState ? mockState.count : state.count
-  const title = `List of Gyms in ${state.stateName} - ${displayCount.toLocaleString('en-US')} Verified Contacts | Gymdues`
-  const description = `Browse gyms in ${state.stateName} by city. ${displayCount.toLocaleString('en-US')}+ verified contacts. Download CSV or view by city.`
-  const canonical = new URL(`/gymsdata/${stateSlug}`, siteUrl).toString()
+  const title = `List of Gyms in ${state.stateName} - ${state.count.toLocaleString('en-US')} Verified Contacts | Gymdues`
+  const description = `Browse gyms in ${state.stateName} by city. ${state.count.toLocaleString('en-US')}+ verified contacts. Download CSV or view by city.`
+  const canonical = new URL(`/gymsdata/${toUrlSegment(state.stateName)}`, siteUrl).toString()
   return {
     title,
     description,
@@ -42,14 +30,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export async function generateStaticParams() {
   const { states } = await getListPageData()
-  return states.map((s) => ({ state: toSlug(s.stateName) }))
+  return states.map((s) => ({ state: toUrlSegment(s.stateName) }))
 }
 
 export default async function GymsdataStatePage({ params }: Props) {
-  const { state: stateSlug } = await params
-  const { states, locations } = await getListPageData()
-  const state = getStateBySlug(states, stateSlug)
-  if (!state) {
+  const { state: stateSegment } = await params
+  const stateParam = (stateSegment ?? '').trim()
+  const data = await getGymsdataForState(stateParam)
+  
+  if (data.notFound || !data.state || !data.displayState) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>State not found</h1>
@@ -59,24 +48,10 @@ export default async function GymsdataStatePage({ params }: Props) {
       </main>
     )
   }
-
-  const citiesFromApi = await getCitiesByState(state.state)
-  const fromLocations = getCitiesInState(locations, state.state, state.stateName)
-  const useMockData = citiesFromApi.length === 0
-  const cities = useMockData
-    ? getMockCitiesForState(state.state, state.stateName)
-    : citiesFromApi.length > 0
-      ? citiesFromApi
-      : fromLocations
-  const mockState = getMockStateByCode(state.state)
-  const displayState = useMockData && mockState ? { ...state, count: mockState.count } : state
-  //const statePath = stateGymsdataPath(state)
-  const stateStats = getStateDerivedStats(displayState.state, displayState.count, cities.length)
+  const state = data.state
+  const displayState = data.displayState
+  const { stateStats, cities, topThreeCities } = data
   const dateStr = formatDataDate()
-  const topThreeCities = cities.slice(0, 3).map((loc) => ({
-    name: loc.city ?? (loc.label ? loc.label.split(',')[0]?.trim() : '') ?? 'City',
-    gyms: loc.count ?? 0,
-  }))
 
   return (
     <main className='min-h-screen'>
@@ -177,7 +152,7 @@ export default async function GymsdataStatePage({ params }: Props) {
           Click a city to see the full list of gyms and verified contacts in that area.
         </p>
         {cities.length > 0 ? (
-          <StateCitiesFilter cities={cities} stateSlug={stateSlug} />
+          <StateCitiesFilter cities={cities} stateSlug={state.stateName} />
         ) : (
           <p className='text-muted-foreground'>
             City-level data for {state.stateName} is being updated. You can still{' '}
@@ -201,7 +176,7 @@ export default async function GymsdataStatePage({ params }: Props) {
                 {cities.slice(0, 10).map((loc) => (
                   <li key={loc.label ?? `${loc.city}-${loc.state}`}>
                     <Link
-                      href={cityGymsdataPath(stateSlug, loc.city ?? '')}
+                      href={cityGymsdataPath(state.stateName, loc.city ?? '')}
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40 text-primary'
                     >
                       <MapPin className='h-3.5 w-3.5 shrink-0' aria-hidden />

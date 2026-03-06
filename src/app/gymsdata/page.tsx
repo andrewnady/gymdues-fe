@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getListPageData } from '@/lib/gyms-api'
+import { getGymsdata, getChainComparison } from '@/lib/gymsdata-api'
 import { ListingByStateSection } from '@/usa-list/components/listing-by-state-section'
 import { UsaMapOrTableSection } from '@/usa-list/components/usa-map-or-table-section'
 //import { GymsByStateTable } from '@/usa-list/components/gyms-by-state-table'
@@ -18,7 +18,7 @@ import {
   HelpCircle,
   Info,
   TrendingUp,
-  BarChart2,
+  //BarChart2,
   //Gift,
   Megaphone,
   Code,
@@ -49,25 +49,10 @@ import { DatasetPreviewTable } from './_components/dataset-preview-table'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-const GYMSDATA_TESTIMONIALS = [
-  {
-    quote:
-      'We used GymDues to source gym contacts for a national outreach campaign, and the results were night and day compared to generic lists. The data was fresh, verified, and instantly usable—our team reached thousands of gyms in just a few days.',
-    name: 'Jordan Lee',
-    role: 'Growth Lead, FitStack Analytics',
-  },
-  {
-    quote:
-      'GymDues saved our sales reps hours per week. Instead of cleaning spreadsheets, they spend time talking to gym owners who actually fit our ICP.',
-    name: 'Morgan Patel',
-    role: 'Head of Sales, IronStack CRM',
-  },
-  {
-    quote:
-      'We layered GymDues data on top of our ad audiences and immediately saw higher CTR and reply rates from gyms that were actively investing in equipment and software.',
-    name: 'Alex Rivera',
-    role: 'Performance Marketer, LiftLabs',
-  },
+const FALLBACK_TESTIMONIALS = [
+  { quote: 'We used GymDues to source gym contacts for a national outreach campaign, and the results were night and day compared to generic lists. The data was fresh, verified, and instantly usable—our team reached thousands of gyms in just a few days.', name: 'Jordan Lee', role: 'Growth Lead, FitStack Analytics' },
+  { quote: 'GymDues saved our sales reps hours per week. Instead of cleaning spreadsheets, they spend time talking to gym owners who actually fit our ICP.', name: 'Morgan Patel', role: 'Head of Sales, IronStack CRM' },
+  { quote: 'We layered GymDues data on top of our ad audiences and immediately saw higher CTR and reply rates from gyms that were actively investing in equipment and software.', name: 'Alex Rivera', role: 'Performance Marketer, LiftLabs' },
 ] as const
 
 function testimonialInitials(name: string): string {
@@ -136,16 +121,51 @@ export async function generateMetadata(): Promise<Metadata> {
 type PageProps = { searchParams?: Promise<{ sort?: string }> }
 
 export default async function GymsdataPage({ searchParams }: PageProps) {
-  const { states, locations } = await getListPageData()
-  const totalGyms = states.reduce((sum, state) => sum + (state.count || 0), 0)
-  const totalStates = states.length
+  let data: Awaited<ReturnType<typeof getGymsdata>>
+  let chainComparisonRes: Awaited<ReturnType<typeof getChainComparison>>
+  try {
+    ;[data, chainComparisonRes] = await Promise.all([getGymsdata(), getChainComparison()])
+  } catch (err) {
+    if (err instanceof Error) console.warn('Gymsdata page data fetch failed:', err.message)
+    data = {
+      states: [],
+      totalGyms: 0,
+      totalStates: 0,
+      statics: [],
+      topCities: [],
+      listPage: null,
+      testimonials: null,
+    }
+    chainComparisonRes = null
+  }
+  const chains = chainComparisonRes?.chains ?? []
+  const { states, totalGyms, totalStates, statics, topCities, testimonials: testimonialsRes } = data
+  const withEmail = statics.find((s) => s.key === 'withEmail')?.value ?? 0
+  const withPhone = statics.find((s) => s.key === 'withPhone')?.value ?? 0
+  const withPhoneAndEmail = statics.find((s) => s.key === 'withPhoneAndEmail')?.value ?? 0
+  const withWebsite = statics.find((s) => s.key === 'withWebsite')?.value ?? 0
+  const withFacebook = statics.find((s) => s.key === 'withFacebook')?.value ?? 0
+  const withInstagram = statics.find((s) => s.key === 'withInstagram')?.value ?? 0
+  const withTwitter = statics.find((s) => s.key === 'withTwitter')?.value ?? 0
+  const withLinkedin = statics.find((s) => s.key === 'withLinkedin')?.value ?? 0
+  const withYoutube = statics.find((s) => s.key === 'withYoutube')?.value ?? 0
+  const ratedCount = statics.find((s) => s.key === 'ratedCount')?.value ?? 0
+  const apiTestimonials = testimonialsRes?.testimonials
+  const testimonials: { quote: string; name: string; role: string; initials?: string }[] =
+    Array.isArray(apiTestimonials) && apiTestimonials.length > 0
+      ? apiTestimonials.map((t) => ({
+          quote: t.quote,
+          name: t.authorName,
+          role: t.authorTitle,
+          initials: t.initials,
+        }))
+      : FALLBACK_TESTIMONIALS.map((t) => ({ ...t, initials: undefined }))
   const params = await searchParams
   const sortBy = params?.sort === 'name' ? 'name' : 'count'
   const sortedStates =
     sortBy === 'name'
       ? [...states].sort((a, b) => (a.stateName ?? '').localeCompare(b.stateName ?? ''))
       : [...states].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
-  const topCities = locations.slice(0, 10)
   const top10States = sortedStates.slice(0, 10)
   const maxStateCount = top10States[0]?.count ?? 1
   //const stateComparisonRows = buildStateComparisonRows(sortedStates)
@@ -230,29 +250,29 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               Top states include {top10States[0]?.stateName ?? 'California'} with {(top10States[0]?.count ?? 0).toLocaleString('en-US')},{' '}
               {top10States[1]?.stateName ?? 'Texas'} with {(top10States[1]?.count ?? 0).toLocaleString('en-US')}, and{' '}
               {top10States[2]?.stateName ?? 'Florida'} with {(top10States[2]?.count ?? 0).toLocaleString('en-US')}.
-              The dataset includes email addresses ({Math.round(totalGyms * 0.64).toLocaleString('en-US')} records), phone numbers ({Math.round(totalGyms * 0.80).toLocaleString('en-US')}),
-              records with both ({Math.round(totalGyms * 0.60).toLocaleString('en-US')}), and websites (over {Math.round(totalGyms * 0.70).toLocaleString('en-US')}), many with contact page URLs.
+              The dataset includes email addresses ({Math.round(withEmail).toLocaleString('en-US')} records), phone numbers ({Math.round(withPhone).toLocaleString('en-US')}),
+              records with both ({Math.round(withPhoneAndEmail).toLocaleString('en-US')}), and websites (over {Math.round(withWebsite).toLocaleString('en-US')}), many with contact page URLs.
             </p>
             <p className='text-sm text-muted-foreground leading-relaxed mb-4'>
-              Many of these Gyms are active on social media: {Math.round(totalGyms * 0.52).toLocaleString('en-US')} have Facebook pages, {Math.round(totalGyms * 0.39).toLocaleString('en-US')} are on Instagram,{' '}
-              {Math.round(totalGyms * 0.32).toLocaleString('en-US')} use X (formerly Twitter), {Math.round(totalGyms * 0.31).toLocaleString('en-US')} have LinkedIn profiles, and {Math.round(totalGyms * 0.20).toLocaleString('en-US')} maintain YouTube channels.
-              Over {Math.round(totalGyms * 0.82).toLocaleString('en-US')} Gyms have been rated by real users — useful for reputation management, review monitoring, and B2B outreach.
+              Many of these Gyms are active on social media: {Math.round(withFacebook).toLocaleString('en-US')} have Facebook pages, {Math.round(withInstagram).toLocaleString('en-US')} are on Instagram,{' '}
+              {Math.round(withTwitter).toLocaleString('en-US')} use X (formerly Twitter), {Math.round(withLinkedin).toLocaleString('en-US')} have LinkedIn profiles, and {Math.round(totalGyms * 0.20).toLocaleString('en-US')} maintain YouTube channels.
+              Over {Math.round(ratedCount).toLocaleString('en-US')} Gyms have been rated by real users — useful for reputation management, review monitoring, and B2B outreach.
             </p>
 
             <div className='grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-foreground mb-4'>
               <ul className='space-y-1.5' aria-label='Dataset stats'>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {totalGyms.toLocaleString('en-US')} Number of Gyms</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.64).toLocaleString('en-US')} Email addresses</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.80).toLocaleString('en-US')} Phone numbers</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.70).toLocaleString('en-US')} With Websites</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.31).toLocaleString('en-US')} LinkedIn Profiles</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withEmail).toLocaleString('en-US')} Email addresses</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withPhone).toLocaleString('en-US')} Phone numbers</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withWebsite).toLocaleString('en-US')} With Websites</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withLinkedin).toLocaleString('en-US')} LinkedIn Profiles</li>
               </ul>
               <ul className='space-y-1.5' aria-label='Social and contact stats'>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.52).toLocaleString('en-US')} Facebook Profiles</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.39).toLocaleString('en-US')} Instagram Handles</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.32).toLocaleString('en-US')} X Handles</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.20).toLocaleString('en-US')} YouTube Channels</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(totalGyms * 0.60).toLocaleString('en-US')} Phone and Email</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withFacebook).toLocaleString('en-US')} Facebook Profiles</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withInstagram).toLocaleString('en-US')} Instagram Handles</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withTwitter).toLocaleString('en-US')} X Handles</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withYoutube).toLocaleString('en-US')} YouTube Channels</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withPhoneAndEmail).toLocaleString('en-US')} Phone and Email</li>
               </ul>
             </div>
 
@@ -266,7 +286,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 Data updated on {lastMonday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </p>
               <div className='flex flex-wrap items-baseline gap-2 mb-4'>
-                <span className='text-3xl sm:text-4xl font-bold tracking-tight text-foreground'>$299</span>
+                <span className='text-3xl sm:text-4xl font-bold tracking-tight text-foreground'>$249</span>
                 <span className='text-sm text-muted-foreground'>one-time</span>
               </div>
               <div className='flex flex-wrap items-center gap-3'>
@@ -416,7 +436,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
 
           <div className='mb-8'>
             <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3'>Interactive tools</p>
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-2'>
+            <div className='grid gap-4 sm:grid-cols-1 lg:grid-cols-1'>
               <Link
                 href='/gymsdata/trends'
                 className='group flex flex-col rounded-xl border-2 border-primary/40 bg-card p-5 shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200'
@@ -426,14 +446,14 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                     <TrendingUp className='h-5 w-5' aria-hidden />
                   </div>
                 </div>
-                <h3 className='font-semibold text-foreground mb-1.5'>Growth Trends</h3>
+                <h3 className='font-semibold text-foreground mb-1.5'>Gym Industry Trends</h3>
                 <p className='text-sm text-muted-foreground flex-1'>New gyms timeline, most growing cities, fastest growing categories, franchise vs independent.</p>
                 <span className='mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all'>
-                  View trends
+                  View reports
                   <ChevronRight className='h-4 w-4' aria-hidden />
                 </span>
               </Link>
-              <Link
+              {/* <Link
                 href='/gymsdata/competitive-intelligence'
                 className='group flex flex-col rounded-xl border-2 border-primary/40 bg-card p-5 shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200'
               >
@@ -448,7 +468,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   Try tool
                   <ChevronRight className='h-4 w-4' aria-hidden />
                 </span>
-              </Link>
+              </Link> */}
               {/* <Link
                 href='/gymsdata/sample-data'
                 className='group flex flex-col rounded-xl border-2 border-primary/40 bg-card p-5 shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200'
@@ -941,7 +961,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </section>
         )} */}
 
-        {/* Gym Chain Comparison – SEO comparison table */}
+        {/* Gym Chain Comparison – from api/v1/gymsdata/chain-comparison */}
         <section className='max-w-5xl mx-auto mb-16' aria-labelledby='chain-comparison-heading'>
           <div className='flex flex-wrap items-center gap-2 mb-2'>
             <Building2 className='h-6 w-6 text-primary shrink-0' />
@@ -964,45 +984,76 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 </tr>
               </thead>
               <tbody>
-                <tr className='border-b border-border/50 hover:bg-muted/40'>
-                  <td className='px-4 py-3 font-medium'>LA Fitness</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>700+</td>
-                  <td className='px-4 py-3 text-right'>$35/mo</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>8.5/10</td>
-                  <td className='px-4 py-3 text-right'>4.2★</td>
-                </tr>
-                <tr className='border-b border-border/50 hover:bg-muted/40'>
-                  <td className='px-4 py-3 font-medium'>24 Hour Fitness</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>450+</td>
-                  <td className='px-4 py-3 text-right'>$40/mo</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>8.0/10</td>
-                  <td className='px-4 py-3 text-right'>4.0★</td>
-                </tr>
-                <tr className='border-b border-border/50 hover:bg-muted/40'>
-                  <td className='px-4 py-3 font-medium'>Planet Fitness</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>2,400+</td>
-                  <td className='px-4 py-3 text-right'>$10/mo</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>6.5/10</td>
-                  <td className='px-4 py-3 text-right'>3.8★</td>
-                </tr>
-                <tr className='hover:bg-muted/40'>
-                  <td className='px-4 py-3 font-medium'>Equinox</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>100+</td>
-                  <td className='px-4 py-3 text-right'>$200/mo</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>9.8/10</td>
-                  <td className='px-4 py-3 text-right'>4.5★</td>
-                </tr>
+                {chains.length > 0 ? (
+                  (() => {
+                    const mostLocationsIdx = chains.reduce((best, c, i) => (c.locations > (chains[best]?.locations ?? 0) ? i : best), 0)
+                    const bestPriceIdx = chains.reduce((best, c, i) => (c.avgPrice < (chains[best]?.avgPrice ?? Infinity) && c.avgPrice > 0 ? i : best), 0)
+                    const mostAmenitiesIdx = chains.reduce((best, c, i) => (c.amenitiesScore > (chains[best]?.amenitiesScore ?? 0) ? i : best), 0)
+                    const mostRatingIdx = chains.reduce((best, c, i) => (c.userRating > (chains[best]?.userRating ?? 0) ? i : best), 0)
+                    return chains.map((chain, i) => (
+                      <tr key={chain.chainName} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40'>
+                        <td className='px-4 py-3 font-medium'>{chain.chainName}</td>
+                        <td className='px-4 py-3 text-right'>
+                          <div className='flex flex-col items-end gap-0.5'>
+                            <span className={`tabular-nums font-semibold ${i === mostLocationsIdx ? 'text-primary' : ''}`}>
+                              {chain.locationsLabel}
+                            </span>
+                            {i === mostLocationsIdx && (
+                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
+                                Most
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className='px-4 py-3 text-right'>
+                          <div className='flex flex-col items-end gap-0.5'>
+                            <span className={`tabular-nums font-semibold ${i === bestPriceIdx ? 'text-primary' : ''}`}>
+                              {chain.avgPriceLabel}
+                            </span>
+                            {i === bestPriceIdx && (
+                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
+                                Best value
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className='px-4 py-3 text-right'>
+                          <div className='flex flex-col items-end gap-0.5'>
+                            <span className={`tabular-nums font-semibold ${i === mostAmenitiesIdx ? 'text-primary' : ''}`}>
+                              {chain.amenitiesScoreLabel}
+                            </span>
+                            {i === mostAmenitiesIdx && (
+                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
+                                Most
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className='px-4 py-3 text-right'>
+                          <div className='flex flex-col items-end gap-0.5'>
+                            <span className={`tabular-nums font-semibold ${i === mostRatingIdx ? 'text-primary' : ''}`}>
+                              {chain.userRating.toFixed(1)}★
+                            </span>
+                            {i === mostRatingIdx && (
+                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
+                                Most
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  })()
+                ) : (
+                  <tr>
+                    <td colSpan={5} className='px-4 py-8 text-center text-muted-foreground'>
+                      Chain comparison data is temporarily unavailable.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-          {/* <div className='mt-4 flex justify-center'>
-            <DownloadSampleButton
-              variant='outline'
-              className='rounded-xl border-2 border-primary bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/20'
-            >
-              Download complete chain data
-            </DownloadSampleButton>
-          </div> */}
         </section>
 
         {/* Distribution by location – state chips (no-JS: same data, single section) */}
@@ -1320,6 +1371,153 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           <GymsdataHeroBanner />
         </div>
 
+        {/* Testimonials – social proof for GymDues data */}
+        <section className='max-w-6xl mx-auto mb-16' aria-labelledby='gymsdata-testimonials-heading'>
+          <div className='text-center mb-8'>
+            <p className='inline-flex items-center justify-center rounded-full border border-emerald-100 bg-emerald-50/70 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-900 mb-3'>
+              Testimonials
+            </p>
+            <h2
+              id='gymsdata-testimonials-heading'
+              className='text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2'
+            >
+              What Our Users Say
+            </h2>
+            <p className='text-sm text-muted-foreground max-w-2xl mx-auto'>
+              Discover how teams use GymDues to find verified gym and fitness business leads faster.
+            </p>
+          </div>
+
+          <div className='rounded-3xl border border-border/70 bg-card/95 px-2 py-4 sm:px-4 sm:py-6 shadow-[0_18px_45px_rgba(15,23,42,0.14)]'>
+            {/* With JS: carousel (one card, arrows) */}
+            <div className='js-only'>
+              <Carousel
+              opts={{
+                align: 'center',
+                loop: true,
+              }}
+              className='w-full relative'
+            >
+              <CarouselContent className='-ml-2'>
+                {testimonials.map((t, idx) => (
+                  <CarouselItem
+                    key={t.name}
+                    className='pl-2 md:pl-4 basis-full'
+                  >
+                    <figure className='grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center rounded-3xl border border-border/60 bg-background px-5 py-5 md:px-8 md:py-7'>
+                      <div className='relative'>
+                        <div className='mb-3 flex items-center gap-1'>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
+                          ))}
+                        </div>
+                        <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
+                          “{t.quote}”
+                        </p>
+                      </div>
+                      <figcaption className='flex items-center justify-start md:justify-end gap-4'>
+                        <div
+                          className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white shadow-md'
+                          style={{
+                            background:
+                              idx % 3 === 0
+                                ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+                                : idx % 3 === 1
+                                  ? 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)'
+                                  : 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
+                          }}
+                          aria-hidden
+                        >
+                          {t.initials ?? testimonialInitials(t.name)}
+                        </div>
+                        <div className='text-left min-w-0'>
+                          <p className='text-sm font-semibold text-foreground'>{t.name}</p>
+                          <p className='text-xs text-muted-foreground'>{t.role}</p>
+                        </div>
+                      </figcaption>
+                    </figure>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className='-left-4 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full border-2 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hidden md:flex' />
+              <CarouselNext className='-right-4 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full border-2 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hidden md:flex' />
+            </Carousel>
+            </div>
+            {/* No-JS: show all testimonials in a list */}
+            <div className='no-js-only space-y-4 px-2'>
+              {testimonials.map((t, idx) => (
+                <figure
+                  key={t.name}
+                  className='grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center rounded-3xl border border-border/60 bg-background px-5 py-5 md:px-8 md:py-7'
+                >
+                  <div className='relative'>
+                    <div className='mb-3 flex items-center gap-1'>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
+                      ))}
+                    </div>
+                    <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
+                      &quot;{t.quote}&quot;
+                    </p>
+                  </div>
+                  <figcaption className='flex items-center justify-start md:justify-end gap-4'>
+                    <div
+                      className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white shadow-md'
+                      style={{
+                        background:
+                          idx % 3 === 0
+                            ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+                            : idx % 3 === 1
+                              ? 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)'
+                              : 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
+                      }}
+                      aria-hidden
+                    >
+                      {t.initials ?? testimonialInitials(t.name)}
+                    </div>
+                    <div className='text-left min-w-0'>
+                      <p className='text-sm font-semibold text-foreground'>{t.name}</p>
+                      <p className='text-xs text-muted-foreground'>{t.role}</p>
+                    </div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Call-to-action */}
+        <section className='max-w-4xl mx-auto border rounded-2xl bg-primary/5 px-6 py-8 md:px-8 md:py-10'>
+          <div className='flex items-center gap-2 mb-3'>
+            <ArrowRightCircle className='h-5 w-5 text-primary' />
+            <h2 className='text-xl md:text-2xl font-semibold'>
+              Ready to compare real membership prices?
+            </h2>
+          </div>
+          <p className='text-sm md:text-base text-muted-foreground mb-5'>
+            This report-style page is great for understanding where gyms are located across the
+            United States. When you&apos;re ready to choose a club, head over to the main gyms
+            directory to filter by state, city, or ZIP code and see live membership price ranges,
+            plans, and fees.
+          </p>
+          <div className='flex flex-wrap items-center gap-3'>
+            <Link
+              href='/gymsdata/checkout'
+              className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all'
+            >
+              <Package className='h-4 w-4' aria-hidden />
+              Buy data
+            </Link>
+            <DownloadSampleButton
+              variant='outline'
+              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/40 transition-all'
+            >
+              <Download className='h-4 w-4' aria-hidden />
+              Download sample
+            </DownloadSampleButton>
+          </div>
+        </section>
+
         {/* FAQ – JS: collapsible details; No-JS: all open */}
         <section
           className='max-w-4xl mx-auto mb-16 rounded-2xl border border-border/80 bg-card shadow-sm overflow-hidden'
@@ -1373,152 +1571,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        {/* Testimonials – social proof for GymDues data */}
-        <section className='max-w-6xl mx-auto mb-16' aria-labelledby='gymsdata-testimonials-heading'>
-          <div className='text-center mb-8'>
-            <p className='inline-flex items-center justify-center rounded-full border border-emerald-100 bg-emerald-50/70 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-900 mb-3'>
-              Testimonials
-            </p>
-            <h2
-              id='gymsdata-testimonials-heading'
-              className='text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-2'
-            >
-              What Our Users Say
-            </h2>
-            <p className='text-sm text-muted-foreground max-w-2xl mx-auto'>
-              Discover how teams use GymDues to find verified gym and fitness business leads faster.
-            </p>
-          </div>
-
-          <div className='rounded-3xl border border-border/70 bg-card/95 px-2 py-4 sm:px-4 sm:py-6 shadow-[0_18px_45px_rgba(15,23,42,0.14)]'>
-            {/* With JS: carousel (one card, arrows) */}
-            <div className='js-only'>
-              <Carousel
-              opts={{
-                align: 'center',
-                loop: true,
-              }}
-              className='w-full relative'
-            >
-              <CarouselContent className='-ml-2'>
-                {GYMSDATA_TESTIMONIALS.map((t, idx) => (
-                  <CarouselItem
-                    key={t.name}
-                    className='pl-2 md:pl-4 basis-full'
-                  >
-                    <figure className='grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center rounded-3xl border border-border/60 bg-background px-5 py-5 md:px-8 md:py-7'>
-                      <div className='relative'>
-                        <div className='mb-3 flex items-center gap-1'>
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
-                          ))}
-                        </div>
-                        <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
-                          “{t.quote}”
-                        </p>
-                      </div>
-                      <figcaption className='flex items-center justify-start md:justify-end gap-4'>
-                        <div
-                          className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white shadow-md'
-                          style={{
-                            background:
-                              idx % 3 === 0
-                                ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
-                                : idx % 3 === 1
-                                  ? 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)'
-                                  : 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
-                          }}
-                          aria-hidden
-                        >
-                          {testimonialInitials(t.name)}
-                        </div>
-                        <div className='text-left min-w-0'>
-                          <p className='text-sm font-semibold text-foreground'>{t.name}</p>
-                          <p className='text-xs text-muted-foreground'>{t.role}</p>
-                        </div>
-                      </figcaption>
-                    </figure>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className='-left-4 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full border-2 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hidden md:flex' />
-              <CarouselNext className='-right-4 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full border-2 bg-background shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hidden md:flex' />
-            </Carousel>
-            </div>
-            {/* No-JS: show all testimonials in a list */}
-            <div className='no-js-only space-y-4 px-2'>
-              {GYMSDATA_TESTIMONIALS.map((t, idx) => (
-                <figure
-                  key={t.name}
-                  className='grid gap-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center rounded-3xl border border-border/60 bg-background px-5 py-5 md:px-8 md:py-7'
-                >
-                  <div className='relative'>
-                    <div className='mb-3 flex items-center gap-1'>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
-                      ))}
-                    </div>
-                    <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
-                      &quot;{t.quote}&quot;
-                    </p>
-                  </div>
-                  <figcaption className='flex items-center justify-start md:justify-end gap-4'>
-                    <div
-                      className='flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white shadow-md'
-                      style={{
-                        background:
-                          idx % 3 === 0
-                            ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
-                            : idx % 3 === 1
-                              ? 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)'
-                              : 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
-                      }}
-                      aria-hidden
-                    >
-                      {testimonialInitials(t.name)}
-                    </div>
-                    <div className='text-left min-w-0'>
-                      <p className='text-sm font-semibold text-foreground'>{t.name}</p>
-                      <p className='text-xs text-muted-foreground'>{t.role}</p>
-                    </div>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Call-to-action */}
-        <section className='max-w-4xl mx-auto border rounded-2xl bg-primary/5 px-6 py-8 md:px-8 md:py-10'>
-          <div className='flex items-center gap-2 mb-3'>
-            <ArrowRightCircle className='h-5 w-5 text-primary' />
-            <h2 className='text-xl md:text-2xl font-semibold'>
-              Ready to compare real membership prices?
-            </h2>
-          </div>
-          <p className='text-sm md:text-base text-muted-foreground mb-5'>
-            This report-style page is great for understanding where gyms are located across the
-            United States. When you&apos;re ready to choose a club, head over to the main gyms
-            directory to filter by state, city, or ZIP code and see live membership price ranges,
-            plans, and fees.
-          </p>
-          <div className='flex flex-wrap items-center gap-3'>
-            <Link
-              href='/gymsdata/checkout'
-              className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all'
-            >
-              <Package className='h-4 w-4' aria-hidden />
-              Buy data
-            </Link>
-            <DownloadSampleButton
-              variant='outline'
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/40 transition-all'
-            >
-              <Download className='h-4 w-4' aria-hidden />
-              Download sample
-            </DownloadSampleButton>
-          </div>
-        </section>
       </div>
       <div className='js-only'>
         <ExitIntentPopup />
