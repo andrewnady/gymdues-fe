@@ -14,10 +14,29 @@ export function toSlug(name: string): string {
     .replace(/^-|-$/g, '')
 }
 
-/** Find state by slug (e.g. "california" or "new-york"). */
-export function getStateBySlug(states: StateWithCount[], stateSlug: string): StateWithCount | null {
-  const slug = stateSlug.toLowerCase()
-  return states.find((s) => toSlug(s.stateName) === slug) ?? null
+/** Replace spaces with hyphens and lowercase for URL segments: "North Carolina" → "north-carolina". Backend accepts this form. */
+export function toUrlSegment(name: string): string {
+  return (name ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/** Find state by URL segment (lowercase hyphenated e.g. "north-carolina", or slug/name) from a states array. */
+export function getStateBySlug(states: StateWithCount[], stateSegment: string): StateWithCount | null {
+  const segment = stateSegment.trim().toLowerCase()
+  const segmentNorm = segment.replace(/-/g, ' ')
+  return states.find((s) => {
+    const name = s.stateName ?? ''
+    return (
+      toSlug(name) === toSlug(segment) ||
+      name.trim().toLowerCase() === segment ||
+      toUrlSegment(name) === segment ||
+      name.trim().toLowerCase() === segmentNorm
+    )
+  }) ?? null
 }
 
 /** Get all cities (locations) in a state, sorted by count desc. */
@@ -39,32 +58,42 @@ export function getCitiesInState(
     .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
 }
 
-/** Find a city in state by city slug. */
+/** Find a city in state by URL segment (lowercase hyphenated e.g. "holly-springs", or slug/name). */
 export function getCityBySlug(
   locations: LocationWithCount[],
   stateCode: string,
-  citySlug: string,
+  citySlugOrName: string,
   stateName?: string
 ): LocationWithCount | null {
-  const slug = citySlug.toLowerCase().trim()
+  const segment = citySlugOrName.trim().toLowerCase()
+  const segmentNorm = segment.replace(/-/g, ' ')
   const inState = getCitiesInState(locations, stateCode, stateName)
   return inState.find((loc) => {
     const c = loc.city ?? (loc.label ? loc.label.split(',')[0]?.trim() : null)
-    return c && toSlug(c) === slug
+    if (!c) return false
+    const cLower = c.trim().toLowerCase()
+    return (
+      toSlug(c) === toSlug(segment) ||
+      cLower === segment ||
+      toUrlSegment(c) === segment ||
+      cLower === segmentNorm
+    )
   }) ?? null
 }
 
-/** Build path for state: /gymsdata/california */
+/** Build path for state: /gymsdata/north-carolina (lowercase, spaces → hyphens). Backend accepts this. */
 export function stateGymsdataPath(state: StateWithCount): string {
-  return `${GYMSDATA_BASE}${toSlug(state.stateName)}`
+  const name = state.stateName?.trim()
+  if (!name) return GYMSDATA_BASE
+  return `${GYMSDATA_BASE}${toUrlSegment(name)}`
 }
 
-/** Build path for city: /gymsdata/california/los-angeles */
-export function cityGymsdataPath(stateSlug: string, cityName: string): string {
-  const s = stateSlug.toLowerCase().trim()
-  const c = cityName ? toSlug(cityName) : ''
+/** Build path for city: /gymsdata/north-carolina/holly-springs (lowercase, spaces → hyphens). Backend accepts this. */
+export function cityGymsdataPath(stateNameOrSegment: string, cityName: string): string {
+  const s = stateNameOrSegment?.trim()
+  const c = cityName?.trim()
   if (!s || !c) return GYMSDATA_BASE
-  return `${GYMSDATA_BASE}${s}/${c}`
+  return `${GYMSDATA_BASE}${toUrlSegment(s)}/${toUrlSegment(c)}`
 }
 
 /** City page path from a location (e.g. top-cities list). Returns path or null if state/city cannot be resolved. */
@@ -79,7 +108,7 @@ export function cityPagePathForLocation(
     states.find((s) => s.state?.toUpperCase() === stateRef.toUpperCase()) ??
     states.find((s) => s.stateName && toSlug(s.stateName) === toSlug(stateRef))
   if (!state?.stateName) return null
-  return cityGymsdataPath(toSlug(state.stateName), cityName)
+  return cityGymsdataPath(state.stateName, cityName)
 }
 
 /** Derived stats for a state page (until API provides). */

@@ -12,13 +12,17 @@ import {
 } from 'recharts'
 import { FRANCHISE_VS_INDEPENDENT } from '../_data/growth-trends-data'
 
-const data = FRANCHISE_VS_INDEPENDENT.map((d) => ({
-  quarter: d.quarter,
-  franchise: d.franchise,
-  independent: d.independent,
-}))
+type FranchiseVsIndependentItem = { quarter: string; quarterKey: string; franchise: number; independent: number }
 
-export function FranchiseVsIndependentChart() {
+interface FranchiseVsIndependentChartProps {
+  data?: FranchiseVsIndependentItem[] | null
+}
+
+export function FranchiseVsIndependentChart({ data: apiData }: FranchiseVsIndependentChartProps) {
+  const data = (apiData?.length
+    ? apiData.map((d) => ({ quarter: d.quarter, franchise: d.franchise, independent: d.independent }))
+    : FRANCHISE_VS_INDEPENDENT.map((d) => ({ quarter: d.quarter, franchise: d.franchise, independent: d.independent }))
+  ) as Array<{ quarter: string; franchise: number; independent: number }>
   return (
     <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">

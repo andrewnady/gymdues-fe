@@ -1,16 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getListPageData, getCitiesByState } from '@/lib/gyms-api'
+import { getListPageData, getGymsdataForCity, getCityPage } from '@/lib/gymsdata-api'
 import {
   getStateBySlug,
-  getCityBySlug,
   getCitiesInState,
+  getCityBySlug,
   cityGymsdataPath,
   stateGymsdataPath,
-  getCityDerivedStats,
-  getTopNeighborhoods,
   formatDataDate,
-  toSlug,
+  toUrlSegment,
 } from '@/lib/gymsdata-utils'
 import { MapPin, ShoppingCart } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
@@ -21,21 +19,39 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 type Props = { params: Promise<{ state: string; city: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { state: stateSlug, city: citySlug } = await params
+  const { state: stateSegment, city: citySegment } = await params
+  const stateParam = (stateSegment ?? '').trim()
+  const cityParam = (citySegment ?? '').trim()
+  if (!stateParam || !cityParam) return { title: 'City Not Found | Gymdues' }
+
   const { states, locations } = await getListPageData()
-  const state = getStateBySlug(states, stateSlug)
+  const state = getStateBySlug(states, stateParam)
   const stateCode = state?.state ?? null
-  const citiesFromApiMeta = stateCode ? await getCitiesByState(stateCode) : []
-  const citiesForState = stateCode
-    ? (citiesFromApiMeta.length > 0 ? citiesFromApiMeta : getCitiesInState(locations, stateCode, state?.stateName))
-    : []
-  const loc = stateCode && state ? getCityBySlug(citiesForState, stateCode, citySlug, state.stateName) : null
+  const citiesForState = stateCode && state ? getCitiesInState(locations, stateCode, state.stateName) : []
+  const loc = stateCode && state ? getCityBySlug(citiesForState, stateCode, cityParam, state.stateName) : null
+
+  const cityPage = await getCityPage(stateParam, cityParam)
+  if (cityPage) {
+    const cityName = cityPage.city ?? cityParam
+    const stateName = cityPage.stateName ?? state?.stateName ?? stateParam
+    const count = cityPage.totalGyms ?? 0
+    const title = `List of Gyms in ${cityName}, ${stateName} - ${count.toLocaleString('en-US')} Verified Contacts | Gymdues`
+    const description = `${count.toLocaleString('en-US')} gyms in ${cityName}, ${stateName}. Verified contact database with emails and phone numbers.`
+    const canonical = new URL(`/gymsdata/${toUrlSegment(stateName)}/${toUrlSegment(cityName)}`, siteUrl).toString()
+    return {
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: { title, description, url: canonical },
+    }
+  }
+
   if (!state || !loc) return { title: 'City Not Found | Gymdues' }
   const cityName = loc.city ?? loc.label ?? 'City'
   const count = loc.count ?? 0
   const title = `List of Gyms in ${cityName}, ${state.stateName} - ${count.toLocaleString('en-US')} Verified Contacts | Gymdues`
   const description = `${count.toLocaleString('en-US')} gyms in ${cityName}, ${state.stateName}. Verified contact database with emails and phone numbers.`
-  const canonical = new URL(`/gymsdata/${stateSlug}/${citySlug}`, siteUrl).toString()
+  const canonical = new URL(`/gymsdata/${toUrlSegment(state.stateName)}/${toUrlSegment(cityName)}`, siteUrl).toString()
   return {
     title,
     description,
@@ -48,44 +64,33 @@ export async function generateStaticParams() {
   const { states, locations } = await getListPageData()
   const params: { state: string; city: string }[] = []
   for (const state of states) {
-    const stateSlug = toSlug(state.stateName)
     const cities = getCitiesInState(locations, state.state, state.stateName)
     for (const loc of cities) {
       const cityName = loc.city ?? loc.label
-      if (cityName) params.push({ state: stateSlug, city: toSlug(cityName) })
+      if (cityName) params.push({ state: toUrlSegment(state.stateName), city: toUrlSegment(cityName) })
     }
   }
   return params
 }
 
 export default async function GymsdataCityPage({ params }: Props) {
-  const { state: stateSlug, city: citySlug } = await params
-  const { states, locations } = await getListPageData()
-  const state = getStateBySlug(states, stateSlug)
-  const stateCode = state?.state ?? null
-  const citiesFromApi = stateCode ? await getCitiesByState(stateCode) : []
-  const citiesInState = stateCode && state
-    ? (citiesFromApi.length > 0 ? citiesFromApi : getCitiesInState(locations, stateCode, state.stateName))
-    : []
-  const loc = stateCode && state ? getCityBySlug(citiesInState, stateCode, citySlug, state.stateName) : null
-
-  if (!state || !loc) {
+  const { state: stateSegment, city: citySegment } = await params
+  const stateParam = (stateSegment ?? '').trim()
+  const cityParam = (citySegment ?? '').trim()
+  const data = await getGymsdataForCity(stateParam, cityParam)
+  if (data.notFound || !data.state) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>City not found</h1>
-        <Link href={state ? stateGymsdataPath(state) : '/gymsdata/'} className='text-primary hover:underline'>
-          Back to {state?.stateName ?? 'states'}
+        <Link href={data.state ? stateGymsdataPath(data.state) : '/gymsdata/'} className='text-primary hover:underline'>
+          Back to {data.state?.stateName ?? 'states'}
         </Link>
       </main>
     )
   }
-
-  const cityName = loc.city ?? loc.label ?? 'City'
-  const count = loc.count ?? 0
-  const stats = getCityDerivedStats(count, citySlug)
-  const neighborhoods = getTopNeighborhoods(cityName, count)
+  const state = data.state
+  const { cityName, count, stats, neighborhoods, nearbyCities } = data
   const dateStr = formatDataDate()
-  const nearbyCities = citiesInState.filter((c) => (c.city ?? c.label) !== cityName).slice(0, 6)
   const statePath = stateGymsdataPath(state)
 
   return (
@@ -140,14 +145,26 @@ export default async function GymsdataCityPage({ params }: Props) {
                   There are <strong className='text-foreground'>{count.toLocaleString('en-US')}</strong> gyms
                   in <strong className='text-foreground'>{cityName}, {state.stateName}</strong> as of {dateStr}.
                 </p>
-                <p>
-                  The top 3 areas are <strong className='text-foreground'>{neighborhoods[0].name}</strong> with{' '}
-                  {neighborhoods[0].gyms.toLocaleString('en-US')} gyms,{' '}
-                  <strong className='text-foreground'>{neighborhoods[1].name}</strong> with{' '}
-                  {neighborhoods[1].gyms.toLocaleString('en-US')} gyms, and{' '}
-                  <strong className='text-foreground'>{neighborhoods[2].name}</strong> with{' '}
-                  {neighborhoods[2].gyms.toLocaleString('en-US')} gyms.
-                </p>
+                {neighborhoods.length >= 3 ? (
+                  <p>
+                    The top 3 areas are <strong className='text-foreground'>{neighborhoods[0].name}</strong> with{' '}
+                    {neighborhoods[0].gyms.toLocaleString('en-US')} gyms,{' '}
+                    <strong className='text-foreground'>{neighborhoods[1].name}</strong> with{' '}
+                    {neighborhoods[1].gyms.toLocaleString('en-US')} gyms, and{' '}
+                    <strong className='text-foreground'>{neighborhoods[2].name}</strong> with{' '}
+                    {neighborhoods[2].gyms.toLocaleString('en-US')} gyms.
+                  </p>
+                ) : neighborhoods.length > 0 ? (
+                  <p>
+                    Top area{neighborhoods.length === 1 ? '' : 's'}:{' '}
+                    {neighborhoods.map((n, i) => (
+                      <span key={n.name}>
+                        <strong className='text-foreground'>{n.name}</strong> ({n.gyms.toLocaleString('en-US')} gyms)
+                        {i < neighborhoods.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}.
+                  </p>
+                ) : null}
                 <ul className='list-disc pl-6 space-y-1'>
                   <li>{stats.pctEmail}% have email addresses</li>
                   <li>{stats.pctPhone}% have verified phone numbers</li>
@@ -180,7 +197,7 @@ export default async function GymsdataCityPage({ params }: Props) {
             {nearbyCities.map((c) => (
               <li key={c.label ?? c.city ?? ''}>
                 <Link
-                  href={cityGymsdataPath(stateSlug, c.city ?? '')}
+                  href={cityGymsdataPath(state.stateName, c.city ?? '')}
                   className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40'
                 >
                   <MapPin className='h-3.5 w-3.5 text-primary' />
