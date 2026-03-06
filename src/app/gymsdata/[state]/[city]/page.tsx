@@ -134,9 +134,6 @@ export default async function GymsdataCityPage({ params }: Props) {
           {/* Map and Overview side by side */}
           <div className='mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8'>
             <div className='min-w-0'>
-              <GymsdataMiniMap state={state} />
-            </div>
-            <div className='min-w-0'>
               <h2 className='text-2xl font-bold mb-4'>
                 Gyms in {cityName} – Complete Contact Database
               </h2>
@@ -172,6 +169,9 @@ export default async function GymsdataCityPage({ params }: Props) {
                   <li>Average rating: {stats.avgRating} stars</li>
                 </ul>
               </div>
+            </div>
+            <div className='min-w-0'>
+              <GymsdataMiniMap state={state} />
             </div>
           </div>
 
