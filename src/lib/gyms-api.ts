@@ -372,6 +372,27 @@ export async function filterTopGyms(options: {
 }): Promise<PaginatedGymsResponse> {
   const { state, city, page, perPage } = options
 
+  // In CI/build, skip API so static generation does not require the CMS (e.g. /best-gyms).
+  if (
+    process.env.CI === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1'
+  ) {
+    return {
+      gyms: [],
+      meta: {
+        current_page: 1,
+        from: null,
+        last_page: 1,
+        per_page: 12,
+        to: null,
+        total: 0,
+        next_page_url: null,
+        prev_page_url: null,
+      },
+    }
+  }
+
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms/filtered-top-gyms`)
 
@@ -440,7 +461,19 @@ export async function filterTopGyms(options: {
     }
   } catch (error) {
     console.error('Error fetching filtered top gyms:', error)
-    throw error
+    return {
+      gyms: [],
+      meta: {
+        current_page: 1,
+        from: null,
+        last_page: 1,
+        per_page: perPage ?? 12,
+        to: null,
+        total: 0,
+        next_page_url: null,
+        prev_page_url: null,
+      },
+    }
   }
 }
 
@@ -633,6 +666,14 @@ export async function getCitiesByState(
   options?: GetCitiesByStateOptions
 ): Promise<LocationWithCount[]> {
   if (!stateCode || !String(stateCode).trim()) return []
+  // In CI/build, skip API so static generation does not depend on CMS (caller uses getListPageData locations).
+  if (
+    process.env.CI === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1'
+  ) {
+    return []
+  }
   const code = String(stateCode).trim().toUpperCase()
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities`)
@@ -681,7 +722,7 @@ export async function getLocations(q?: string): Promise<LocationWithCount[]> {
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
     const response = await fetch(url.toString(), {
-      cache: 'no-store',
+      next: { revalidate: 300 },
       signal: controller.signal,
     })
     clearTimeout(timeoutId)
@@ -817,16 +858,16 @@ export async function getRatedGyms(limit?: number): Promise<Gym[]> {
 
 /**
  * Fetches best gyms for a given state from the API.
- * Uses endpoint: GET /api/v1/gyms/filter-state/{stateName}
+ * Uses endpoint: GET /api/v1/gyms/filter-state?slug=
  * (server is expected to already apply rating/quality filters).
  */
-export async function getBestGymsByState(stateName: string, limit?: number): Promise<Gym[]> {
-  if (!stateName || !stateName.trim()) {
+export async function getBestGymsBySlug(slug: string, limit?: number): Promise<Gym[]> {
+  if (!slug || !slug.trim()) {
     return []
   }
 
   try {
-    const url = `${API_BASE_URL}/api/v1/gyms/filter-state/${encodeURIComponent(stateName.trim())}`
+    const url = `${API_BASE_URL}/api/v1/gyms/filter-state?slug=${encodeURIComponent(slug)}`
 
     const response = await fetch(url, {
       next: { revalidate: 60 },
@@ -834,7 +875,7 @@ export async function getBestGymsByState(stateName: string, limit?: number): Pro
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch best gyms for state ${stateName}: ${response.status} ${response.statusText}`,
+        `Failed to fetch best gyms for slug ${slug}: ${response.status} ${response.statusText}`,
       )
     }
 
@@ -864,7 +905,7 @@ export async function getBestGymsByState(stateName: string, limit?: number): Pro
 
     return normalizedGyms
   } catch (error) {
-    console.error(`Error fetching best gyms for state ${stateName}:`, error)
+    console.error(`Error fetching best gyms for slug ${slug}:`, error)
     return []
   }
 }
@@ -996,6 +1037,14 @@ export async function getStates(): Promise<StateWithCount[]> {
  * Use for state filter autocomplete.
  */
 export async function getCityStates(fields?: string): Promise<{ states: StateWithCount[]; cities: StateWithCount[] }> {
+  // In CI/build, skip API so static generation does not require the CMS.
+  if (
+    process.env.CI === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === 'true' ||
+    process.env.USE_LIST_PAGE_MOCK === '1'
+  ) {
+    return { states: [], cities: [] }
+  }
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
     if (fields && fields.trim()) {
@@ -1249,5 +1298,57 @@ export async function getDatasetMetrics(): Promise<DatasetMetrics> {
   } catch (error) {
     console.warn('getDatasetMetrics failed:', error)
     return empty
+  }
+}
+
+export interface PopularCityItem {
+  title: string
+  slug: string
+  featured_image: string
+}
+
+export async function getPopularGymsStateCities(): Promise<PopularCityItem[]> {
+  try {
+    const url = new URL(`${API_BASE_URL}/api/v1/popular-gyms-state-city`)
+
+    const response = await fetch(url.toString(), {
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch popular gyms state/city: ${response.status} ${response.statusText}`)
+    }
+
+    let data = await response.json()
+    data = transformApiResponse(data)
+
+    const resolveImageUrl = (raw: string): string => {
+      if (!raw) return raw
+      if (raw.startsWith('http://') || raw.startsWith('https://')) {
+        return transformApiUrl(raw)
+      }
+      const base = API_BASE_URL.replace(/\/$/, '')
+      if (raw.startsWith('/storage/')) return `${base}${raw}`
+      const sep = raw.startsWith('/') ? '' : '/'
+      return `${base}/storage/app/media${sep}${raw}`
+    }
+
+    const normalizeItem = (item: PopularCityItem): PopularCityItem => ({
+      ...item,
+      featured_image: resolveImageUrl(item.featured_image),
+    })
+
+    if (typeof data === 'object' && data !== null && 'data' in data && Array.isArray(data.data)) {
+      return (data.data as PopularCityItem[]).map(normalizeItem)
+    }
+
+    if (Array.isArray(data)) {
+      return (data as PopularCityItem[]).map(normalizeItem)
+    }
+
+    return []
+  } catch (error) {
+    console.warn('getPopularGymsStateCities: endpoint unavailable, slider will be hidden.', error instanceof Error ? error.message : error)
+    return []
   }
 }

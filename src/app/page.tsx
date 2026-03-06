@@ -5,7 +5,8 @@ import {
   getLatestGyms,
   getAllGyms,
   getRatedGyms,
-  getBestGymsByState,
+  getBestGymsBySlug,
+  getPopularGymsStateCities,
 } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
@@ -20,6 +21,7 @@ import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
 import { RatedGymsSection } from '@/components/rated-gyms-section'
 import { BestGymsLocationSection } from '@/components/best-gyms-location-section'
+import { PopularCitiesSlider } from '@/components/popular-cities-slider'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -118,14 +120,16 @@ export default async function Home() {
     caBestResult,
     reviewsResult,
     postsResult,
+    popularCitiesResult,
   ] = await Promise.allSettled([
     getTrendingGyms(),
     getAllGyms(undefined, undefined, undefined, undefined, true),
     getRatedGyms(20),
-    getBestGymsByState('New York', 20),
-    getBestGymsByState('California', 20),
+    getBestGymsBySlug('best-new-york-gyms', 20),
+    getBestGymsBySlug('best-california-gyms', 20),
     getAllReviews(12),
     getRecentBlogPosts(3),
+    getPopularGymsStateCities(),
   ])
 
   let trendingGyms: Gym[] = []
@@ -171,6 +175,8 @@ export default async function Home() {
   } else {
     console.error('Failed to load California best gyms:', caBestResult.reason)
   }
+
+  const popularCities = popularCitiesResult.status === 'fulfilled' ? popularCitiesResult.value : []
 
   let reviews: ReviewWithGym[] = []
   if (reviewsResult.status === 'fulfilled') {
@@ -280,6 +286,7 @@ export default async function Home() {
         description="Searching for the best gyms in California? From Los Angeles and San Diego to San Francisco and beyond, California has an incredible range of gyms—high-end health clubs, CrossFit boxes, Pilates and yoga studios, and budget-friendly chains with multiple locations. On GymDues, you can compare gym memberships, amenities, hours, ratings, and reviews to choose the right gym for your lifestyle—whether you want serious strength training, group classes, or a flexible monthly plan."
         gyms={caBestGyms}
       />
+      <PopularCitiesSlider cities={popularCities} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 

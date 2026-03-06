@@ -36,7 +36,7 @@ export async function GET(
     const urls = pageEntries
       .map(
         (slug: string) => `  <url>
-    <loc>${BASE_URL}${slug}/</loc>
+    <loc>${BASE_URL}/${slug}/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`

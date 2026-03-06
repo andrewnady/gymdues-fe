@@ -281,6 +281,57 @@ export default async function GymDetailPage({ params }: PageProps) {
     }),
   }
 
+  // Product Schemas - one per membership plan (only when pricing data exists)
+  const productSchemas = gym.pricing && gym.pricing.length > 0
+    ? gym.pricing.map((plan) => {
+        const price = typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price
+        return {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: `${gym.name} - ${plan.tier_name}`,
+          description: plan.description || `${plan.tier_name} membership at ${gym.name}`,
+          image: gymImage,
+          brand: {
+            '@type': 'Brand',
+            name: gym.name,
+          },
+          offers: {
+            '@type': 'Offer',
+            price: price,
+            priceCurrency: 'USD',
+            availability: 'https://schema.org/InStock',
+            seller: {
+              '@type': 'ExerciseGym',
+              name: gym.name,
+              url: gym.website || gymUrl,
+            },
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: price,
+              priceCurrency: 'USD',
+              unitText: plan.frequency.toLowerCase(),
+            },
+          },
+        }
+      })
+    : []
+
+  // Carousel Schema for Nearby Gyms (only when nearby gyms exist)
+  const nearbyGymsCarouselSchema = nearbyGyms && nearbyGyms.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: `Gyms Near ${gym.name}`,
+        description: `Other gyms in the area near ${gym.name} in ${gym.city}, ${gym.state}`,
+        itemListElement: nearbyGyms.map((nearbyGym, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          url: new URL(`/gyms/${nearbyGym.slug}`, siteUrl).toString(),
+          name: nearbyGym.name,
+        })),
+      }
+    : null
+
   // Breadcrumb Schema (JSON-LD)
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -348,6 +399,25 @@ export default async function GymDetailPage({ params }: PageProps) {
           __html: JSON.stringify(exerciseGymSchema),
         }}
       />
+      {/* Product Schemas for each membership plan */}
+      {productSchemas.map((product, index) => (
+        <script
+          key={`product-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(product),
+          }}
+        />
+      ))}
+      {/* Carousel Schema for Nearby Gyms */}
+      {nearbyGymsCarouselSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(nearbyGymsCarouselSchema),
+          }}
+        />
+      )}
       {/* Hero Section */}
       <div className='relative h-64 md:h-96 w-full bg-muted'>
         <GymHeroImage src={heroPath} alt={gym.name} />

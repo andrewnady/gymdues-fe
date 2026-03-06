@@ -168,7 +168,8 @@ export function GymsDiscoveryMap({
         const lng = Number(address.longitude)
         const marker = L.marker([lat, lng], { icon: DEFAULT_ICON })
         const label = address.full_address || [address.street, address.city, address.state].filter(Boolean).join(', ') || gym.name
-        const popupHtml = `<a href="/gyms/${escapeHtml(gym.slug)}#location=${escapeHtml(String(address.id))}" class="font-medium hover:underline">${escapeHtml(gym.name)}</a><br/><span class="text-muted-foreground text-sm">${escapeHtml(label)}</span>`
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+        const popupHtml = `<div style="min-width:160px"><p style="font-weight:600;margin:0 0 2px">${escapeHtml(gym.name)}</p><p style="font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 8px">${escapeHtml(label)}</p><a href="${siteUrl}/gyms/${escapeHtml(gym.slug)}#location=${escapeHtml(String(address.id))}" style="display:inline-block;padding:4px 12px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-radius:calc(var(--radius) - 2px);font-size:13px;font-weight:500;text-decoration:none">View Details</a></div>`
         marker.bindPopup(popupHtml)
         const key = `${gym.id}-${address.id}`
         if (onLocationSelect) {
@@ -220,13 +221,17 @@ export function GymsDiscoveryMap({
       const lat = Number(gym.address.latitude)
       const lng = Number(gym.address.longitude)
       const marker = L.marker([lat, lng], { icon: DEFAULT_ICON })
-      const label = gym.name
       const slug = gym.slug
-      const popupHtml = `<a href="/gyms/${escapeHtml(slug)}" class="font-medium hover:underline">${escapeHtml(label)}</a>`
+      const addressLabel = gym.address.full_address || [gym.address.street, gym.address.city, gym.address.state].filter(Boolean).join(', ')
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+      const popupHtml = `<div style="min-width:160px"><p style="font-weight:600;margin:0 0 2px">${escapeHtml(gym.name)}</p>${addressLabel ? `<p style="font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 8px">${escapeHtml(addressLabel)}</p>` : '<div style="margin-bottom:8px"></div>'}<a href="${siteUrl}/gyms/${escapeHtml(slug)}" style="display:inline-block;padding:4px 12px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-radius:calc(var(--radius) - 2px);font-size:13px;font-weight:500;text-decoration:none">View Details</a></div>`
       marker.bindPopup(popupHtml)
-      if (onGymSelect) {
-        marker.on('click', () => onGymSelect(String(gym.id)))
-      }
+      marker.on('click', () => {
+        onGymSelect?.(String(gym.id))
+        if (gym.address && typeof gym.address === 'object' && gym.address.id) {
+          onLocationSelect?.(String(gym.id), String(gym.address.id))
+        }
+      })
       marker.addTo(map)
       markersRef.current.push(marker)
       markerGymIds.push(String(gym.id))
