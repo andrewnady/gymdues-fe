@@ -16,7 +16,6 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ post }: BlogCardProps) {
-  console.log('post', post)
   return (
     <Link href={`/blog/${post.slug}`} className='block'>
       <Card className='overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col cursor-pointer'>

@@ -650,12 +650,21 @@ export async function getAddressesByLocation(options?: {
 
 const FETCH_TIMEOUT_MS = 15_000
 
+export interface GetCitiesByStateOptions {
+  group_by?: 'city' | 'location'
+  sort?: 'count' | 'name'
+}
+
 /**
  * Fetches cities (locations with counts) for a given state from the API.
- * Endpoint: GET /api/v1/gyms/cities?state={stateCode}
+ * Endpoint: GET /api/v1/gyms/cities?state={stateCode}.
+ * options.group_by=city: one row per city (total gyms). options.sort=name: city A–Z.
  * Returns [] on error or when the endpoint is not available (caller can fall back to getListPageData + getCitiesInState).
  */
-export async function getCitiesByState(stateCode: string): Promise<LocationWithCount[]> {
+export async function getCitiesByState(
+  stateCode: string,
+  options?: GetCitiesByStateOptions
+): Promise<LocationWithCount[]> {
   if (!stateCode || !String(stateCode).trim()) return []
   // In CI/build, skip API so static generation does not depend on CMS (caller uses getListPageData locations).
   if (
@@ -669,6 +678,8 @@ export async function getCitiesByState(stateCode: string): Promise<LocationWithC
   try {
     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities`)
     url.searchParams.set('state', code)
+    if (options?.group_by) url.searchParams.set('group_by', options.group_by)
+    if (options?.sort) url.searchParams.set('sort', options.sort)
     const response = await fetch(url.toString(), {
       next: { revalidate: 300 },
     })
@@ -699,9 +710,8 @@ export async function getCitiesByState(stateCode: string): Promise<LocationWithC
 }
 
 /**
- * Fetches locations (city+state and postal_code) with counts for autocomplete.
+ * Fetches locations (city+state and postal_code) with counts for autocomplete (main gyms API).
  * Sorted by count desc. Optional q filters by label.
- * Uses a timeout to avoid hanging; returns [] on timeout or fetch failure.
  */
 export async function getLocations(q?: string): Promise<LocationWithCount[]> {
   const url = new URL(`${API_BASE_URL}/api/v1/gyms/locations`)
@@ -1036,7 +1046,7 @@ export async function getCityStates(fields?: string): Promise<{ states: StateWit
     return { states: [], cities: [] }
   }
   try {
-     const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
+    const url = new URL(`${API_BASE_URL}/api/v1/gyms/cities-and-states`)
     if (fields && fields.trim()) {
       url.searchParams.append('fields', fields.trim())
     }
@@ -1109,7 +1119,7 @@ export async function getNextFavouriteGyms(options: {
 }
 
 /**
- * Gets states with gym counts (legacy: fetches all gyms and derives states).
+ * Gets states with gym counts (legacy: fetches all gyms and derives states when getStates returns empty).
  * Prefer getStates() which uses the database endpoint.
  */
 export async function getStatesWithCounts(): Promise<StateWithCount[]> {
@@ -1198,23 +1208,13 @@ export interface ListPageData {
 const LIST_PAGE_FETCH_TIMEOUT_MS = 18_000
 
 /**
- * Fetches data for the gymsdata page.
- * Tries real API (getStatesWithCounts + getLocations); on failure or empty states uses mock.
- * Set USE_LIST_PAGE_MOCK=true to always use mock (e.g. until backend endpoint is ready).
- * In CI (e.g. GitHub Actions) we use mock by default so the build completes without needing the CMS.
+ * Fetches list page data from the **main gyms API** (GET /api/v1/gyms/states, /gyms/locations).
+ * Use for non-gymsdata pages (e.g. sample-data, API route). Returns empty on failure or timeout.
  */
 export async function getListPageData(): Promise<ListPageData> {
-  const useMock =
-    process.env.USE_LIST_PAGE_MOCK === 'true' ||
-    process.env.USE_LIST_PAGE_MOCK === '1' 
-  if (useMock) {
-    const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
-    return getMockListPageData()
-  }
-
-  const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+  const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> =>
     Promise.race([
-      p,
+      promise,
       new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
     ])
 
@@ -1226,27 +1226,21 @@ export async function getListPageData(): Promise<ListPageData> {
         [] as StateWithCount[]
       ),
       withTimeout(
-        getLocations().catch((): LocationWithCount[] => []),
+        getLocations(undefined).catch((): LocationWithCount[] => []),
         LIST_PAGE_FETCH_TIMEOUT_MS,
         [] as LocationWithCount[]
       ),
     ])
 
-    if (states.length === 0) {
-      const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
-      return getMockListPageData()
-    }
-
     return {
-      states,
+      states: Array.isArray(states) ? states : [],
       locations: Array.isArray(locations) ? locations : [],
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.warn('getListPageData failed, using mock:', error.message)
+      console.warn('getListPageData failed:', error.message)
     }
-    const { getMockListPageData } = await import('@/usa-list/data/mock-list-page-data')
-    return getMockListPageData()
+    return { states: [], locations: [] }
   }
 }
 
