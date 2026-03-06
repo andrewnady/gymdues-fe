@@ -101,10 +101,26 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
     }
   }
 
+  // Extract phone, website, email from contacts array if present
+  const contacts = Array.isArray(gym.contacts)
+    ? (gym.contacts as Array<{ type: string; value: string }>)
+    : []
+
+  const contactPhone =
+    contacts.find((c) => c.type === 'business_phone')?.value ?? undefined
+  const contactWebsite =
+    contacts.find((c) => c.type === 'business_website')?.value ?? undefined
+  const contactEmail =
+    contacts.find((c) => c.type === 'email')?.value ?? undefined
+
   return {
     ...normalizedGym,
     reviewCount: Number(reviewCount) || 0,
     addresses_count: addressesCount,
+    // Prefer contacts array values; fall back to direct fields for legacy data
+    phone: contactPhone ?? (normalizedGym.phone as string) ?? '',
+    website: contactWebsite ?? (normalizedGym.website as string | undefined),
+    email: contactEmail ?? (normalizedGym.email as string) ?? '',
     // Preserve date fields if they exist
     created_at: normalizedGym.created_at ? String(normalizedGym.created_at) : undefined,
     updated_at: normalizedGym.updated_at ? String(normalizedGym.updated_at) : undefined,

@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { getGymBySlug, getNearbyGyms, getAddressesByGymId } from '@/lib/gyms-api'
 import { getReviewCount, getGymHeroImagePath } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
+import { GymClaimBanner } from '@/components/gym-claim-banner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -522,6 +523,15 @@ export default async function GymDetailPage({ params }: PageProps) {
             <GymAboutSection description={gym.description} />
           </CardContent>
         </Card>
+
+        {/* Claim / Verified Banner */}
+        <GymClaimBanner
+          gymName={gym.name}
+          isClaimed={gym.is_claimed ?? false}
+          updatedAt={gym.updated_at}
+          gymWebsite={gym.website}
+          gymPhones={gym.contacts?.filter(c => c.type === 'business_phone').map(c => c.value)}
+        />
 
         {/* Map and address sections: #location= (address id) is read from hash on the client */}
         <GymSlugAddressBlock slug={slug} gym={gym} initialAddresses={gymAddresses} />

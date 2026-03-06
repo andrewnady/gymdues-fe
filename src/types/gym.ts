@@ -106,6 +106,16 @@ export interface AddressDetail {
   pricing: Plan[]
 }
 
+export interface GymContactItem {
+  id?: number
+  gym_id?: number
+  address_id?: number | null
+  type: string
+  value: string
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Gym {
   id: string
   slug: string
@@ -129,6 +139,7 @@ export interface Gym {
   phone: string
   email: string
   website?: string
+  contacts?: GymContactItem[]
   rating: number
   reviewCount: number
   reviews: Review[]
@@ -140,6 +151,7 @@ export interface Gym {
   created_at?: string
   updated_at?: string
   addresses_count?: number
+  is_claimed?: boolean
 }
 
 export interface ReviewWithGym {
