@@ -27,7 +27,7 @@ export function UsaListStickyCta({ totalGyms }: UsaListStickyCtaProps) {
     return () => clearInterval(id)
   }, [])
 
-  const browseLabel = totalGyms >= 60000 ? '60K+' : totalGyms >= 1000 ? `${(totalGyms / 1000).toFixed(0)}K+` : `${totalGyms.toLocaleString('en-US')}+`
+  const browseLabel = totalGyms >= 250000 ? '250K+' : totalGyms >= 1000 ? `${(totalGyms / 1000).toFixed(0)}K+` : `${totalGyms.toLocaleString('en-US')}+`
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg">
@@ -37,7 +37,7 @@ export function UsaListStickyCta({ totalGyms }: UsaListStickyCtaProps) {
             href="/gymsdata/"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
-            Browse {browseLabel} Gyms
+            Browse {browseLabel} Fitness, Gym, and Health Services
           </Link>
           <span className="hidden sm:inline text-muted-foreground/60" aria-hidden>|</span>
           <Link

@@ -46,7 +46,7 @@ export default function ForEquipmentSuppliersPage() {
         ),
       }}
       ctaPrimaryText="Download Free Sample"
-      ctaSecondaryLabel="Browse full gym database"
+      ctaSecondaryLabel="Browse full data"
     />
   )
 }

@@ -76,7 +76,7 @@ export default async function SampleDataPage() {
 
         <div className="max-w-4xl mx-auto mt-12 pt-8 border-t text-center">
           <Link href="/gymsdata" className="text-primary font-medium hover:underline">
-            Browse full gym database
+            Browse List of Fitness, Gym, and Health Services in United States
           </Link>
         </div>
       </div>

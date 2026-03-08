@@ -4,8 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Download } from 'lucide-react'
 import { DownloadSampleModal, type DownloadSampleFormData } from './download-sample-modal'
+import { submitSampleDownload, type SampleDownloadFilters } from '@/lib/gymsdata-api'
 
-const ALERT_MESSAGE = 'Download is not available right now.'
 const SAMPLE_DATA_HREF = '/gymsdata/sample-data'
 
 interface DownloadSampleButtonProps {
@@ -13,19 +13,44 @@ interface DownloadSampleButtonProps {
   children?: React.ReactNode
   /** Optional variant: 'primary' (default) or 'outline' */
   variant?: 'primary' | 'outline'
+  /** Optional filters so sample is scoped to state, city, or type (e.g. from state/city/type pages) */
+  filter?: SampleDownloadFilters
 }
 
-/** With JS: opens modal. Without JS: link goes to sample data page. */
+/** With JS: opens modal; on submit calls gymsdata/sample-download and triggers Excel download. Without JS: link goes to sample data page. */
 export function DownloadSampleButton({
   className = '',
   children,
   variant = 'primary',
+  filter,
 }: DownloadSampleButtonProps) {
   const [modalOpen, setModalOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [successEmail, setSuccessEmail] = useState<string | null>(null)
 
-  const handleSubmit = (_data: DownloadSampleFormData) => {
-    if (typeof window !== 'undefined') {
-      window.alert(ALERT_MESSAGE)
+  const handleClose = () => {
+    setModalOpen(false)
+    setError(null)
+    setSuccessEmail(null)
+  }
+
+  const handleSubmit = async (data: DownloadSampleFormData) => {
+    setError(null)
+    setSuccessEmail(null)
+    try {
+      const { blob, filename } = await submitSampleDownload(data.name, data.email, filter)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setSuccessEmail(data.email)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Download failed. Please try again.'
+      setError(message)
     }
   }
 
@@ -56,8 +81,10 @@ export function DownloadSampleButton({
       </Link>
       <DownloadSampleModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleClose}
         onSubmit={handleSubmit}
+        error={error}
+        successEmail={successEmail}
       />
     </>
   )
