@@ -226,7 +226,7 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
           </h3>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <label className='block'>
-              <span className='text-xs font-medium text-muted-foreground'>By state (with gym counts)</span>
+              <span className='text-xs font-medium text-muted-foreground'>By state (with counts)</span>
               <div className='relative mt-1.5'>
                 <select
                   value={selectedState}
@@ -240,7 +240,7 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
                   <option value=''>All states — browse entire U.S. list</option>
                   {sortedStates.map((s) => (
                     <option key={s.state} value={s.state}>
-                      {s.stateName} — {s.count.toLocaleString('en-US')} gyms
+                      {s.stateName} — {s.count.toLocaleString('en-US')} Fitness, Gym, and Health Services
                     </option>
                   ))}
                 </select>
@@ -288,7 +288,7 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
                         className='px-3 py-2 text-sm cursor-pointer hover:bg-muted focus:bg-muted focus:outline-none'
                         onClick={() => selectLocation(loc)}
                       >
-                        {loc.label} — {loc.count.toLocaleString('en-US')} gyms
+                        {loc.label} — {loc.count.toLocaleString('en-US')} Fitness, Gym, and Health Services
                       </li>
                     ))}
                   </ul>
@@ -364,7 +364,7 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
           <div>
             <h3 className='text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2'>
               <Dumbbell className='h-4 w-4' />
-              Gym type
+              Type
             </h3>
             <div className='flex flex-wrap gap-2'>
               {GYM_TYPES.map((label) => (

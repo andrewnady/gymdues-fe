@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { BarChart2, ChevronDown, Trophy, MapPin, Search, Loader2 } from 'lucide-react'
+import { BarChart2, ChevronDown, Trophy, MapPin, Search, Loader2, RefreshCw } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
 
@@ -25,7 +25,7 @@ interface UsaListStateComparisonProps {
 type MetricKey = 'totalGyms' | 'withEmail' | 'withPhone' | 'avgRating' | 'densityPer100k'
 
 const METRICS: { key: MetricKey; label: string; format: (v: number) => string; higherIsBetter: boolean }[] = [
-  { key: 'totalGyms', label: 'Total Gyms', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
+  { key: 'totalGyms', label: 'Total Fitness, Gym, and Health Services', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
   { key: 'withEmail', label: 'With Email', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
   { key: 'withPhone', label: 'With Phone', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
   { key: 'avgRating', label: 'Avg Rating', format: (v) => v.toFixed(1), higherIsBetter: true },
@@ -157,6 +157,7 @@ function SelectState({
 }
 
 const DEFAULT_STATES = ['CA', 'TX', 'FL']
+const FETCH_TIMEOUT_MS = 14_000
 
 function getInitialState(states: { state: string }[], index: number): string {
   const preferred = DEFAULT_STATES[index]
@@ -167,25 +168,50 @@ function getInitialState(states: { state: string }[], index: number): string {
 export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonProps) {
   const [allStates, setAllStates] = useState<StateComparisonItem[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<'timeout' | 'error' | null>(null)
   const [stateA, setStateA] = useState(() => getInitialState(sortedStates, 0))
   const [stateB, setStateB] = useState(() => getInitialState(sortedStates, 1))
   const [stateC, setStateC] = useState(() => getInitialState(sortedStates, 2))
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/gymsdata/state-comparison')
-      .then((res) => res.json())
-      .then((data: { states?: StateComparisonItem[] }) => {
-        if (!cancelled && Array.isArray(data?.states)) setAllStates(data.states.length > 0 ? data.states : null)
+  const fetchComparison = useCallback(() => {
+    setError(null)
+    setLoading(true)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+    fetch('/api/gymsdata/state-comparison', { signal: controller.signal })
+      .then((res) => {
+        clearTimeout(timeoutId)
+        if (!res.ok) {
+          if (res.status === 504) throw new Error('Timeout')
+          throw new Error('Failed to load')
+        }
+        return res.json()
       })
-      .catch(() => {
-        if (!cancelled) setAllStates(null)
+      .then((data: { states?: StateComparisonItem[]; error?: string }) => {
+        if (data?.error) throw new Error(data.error)
+        if (Array.isArray(data?.states) && data.states.length > 0) {
+          setAllStates(data.states)
+          setError(null)
+        } else {
+          setAllStates(null)
+        }
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
+      .catch((e) => {
+        clearTimeout(timeoutId)
+        if (e?.name === 'AbortError' || e?.message === 'Timeout') {
+          setError('timeout')
+        } else {
+          setError('error')
+        }
+        setAllStates(null)
       })
-    return () => { cancelled = true }
+      .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    fetchComparison()
+  }, [fetchComparison])
 
   const dropdownStates: StateWithCount[] = useMemo(
     () =>
@@ -223,13 +249,18 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
     <section className='max-w-4xl mx-auto mb-16' aria-labelledby='state-comparison-heading'>
       <div className='flex flex-wrap items-center gap-2 mb-2'>
         <BarChart2 className='h-6 w-6 text-primary shrink-0' />
-        <h2 id='state-comparison-heading' className='text-2xl md:text-3xl font-semibold'>
+        <h2 id='state-comparison-heading' className='text-lg font-semibold text-foreground md:text-xl'>
           State Comparison Tool
         </h2>
-        {loading && !allStates?.length && (
+        {loading && !allStates?.length && !error && (
           <span className='inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground' aria-live='polite'>
             <Loader2 className='h-3.5 w-3.5 animate-spin shrink-0' aria-hidden />
             Loading…
+          </span>
+        )}
+        {error && (
+          <span className='inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive' role='status'>
+            {error === 'timeout' ? 'Took too long' : 'Load failed'}
           </span>
         )}
         {/* <details className='[&::-webkit-details-marker]:hidden' aria-label='Table details'>
@@ -307,6 +338,26 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
                 <tr>
                   <td colSpan={4} className='py-8 text-center text-muted-foreground'>
                     Loading comparison…
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={4} className='py-8 text-center'>
+                    <div className='flex flex-col items-center gap-3'>
+                      <p className='text-sm text-muted-foreground max-w-sm'>
+                        {error === 'timeout'
+                          ? 'Comparison data is taking longer than expected. You can try again or browse by state below.'
+                          : 'Comparison data could not be loaded. You can try again or browse by state below.'}
+                      </p>
+                      <button
+                        type='button'
+                        onClick={() => fetchComparison()}
+                        className='inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
+                      >
+                        <RefreshCw className='h-4 w-4' aria-hidden />
+                        Try again
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ) : (
