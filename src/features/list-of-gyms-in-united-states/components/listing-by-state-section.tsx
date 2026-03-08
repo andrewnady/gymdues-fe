@@ -51,7 +51,9 @@ function StateCard({ state }: { state: StateWithCount }) {
           <h3 className='text-xl font-bold text-white'>{state.stateName}</h3>
         </div>
         <p className='text-white/90 text-sm'>
-          {state.count.toLocaleString('en-US')} {state.count === 1 ? 'gym' : 'gyms'} available
+          {typeof state.count === 'number'
+            ? `${state.count.toLocaleString('en-US')} Fitness, Gym, and Health Services`
+            : 'Fitness, Gym, and Health Services available'}
         </p>
       </div>
     </Link>
@@ -71,16 +73,16 @@ export function ListingByStateSection({ states }: ListingByStateSectionProps) {
                 <Globe2 className='h-5 w-5 text-primary' />
               </div>
               <h2 id='browse-by-state-heading' className='text-2xl md:text-3xl font-bold tracking-tight'>
-                Browse Gyms By State
+                Browse Fitness, Gym, and Health Services By State
               </h2>
             </div>
             <ReadMoreText lines={2} className='text-muted-foreground text-base max-w-4xl'>
-              Start your search locally and find the best gym options near you. Explore verified
+              Start your search locally and find the best Fitness, Gym, and Health Services options near you. Explore verified
               listings by state and compare amenities, location, and pricing—whether you&apos;re
               researching <strong>LA Fitness membership cost</strong>,{' '}
               <strong>Anytime Fitness membership cost</strong>,{' '}
               <strong>24 Hour Fitness membership cost</strong>, or{' '}
-              <strong>NYSC membership cost</strong>, narrow down choices fast and find gyms that
+              <strong>NYSC membership cost</strong>, narrow down choices fast and find Fitness, Gym, and Health Services that
               match your budget and goals.
             </ReadMoreText>
           </div>
