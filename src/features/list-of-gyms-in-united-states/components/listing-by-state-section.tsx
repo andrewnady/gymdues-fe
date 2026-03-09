@@ -19,19 +19,19 @@ interface ListingByStateSectionProps {
 
 const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL
 
-// City/state hero images for featured cards
-const stateImages: Record<string, string> = {
-  NY: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop&q=80',
-  CA: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=600&fit=crop&q=80',
-  TX: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?w=800&h=600&fit=crop&q=80',
-  FL: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600&fit=crop&q=80',
-  IL: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop&q=80',
-  PA: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop&q=80',
-  OH: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop&q=80',
-  GA: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop&q=80',
-}
-const DEFAULT_IMAGE =
-  'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop&q=80'
+// Unique image per state (no repeats). Picsum: seed = state code → deterministic, one image per state.
+const STATE_CODES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA',
+  'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
+  'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA',
+  'WV', 'WI', 'WY',
+] as const
+const stateImageUrl = (stateCode: string) =>
+  `https://picsum.photos/seed/${encodeURIComponent(stateCode)}/800/600`
+const stateImages: Record<string, string> = Object.fromEntries(
+  STATE_CODES.map((code) => [code, stateImageUrl(code)])
+)
+const DEFAULT_IMAGE = stateImageUrl('US')
 
 function StateCard({ state }: { state: StateWithCount }) {
   const image = stateImages[state.state] || DEFAULT_IMAGE

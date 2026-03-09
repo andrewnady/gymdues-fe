@@ -31,8 +31,10 @@ import { UsaListStateComparison } from '@/usa-list/components/usa-list-state-com
 //import { UsaListStickyCta } from '@/usa-list/components/usa-list-sticky-cta'
 import { TopCitiesTable } from '@/usa-list/components/top-cities-table'
 //import { DistributionByLocationChips } from '@/usa-list/components/distribution-by-location-chips'
-import { CheckCircle2, Download, Zap } from 'lucide-react'
+import { CheckCircle2, Zap } from 'lucide-react'
 import { stateGymsdataPath, cityPagePathForLocation } from '@/lib/gymsdata-utils'
+import { buildDatasetSchema, buildOrganizationSchema, buildBreadcrumbSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { ExitIntentPopup } from '@/components/exit-intent-popup'
 import {
@@ -47,8 +49,8 @@ import {
 import { GymsdataHeroBanner } from './_components/gymsdata-hero-banner'
 import { DatasetPreviewTable } from './_components/dataset-preview-table'
 import { BusinessTypesTable } from './_components/business-types-table'
-import { FULL_DATA_PRICE_LABEL } from './_constants'
-import { BuyDataPrice } from './_components/buy-data-price'
+import { FULL_DATA_PRICE_LABEL, getLastUpdateDateStrings } from './_constants'
+import { BuyDataButton } from './_components/buy-data-button'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -188,64 +190,28 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
   const maxStateCount = top10States[0]?.count ?? 1
   //const stateComparisonRows = buildStateComparisonRows(sortedStates)
 
-  // Last Monday (data updated weekly) – same date used everywhere
-  const now = new Date()
-  const daysSinceMonday = (now.getDay() + 6) % 7
-  const lastMonday = new Date(now)
-  lastMonday.setDate(now.getDate() - daysSinceMonday)
-  lastMonday.setHours(0, 0, 0, 0)
-  const lastUpdateDateStr = lastMonday.toLocaleDateString('en-US', {
-    timeZone: 'America/New_York',
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const { long: lastUpdateDateLong, short: lastUpdateDateShort } = getLastUpdateDateStrings()
 
-  const schemaDataset = {
-    '@context': 'https://schema.org',
-    '@type': 'Dataset',
+  const schemaDataset = buildDatasetSchema({
+    baseUrl: siteUrl,
     name: 'Complete List of Fitness, Gym, and Health Services in United States - Verified Contact Database 2026',
     description: `250K+ verified Fitness, Gym, and Health Services contacts. ${totalGyms.toLocaleString('en-US')}+ Fitness, Gym, and Health Services across ${totalStates} states. Phone numbers, emails, state & city. Updated weekly.`,
-    url: `${siteUrl}/gymsdata/`,
-    license: 'https://creativecommons.org/licenses/by/4.0/',
-    creator: {
-      '@type': 'Organization',
-      name: 'Gymdues',
-      url: siteUrl,
-      logo: `${siteUrl}/images/logo.svg`,
-    },
-  }
-  const schemaOrganization = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Gymdues',
-    url: siteUrl,
-    logo: `${siteUrl}/images/logo.svg`,
-  }
-  const schemaBreadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
-      { '@type': 'ListItem', position: 2, name: 'List of Fitness, Gym, and Health Services in United States', item: `${siteUrl}/gymsdata/` },
+    pagePath: '/gymsdata/',
+    totalGyms,
+    totalStates,
+  })
+  const schemaOrganization = buildOrganizationSchema(siteUrl)
+  const schemaBreadcrumb = buildBreadcrumbSchema(
+    [
+      { name: 'Home', url: '/' },
+      { name: 'List of Fitness, Gym, and Health Services in United States', url: '/gymsdata/' },
     ],
-  }
+    siteUrl
+  )
 
   return (
     <div className='min-h-screen bg-background'>
-      <script
-        type='application/ld+json'
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaDataset) }}
-      />
-      <script
-        type='application/ld+json'
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrganization) }}
-      />
-      <script
-        type='application/ld+json'
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumb) }}
-      />
+      <JsonLdSchema data={[schemaDataset, schemaOrganization, schemaBreadcrumb]} />
       <div className='container mx-auto px-4 py-12 lg:py-16 pb-24'>
         {/* Breadcrumb */}
         <nav className='max-w-6xl mx-auto mb-6 text-sm text-muted-foreground' aria-label='Breadcrumb'>
@@ -264,7 +230,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </h1>
             <p className='text-sm text-muted-foreground leading-relaxed mb-3'>
               There are <strong className='text-foreground'>{totalGyms.toLocaleString('en-US')}</strong> Fitness, Gym, and Health Services in United States as of{' '}
-              {lastMonday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
+              {lastUpdateDateLong}.
               Top states include {top10States[0]?.stateName ?? 'California'} with {(top10States[0]?.count ?? 0).toLocaleString('en-US')},{' '}
               {top10States[1]?.stateName ?? 'Texas'} with {(top10States[1]?.count ?? 0).toLocaleString('en-US')}, and{' '}
               {top10States[2]?.stateName ?? 'Florida'} with {(top10States[2]?.count ?? 0).toLocaleString('en-US')}.
@@ -280,12 +246,13 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             <div className='grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-foreground mb-4'>
               <ul className='space-y-1.5' aria-label='Dataset stats'>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {totalGyms.toLocaleString('en-US')} Number of Fitness, Gym, and Health Services</li>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> 13 Business types </li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withEmail).toLocaleString('en-US')} Email addresses</li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withPhone).toLocaleString('en-US')} Phone numbers</li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withWebsite).toLocaleString('en-US')} With Websites</li>
-                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withLinkedin).toLocaleString('en-US')} LinkedIn Profiles</li>
               </ul>
               <ul className='space-y-1.5' aria-label='Social and contact stats'>
+                <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withLinkedin).toLocaleString('en-US')} LinkedIn Profiles</li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withFacebook).toLocaleString('en-US')} Facebook Profiles</li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withInstagram).toLocaleString('en-US')} Instagram Handles</li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {Math.round(withTwitter).toLocaleString('en-US')} X (formerly Twitter) Handles</li>
@@ -300,32 +267,17 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
 
             {/* Price & CTAs – enhanced block */}
             <div className='rounded-2xl border border-border/80 bg-card/50 px-5 py-5 sm:px-6 sm:py-6 shadow-sm'>
-              <p className='text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2'>
-                Data updated on {lastMonday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              <p className='text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4'>
+                Data updated on {lastUpdateDateLong}
               </p>
-              <div className='flex flex-wrap items-baseline gap-2 mb-4'>
-                <BuyDataPrice
+              <div className='flex flex-wrap items-center gap-3'>
+                <BuyDataButton
+                  href='/gymsdata/checkout'
+                  label='Purchase The Data'
                   priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
                   fallbackLabel={FULL_DATA_PRICE_LABEL}
-                  className='text-3xl sm:text-4xl font-bold tracking-tight text-foreground'
-                  hideRowCount
                 />
-              </div>
-              <div className='flex flex-wrap items-center gap-3'>
-                <Link
-                  href='/gymsdata/checkout'
-                  className='inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg transition-all'
-                >
-                  <Package className='h-4 w-4' aria-hidden />
-                  Purchase The Data
-                </Link>
-                <DownloadSampleButton
-                  variant='outline'
-                  className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-6 py-3.5 text-sm font-semibold hover:bg-muted hover:border-primary/40 transition-all'
-                >
-                  <Download className='h-4 w-4' aria-hidden />
-                  Free Sample List
-                </DownloadSampleButton>
+                <DownloadSampleButton variant='outline' />
               </div>
               <p className='mt-4 flex items-center gap-2 text-sm font-medium text-primary'>
                 <Zap className='h-4 w-4' aria-hidden />
@@ -398,7 +350,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   </p>
                   <p className='text-xs sm:text-[0.8rem]'>
                     Updated weekly – last pass on{' '}
-                    <span className='font-semibold text-white'>{lastUpdateDateStr}</span>
+                    <span className='font-semibold text-white'>{lastUpdateDateShort}</span>
                   </p>
                 </div>
                 <CheckCircle2 className='h-5 w-5 flex-shrink-0 text-emerald-300' aria-hidden />
@@ -932,7 +884,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   </thead>
                   <tbody>
                     {topCities.map((loc, i) => (
-                      <tr key={i} className='border-b border-border/60 last:border-0 hover:bg-muted/40'>
+                      <tr key={loc.label ?? `city-${i}`} className='border-b border-border/60 last:border-0 hover:bg-muted/40'>
                         <td className='px-4 py-3 text-center text-muted-foreground font-medium tabular-nums'>{i + 1}</td>
                         <td className='px-4 py-3 font-medium'>
                           <Link href={cityPagePathForLocation(loc, sortedStates) ?? `/gymsdata/#location=${encodeURIComponent(loc.label)}`} className='text-primary hover:underline underline-offset-2'>
@@ -1002,23 +954,39 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         {/* Gym Chain Comparison – from api/v1/gymsdata/chain-comparison */}
         <section className='max-w-5xl mx-auto mb-16' aria-labelledby='chain-comparison-heading'>
           <div className='flex flex-wrap items-center gap-2 mb-2'>
-            <Building2 className='h-6 w-6 text-primary shrink-0' />
+            <Building2 className='h-6 w-6 text-primary shrink-0' aria-hidden />
             <h2 id='chain-comparison-heading' className='text-lg font-semibold text-foreground md:text-xl'>
-            Fitness, Gym, and Health Services Chain Comparison
+              Fitness, Gym, and Health Services Chain Comparison
             </h2>
           </div>
           <p className='text-sm text-muted-foreground mb-6 max-w-2xl'>
             Compare major Fitness, Gym, and Health Services chains by locations, average price, amenities score, and user rating. Data for SEO and research.
           </p>
           <div className='overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm'>
-            <table className='min-w-full text-left text-sm'>
+            <table className='w-full min-w-[600px] text-sm' aria-describedby='chain-comparison-heading'>
+              <caption className='sr-only'>
+                Fitness, Gym, and Health Services chains compared by locations, average price, amenities score, and user rating
+              </caption>
               <thead className='bg-muted/50 border-b border-border/60'>
                 <tr>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground'>Chain Name</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-28'>Locations</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-28'>Avg Price</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-32'>Amenities Score</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-28'>User Rating</th>
+                  <th scope='col' className='px-4 py-3.5 text-left font-medium text-muted-foreground min-w-[140px]'>
+                    Chain Name
+                  </th>
+                  <th scope='col' className='px-4 py-3.5 text-right font-medium text-muted-foreground w-28 tabular-nums'>
+                    Locations
+                  </th>
+                  <th scope='col' className='px-4 py-3.5 text-right font-medium text-muted-foreground w-28 tabular-nums'>
+                    Avg Price
+                  </th>
+                  <th scope='col' className='px-4 py-3.5 text-right font-medium text-muted-foreground w-32 tabular-nums'>
+                    Amenities Score
+                  </th>
+                  <th scope='col' className='px-4 py-3.5 text-right font-medium text-muted-foreground w-28 tabular-nums'>
+                    User Rating
+                  </th>
+                  <th scope='col' className='px-4 py-3.5 text-center font-medium text-muted-foreground w-24'>
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1028,63 +996,73 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                     const bestPriceIdx = chains.reduce((best, c, i) => (c.avgPrice < (chains[best]?.avgPrice ?? Infinity) && c.avgPrice > 0 ? i : best), 0)
                     const mostAmenitiesIdx = chains.reduce((best, c, i) => (c.amenitiesScore > (chains[best]?.amenitiesScore ?? 0) ? i : best), 0)
                     const mostRatingIdx = chains.reduce((best, c, i) => (c.userRating > (chains[best]?.userRating ?? 0) ? i : best), 0)
+                    const badge = (show: boolean, label: string) =>
+                      show ? (
+                        <span className='mt-0.5 inline-flex rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
+                          {label}
+                        </span>
+                      ) : null
                     return chains.map((chain, i) => (
-                      <tr key={chain.chainName} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40'>
-                        <td className='px-4 py-3 font-medium'>{chain.chainName}</td>
-                        <td className='px-4 py-3 text-right'>
-                          <div className='flex flex-col items-end gap-0.5'>
-                            <span className={`tabular-nums font-semibold ${i === mostLocationsIdx ? 'text-primary' : ''}`}>
+                      <tr key={chain.chainName} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40 transition-colors'>
+                        <td className='px-4 py-3 font-medium text-foreground align-top'>
+                          {chain.path ? (
+                            <Link href={`${siteUrl}/gyms/${encodeURIComponent(chain.path)}`} className='text-primary hover:underline'>
+                              {chain.chainName}
+                            </Link>
+                          ) : (
+                            chain.chainName
+                          )}
+                        </td>
+                        <td className='px-4 py-3 text-right align-top w-28'>
+                          <div className='flex flex-col items-end'>
+                            <span className={`tabular-nums font-semibold ${i === mostLocationsIdx ? 'text-primary' : 'text-foreground'}`}>
                               {chain.locationsLabel}
                             </span>
-                            {i === mostLocationsIdx && (
-                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
-                                Most
-                              </span>
-                            )}
+                            {badge(i === mostLocationsIdx, 'Most')}
                           </div>
                         </td>
-                        <td className='px-4 py-3 text-right'>
-                          <div className='flex flex-col items-end gap-0.5'>
-                            <span className={`tabular-nums font-semibold ${i === bestPriceIdx ? 'text-primary' : ''}`}>
+                        <td className='px-4 py-3 text-right align-top w-28'>
+                          <div className='flex flex-col items-end'>
+                            <span className={`tabular-nums font-semibold ${i === bestPriceIdx ? 'text-primary' : 'text-foreground'}`}>
                               {chain.avgPriceLabel}
                             </span>
-                            {i === bestPriceIdx && (
-                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
-                                Best value
-                              </span>
-                            )}
+                            {badge(i === bestPriceIdx, 'Best value')}
                           </div>
                         </td>
-                        <td className='px-4 py-3 text-right'>
-                          <div className='flex flex-col items-end gap-0.5'>
-                            <span className={`tabular-nums font-semibold ${i === mostAmenitiesIdx ? 'text-primary' : ''}`}>
+                        <td className='px-4 py-3 text-right align-top w-32'>
+                          <div className='flex flex-col items-end'>
+                            <span className={`tabular-nums font-semibold ${i === mostAmenitiesIdx ? 'text-primary' : 'text-foreground'}`}>
                               {chain.amenitiesScoreLabel}
                             </span>
-                            {i === mostAmenitiesIdx && (
-                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
-                                Most
-                              </span>
-                            )}
+                            {badge(i === mostAmenitiesIdx, 'Most')}
                           </div>
                         </td>
-                        <td className='px-4 py-3 text-right'>
-                          <div className='flex flex-col items-end gap-0.5'>
-                            <span className={`tabular-nums font-semibold ${i === mostRatingIdx ? 'text-primary' : ''}`}>
+                        <td className='px-4 py-3 text-right align-top w-28'>
+                          <div className='flex flex-col items-end'>
+                            <span className={`tabular-nums font-semibold ${i === mostRatingIdx ? 'text-primary' : 'text-foreground'}`}>
                               {chain.userRating.toFixed(1)}★
                             </span>
-                            {i === mostRatingIdx && (
-                              <span className='inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary'>
-                                Most
-                              </span>
-                            )}
+                            {badge(i === mostRatingIdx, 'Most')}
                           </div>
+                        </td>
+                        <td className='px-4 py-3 text-center align-top w-24'>
+                          {chain.path ? (
+                            <Link
+                              href={`${siteUrl}/gyms/${encodeURIComponent(chain.path)}`}
+                              className='inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors'
+                            >
+                              View gym
+                            </Link>
+                          ) : (
+                            <span className='text-muted-foreground text-xs'>—</span>
+                          )}
                         </td>
                       </tr>
                     ))
                   })()
                 ) : (
                   <tr>
-                    <td colSpan={5} className='px-4 py-8 text-center text-muted-foreground'>
+                    <td colSpan={6} className='px-4 py-8 text-center text-muted-foreground'>
                       Chain comparison data is temporarily unavailable.
                     </td>
                   </tr>
@@ -1271,12 +1249,12 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         <section className='max-w-6xl mx-auto mb-12'>
           <div className='rounded-2xl border border-border/80 bg-card p-5 md:p-6 shadow-sm'>
             <h2 className='text-lg font-semibold mb-4 text-center'>Data quality</h2>
-            <div className='flex flex-wrap justify-center gap-3 md:gap-4'>
+            <div className='flex flex-wrap justify-center gap-2 md:gap-2'>
               {[
-                `Updated weekly (last: ${lastUpdateDateStr})`,
+                `Updated weekly (last: ${lastUpdateDateShort})`,
                 '95%+ Accuracy Rate',
                 'Money-Back Guarantee',
-                '48-Hour Delivery',
+                'Instant delivery',
                 'CSV / Excel / JSON',
                 'CRM-Ready',
               ].map((label) => (
@@ -1379,21 +1357,13 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               Ready to use the data? Browse the directory or get a sample.
             </p>
             <div className='flex flex-wrap items-center gap-3'>
-              <Link
+              <BuyDataButton
                 href='/gymsdata/checkout'
-                className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
-              >
-                Buy dataset
-                <ArrowRightCircle className='h-4 w-4' />
-              </Link>
-              <BuyDataPrice priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined} fallbackLabel={FULL_DATA_PRICE_LABEL} className='text-sm text-muted-foreground' />
-              <DownloadSampleButton
-                variant='outline'
-                className='rounded-xl border-2 border-input px-5 py-3'
-              >
-                <Download className='h-4 w-4' aria-hidden />
-                Request sample
-              </DownloadSampleButton>
+                label='Buy dataset'
+                priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
+                fallbackLabel={FULL_DATA_PRICE_LABEL}
+              />
+              <DownloadSampleButton variant='outline' />
               {/* <Link
                 href='#states-table'
                 className='inline-flex items-center gap-2 rounded-xl border border-input bg-background px-5 py-3 text-sm font-medium hover:bg-muted transition-colors'
@@ -1447,7 +1417,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                       <div className='relative'>
                         <div className='mb-3 flex items-center gap-1'>
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
+                            <Star key={`${t.name}-star-${i}`} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
                           ))}
                         </div>
                         <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
@@ -1492,7 +1462,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   <div className='relative'>
                     <div className='mb-3 flex items-center gap-1'>
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
+                        <Star key={`${t.name}-star-${i}`} className='h-4 w-4 text-amber-400 fill-amber-400' aria-hidden />
                       ))}
                     </div>
                     <p className='text-sm md:text-[0.95rem] text-foreground leading-relaxed'>
@@ -1540,21 +1510,13 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             plans, and fees.
           </p>
           <div className='flex flex-wrap items-center gap-3'>
-            <Link
+            <BuyDataButton
               href='/gymsdata/checkout'
-              className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all'
-            >
-              <Package className='h-4 w-4' aria-hidden />
-              Buy data
-            </Link>
-            <BuyDataPrice priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined} fallbackLabel={FULL_DATA_PRICE_LABEL} className='text-sm text-muted-foreground' />
-            <DownloadSampleButton
-              variant='outline'
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/40 transition-all'
-            >
-              <Download className='h-4 w-4' aria-hidden />
-              Download sample
-            </DownloadSampleButton>
+              label='Buy data'
+              priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
+              fallbackLabel={FULL_DATA_PRICE_LABEL}
+            />
+            <DownloadSampleButton variant='outline' />
           </div>
         </section>
 
@@ -1626,10 +1588,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               <Filter className='h-4 w-4' />
               Filter Now
             </Link>
-            <DownloadSampleButton variant='outline' className='rounded-xl border-2 border-input px-4 py-2.5 hover:border-primary/30'>
-              <Download className='h-4 w-4' aria-hidden />
-              Download Sample
-            </DownloadSampleButton>
+            <DownloadSampleButton variant='outline' />
           </div>
           <p className='text-center text-xs text-muted-foreground mt-2'>
             1,247 businesses downloaded this month · ★★★★★ 4.8/5 from 300+ reviews

@@ -39,7 +39,7 @@ export function BuyDataPrice({
     if (!formatted) return fallbackLabel
     let text = formatted
     if (suffixOneTime && !/one-time$/i.test(text)) {
-      text = `${text} one-time`
+      text = `${text}`
     }
     if (!hideRowCount && typeof priceFromServer?.rowCount === 'number') {
       text = `${priceFromServer.rowCount.toLocaleString()} rows — ${text}`

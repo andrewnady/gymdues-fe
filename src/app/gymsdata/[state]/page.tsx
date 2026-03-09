@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
 import { getStateBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
-import { MapPin, ShoppingCart } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
-import { BuyDataPrice } from '../_components/buy-data-price'
+import { BuyDataButton } from '../_components/buy-data-button'
 import { GymsdataMiniMap } from '../_components/gymsdata-mini-map'
 import { StateCitiesFilter } from '../_components/state-cities-filter'
 
@@ -136,15 +136,13 @@ export default async function GymsdataStatePage({ params }: Props) {
 
           {/* Download CTA */}
           <div className='mt-6 flex flex-wrap items-center gap-3'>
-            <DownloadSampleButton variant='primary' filter={{ state: stateParam }} />
-            <Link
+            <DownloadSampleButton variant='outline' filter={{ state: stateParam }} />
+            <BuyDataButton
               href={`/gymsdata/checkout?state=${encodeURIComponent(stateParam)}`}
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/30'
-            >
-              <ShoppingCart className='h-4 w-4' />
-              Buy data
-            </Link>
-            <BuyDataPrice priceFromServer={data.statePage?.formattedPrice ? { formattedPrice: data.statePage.formattedPrice, price: data.statePage.price, rowCount: data.statePage.totalGyms } : undefined} fallbackLabel={FULL_DATA_PRICE_LABEL} className='text-sm text-muted-foreground' />
+              label='Buy data'
+              priceFromServer={data.statePage?.formattedPrice ? { formattedPrice: data.statePage.formattedPrice, price: data.statePage.price, rowCount: data.statePage.totalGyms } : undefined}
+              fallbackLabel={FULL_DATA_PRICE_LABEL}
+            />
           </div>
         </div>
       </div>
