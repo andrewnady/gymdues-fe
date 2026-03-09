@@ -164,11 +164,11 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
           <div className='inline-flex items-center gap-2 mb-1'>
             <MapPin className='h-5 w-5 text-primary' />
             <h2 className='text-2xl md:text-3xl font-semibold'>
-              Gym coverage by U.S. state
+            Fitness, Gym, and Health Services coverage by U.S. state
             </h2>
           </div>
           <p className='text-sm md:text-base text-muted-foreground'>
-            Hover over a state to see gym count and click to browse gyms there.
+            Hover over a state to see Fitness, Gym, and Health Services count and click to browse Fitness, Gym, and Health Services there.
           </p>
         </div>
       )}
@@ -252,7 +252,7 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
                 <div className='rounded-xl bg-popover/95 shadow-xl border border-border/80 px-3 py-2 flex flex-col gap-1 text-xs text-foreground'>
                   <div className='flex items-center gap-1 text-[11px] text-muted-foreground'>
                     <span className='inline-flex h-1.5 w-1.5 rounded-full bg-primary mr-1' />
-                    Gyms in
+                    Fitness, Gym, and Health Services in
                   </div>
                   <div className='text-sm font-semibold'>
                     {hoverState.stateName}
@@ -277,12 +277,12 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
           <div className='flex items-center gap-3'>
             <div className='flex-1 min-w-[180px] max-w-[280px]'>
               <p className='text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5'>
-                {layer === 'all' ? 'Gyms per state' : `${LAYERS.find((l) => l.id === layer)?.label ?? 'Gyms'} per state`}
+                {layer === 'all' ? 'Fitness, Gym, and Health Services per state' : `${LAYERS.find((l) => l.id === layer)?.label ?? 'Fitness, Gym, and Health Services'} per state`}
               </p>
               <div
                 className='relative h-4 w-full rounded-full overflow-visible flex'
                 role='img'
-                aria-label='Color scale from fewer to more gyms'
+                aria-label='Color scale from fewer to more Fitness, Gym, and Health Services'
               >
                 <div className='flex-1 flex rounded-full overflow-hidden h-full'>
                   {COLOR_STOPS.map((c, i) => (
@@ -315,8 +315,8 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
                 )}
               </div>
               <div className='mt-1 flex justify-between text-[10px] text-muted-foreground'>
-                {legendStops.map((val) => (
-                  <span key={val}>{val.toLocaleString('en-US')}</span>
+                {legendStops.map((val, i) => (
+                  <span key={`legend-${i}-${val}`}>{val.toLocaleString('en-US')}</span>
                 ))}
               </div>
             </div>

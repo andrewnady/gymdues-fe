@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
   LineChart,
   Line,
@@ -18,14 +19,24 @@ interface FranchiseVsIndependentChartProps {
   data?: FranchiseVsIndependentItem[] | null
 }
 
+const CHART_HEIGHT = 280
+
 export function FranchiseVsIndependentChart({ data: apiData }: FranchiseVsIndependentChartProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   const data = (apiData?.length
     ? apiData.map((d) => ({ quarter: d.quarter, franchise: d.franchise, independent: d.independent }))
     : FRANCHISE_VS_INDEPENDENT.map((d) => ({ quarter: d.quarter, franchise: d.franchise, independent: d.independent }))
   ) as Array<{ quarter: string; franchise: number; independent: number }>
+
+  if (!mounted) {
+    return <div className="h-[280px] w-full min-w-0" aria-hidden />
+  }
+
   return (
-    <div className="h-[280px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-[280px] min-h-[280px] w-full min-w-0" style={{ width: '100%' }}>
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis dataKey="quarter" tick={{ fontSize: 11 }} className="text-muted-foreground" />

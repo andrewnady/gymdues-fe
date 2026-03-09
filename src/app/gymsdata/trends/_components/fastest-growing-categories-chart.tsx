@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { FASTEST_GROWING_CATEGORIES } from '../_data/growth-trends-data'
 
@@ -19,7 +20,12 @@ interface FastestGrowingCategoriesChartProps {
   data?: CategoryItem[] | null
 }
 
+const CHART_HEIGHT = 320
+
 export function FastestGrowingCategoriesChart({ data: apiData }: FastestGrowingCategoriesChartProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   const data = (apiData?.length
     ? apiData.map((d, i) => ({
         name: d.category,
@@ -28,9 +34,14 @@ export function FastestGrowingCategoriesChart({ data: apiData }: FastestGrowingC
       }))
     : FASTEST_GROWING_CATEGORIES.map((d) => ({ name: d.name, value: d.value, color: d.color }))
   ) as Array<{ name: string; value: number; color: string }>
+
+  if (!mounted) {
+    return <div className="h-[320px] w-full min-w-0" aria-hidden />
+  }
+
   return (
-    <div className="h-[320px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-[320px] min-h-[320px] w-full min-w-0" style={{ width: '100%' }}>
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <PieChart>
           <Pie
             data={data}

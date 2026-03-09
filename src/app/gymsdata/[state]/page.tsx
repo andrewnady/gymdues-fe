@@ -2,8 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
 import { getStateBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
-import { MapPin, ShoppingCart } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
+import { FULL_DATA_PRICE_LABEL } from '../_constants'
+import { BuyDataButton } from '../_components/buy-data-button'
 import { GymsdataMiniMap } from '../_components/gymsdata-mini-map'
 import { StateCitiesFilter } from '../_components/state-cities-filter'
 
@@ -60,7 +62,7 @@ export default async function GymsdataStatePage({ params }: Props) {
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <Link href='/' className='hover:text-primary'>Home</Link>
             <span className='mx-2'>/</span>
-            <Link href='/gymsdata/' className='hover:text-primary'>List of Gyms in United States</Link>
+            <Link href='/gymsdata/' className='hover:text-primary'>List of Fitness, Gym, and Health Services in United States</Link>
             <span className='mx-2'>/</span>
             <span className='text-foreground font-medium'>{displayState.stateName}</span>
           </nav>
@@ -133,15 +135,14 @@ export default async function GymsdataStatePage({ params }: Props) {
           </div>
 
           {/* Download CTA */}
-          <div className='mt-6 flex flex-wrap gap-3'>
-            <DownloadSampleButton variant='primary' />
-            <Link
-              href='/gymsdata/checkout'
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/30'
-            >
-              <ShoppingCart className='h-4 w-4' />
-              Buy data
-            </Link>
+          <div className='mt-6 flex flex-wrap items-center gap-3'>
+            <DownloadSampleButton variant='outline' filter={{ state: stateParam }} />
+            <BuyDataButton
+              href={`/gymsdata/checkout?state=${encodeURIComponent(stateParam)}`}
+              label='Buy data'
+              priceFromServer={data.statePage?.formattedPrice ? { formattedPrice: data.statePage.formattedPrice, price: data.statePage.price, rowCount: data.statePage.totalGyms } : undefined}
+              fallbackLabel={FULL_DATA_PRICE_LABEL}
+            />
           </div>
         </div>
       </div>
@@ -202,7 +203,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
                   <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
-                    List of Gyms in United States
+                    List of Fitness, Gym, and Health Services in United States
                   </Link>
                 </li>
                 <li>

@@ -96,6 +96,37 @@ export function cityGymsdataPath(stateNameOrSegment: string, cityName: string): 
   return `${GYMSDATA_BASE}${toUrlSegment(s)}/${toUrlSegment(c)}`
 }
 
+/** Type item shape for slug lookup (from list-page types). */
+export type TypeWithCount = { type: string; typeSlug: string; count: number; pct?: number; price?: number; formattedPrice?: string }
+
+/** Find type by URL segment (e.g. "health-clubs" or "exercise-%26-physical-fitness-programs"). Normalizes so slugs with "&" match. */
+export function getTypeBySlug(
+  types: TypeWithCount[],
+  typeSlug: string
+): TypeWithCount | null {
+  try {
+    const segment = decodeURIComponent((typeSlug ?? '').trim()).toLowerCase()
+    const segmentNorm = toSlug(segment)
+    return types.find(
+      (t) =>
+        toSlug(t.typeSlug ?? '') === segmentNorm ||
+        (t.typeSlug ?? '').toLowerCase() === segment
+    ) ?? null
+  } catch {
+    const segment = (typeSlug ?? '').trim().toLowerCase()
+    const segmentNorm = toSlug(segment)
+    return types.find((t) => toSlug(t.typeSlug ?? '') === segmentNorm) ?? null
+  }
+}
+
+/** Build path for type page: /gymsdata/types/health-clubs. Encodes & and other reserved chars so types like "exercise-&-physical-fitness-programs" work. */
+export function typeGymsdataPath(typeSlug: string): string {
+  const slug = (typeSlug ?? '').trim()
+  if (!slug) return `${GYMSDATA_BASE}types/`
+  const segment = toUrlSegment(slug)
+  return `${GYMSDATA_BASE}types/${encodeURIComponent(segment)}`
+}
+
 /** City page path from a location (e.g. top-cities list). Returns path or null if state/city cannot be resolved. */
 export function cityPagePathForLocation(
   loc: LocationWithCount,

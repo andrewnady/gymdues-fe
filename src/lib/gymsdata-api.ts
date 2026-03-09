@@ -18,6 +18,8 @@ export interface GymsdataStateItem {
   count: number
   pct?: number
   imageUrl?: string
+  price?: number
+  formattedPrice?: string
 }
 
 export interface GymsdataLocationItem {
@@ -29,10 +31,24 @@ export interface GymsdataLocationItem {
   count: number
 }
 
+export interface GymsdataTypeItem {
+  type: string
+  typeSlug: string
+  count: number
+  pct?: number
+  price?: number
+  formattedPrice?: string
+}
+
 export interface GymsdataListPageResponse {
   totalGyms: number
   statesCovered: number
   states: GymsdataStateItem[]
+  typesCovered?: number
+  types?: GymsdataTypeItem[]
+  /** Full-dataset price from row count (when backend provides it). */
+  price?: number
+  formattedPrice?: string
   withEmail?: number
   withPhone?: number
   withPhoneAndEmail?: number
@@ -56,9 +72,12 @@ export interface GymsdataStatePageResponse {
   pctWithPhone?: number
   pctWithSocial?: number
   avgRating?: number
-  topCities: Array<{ city: string; count: number; label?: string }>
+  /** State-level price from row count. */
+  price?: number
+  formattedPrice?: string
+  topCities: Array<{ city: string; count: number; label?: string; price?: number; formattedPrice?: string }>
   imageUrl?: string
-  cities?: Array<{ label: string; city: string; state: string; stateName?: string; postal_code?: string; count: number }>
+  cities?: Array<{ label: string; city: string; state: string; stateName?: string; postal_code?: string; count: number; price?: number; formattedPrice?: string }>
   nearbyCities?: Array<{ label: string; city: string; count: number }>
 }
 
@@ -72,8 +91,11 @@ export interface GymsdataCityPageResponse {
   pctWithPhone?: number
   pctWithSocial?: number
   avgRating?: number
+  /** City-level price from row count. */
+  price?: number
+  formattedPrice?: string
   topAreas?: Array<{ area: string; count: number; label: string }>
-  nearbyCities?: Array<{ city: string; count: number; label: string }>
+  nearbyCities?: Array<{ city: string; count: number; label: string; price?: number; formattedPrice?: string }>
   imageUrl?: string
 }
 
@@ -99,6 +121,8 @@ export interface GymsdataChainComparisonResponse {
     amenitiesScore: number
     amenitiesScoreLabel: string
     userRating: number
+    /** Slug for link to /gyms/{path} (e.g. "la-fitness"). */
+    path?: string
   }>
 }
 
@@ -172,6 +196,107 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T | nul
 }
 
 // --- Endpoints ---
+
+export interface SampleDownloadResult {
+  blob: Blob
+  filename: string
+}
+
+/**
+ * Optional filters for sample-download: state (slug e.g. california), city (slug e.g. los-angeles; requires state), type (e.g. Gym).
+ */
+export interface SampleDownloadFilters {
+  state?: string
+  city?: string
+  type?: string
+}
+
+/**
+ * POST /api/v1/gymsdata/sample-download – submit name + email; optional state, city (with state), type; returns Excel + email copy.
+ * Call from client (browser) to trigger file download. Returns blob and suggested filename; throws on error.
+ */
+export async function submitSampleDownload(
+  name: string,
+  email: string,
+  filters?: SampleDownloadFilters
+): Promise<SampleDownloadResult> {
+  const url = `${GYMSDATA_BASE}/sample-download`
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_GYM_API_KEY) {
+    headers['Authorization'] = `Bearer ${process.env.NEXT_PUBLIC_GYM_API_KEY}`
+  }
+
+  const body: Record<string, string> = { name: name.trim(), email: email.trim() }
+  if (filters?.state) body.state = filters.state.trim()
+  if (filters?.city) body.city = filters.city.trim()
+  if (filters?.type) body.type = filters.type.trim()
+  
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Sample download failed (${res.status})`)
+  }
+
+  let filename = 'gymdues-sample'
+  if (filters?.type) filename += `-${filters.type.replace(/\s+/g, '-').toLowerCase()}`
+  if (filters?.state) filename += `-${filters.state.replace(/\s+/g, '-').toLowerCase()}`
+  if (filters?.city) filename += `-${filters.city.replace(/\s+/g, '-').toLowerCase()}`
+  filename += '.xlsx'
+  const disposition = res.headers.get('Content-Disposition')
+  if (disposition) {
+    const match = /filename\*?=(?:UTF-8'')?["']?([^"'\s;]+)["']?/i.exec(disposition) ?? /filename=["']?([^"'\s;]+)["']?/i.exec(disposition)
+    if (match?.[1]) filename = match[1].trim()
+  }
+
+  return { blob: await res.blob(), filename }
+}
+
+/** Response from POST /api/v1/gymsdata/checkout – Stripe session URL. */
+export interface GymsdataCheckoutResponse {
+  url: string
+}
+
+/**
+ * POST /api/v1/gymsdata/checkout – create Stripe Checkout session.
+ * Body: name, email; optional state, city (with state), type. Amount from scope (row count).
+ * Returns session URL to redirect the user to Stripe Checkout.
+ */
+export async function submitCheckout(
+  name: string,
+  email: string,
+  filters?: SampleDownloadFilters
+): Promise<GymsdataCheckoutResponse> {
+  const url = `${GYMSDATA_BASE}/checkout`
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_GYM_API_KEY) {
+    headers['Authorization'] = `Bearer ${process.env.NEXT_PUBLIC_GYM_API_KEY}`
+  }
+  const body: Record<string, string> = { name: name.trim(), email: email.trim() }
+  if (filters?.state) body.state = filters.state.trim()
+  if (filters?.city) body.city = filters.city.trim()
+  if (filters?.type) body.type = filters.type.trim()
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Checkout failed (${res.status})`)
+  }
+  const data = (await res.json()) as GymsdataCheckoutResponse
+  if (!data?.url) throw new Error('No checkout URL returned')
+  return data
+}
 
 /**
  * GET /api/v1/gymsdata/states – states with gym counts.
@@ -301,7 +426,6 @@ export async function getStatePage(
   if (options?.cities_sort) url.searchParams.set('cities_sort', options.cities_sort)
   if (options?.cities_limit != null) url.searchParams.set('cities_limit', String(options.cities_limit))
   
-  console.log(url.toString())
   return fetchJson<GymsdataStatePageResponse>(url.toString())
 }
 
@@ -357,6 +481,8 @@ export interface GymsdataMainPageResult {
   totalStates: number
   statics: Array<{ key: string; value: number }>
   topCities: LocationWithCount[]
+  typesCovered: number
+  types: GymsdataTypeItem[]
   listPage: GymsdataListPageResponse | null
   testimonials: GymsdataTestimonialsResponse | null
 }
@@ -392,12 +518,16 @@ export async function getGymsdata(): Promise<GymsdataMainPageResult> {
   ]
   const totalStates = listPage?.statesCovered ?? states.length
   const topCities = topCitiesRaw.length > 0 ? topCitiesRaw : locations.slice(0, 10)
+  const types = listPage?.types && Array.isArray(listPage.types) ? listPage.types : []
+  const typesCovered = listPage?.typesCovered ?? types.length
   return {
     states,
     totalGyms,
     totalStates,
     statics,
     topCities,
+    typesCovered,
+    types,
     listPage: listPage ?? null,
     testimonials: testimonialsRes ?? null,
   }
