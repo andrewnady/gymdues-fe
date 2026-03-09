@@ -3,12 +3,15 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X, Building2, CheckCircle, Mail, Phone, FileText, ChevronRight, Clock } from 'lucide-react'
+import { getApiBaseUrl } from '@/lib/api-config'
 
 type VerificationMethod = 'email' | 'phone' | 'document' | null
 
 interface ClaimBusinessModalProps {
   open: boolean
   onClose: () => void
+  onClaimed?: () => void
+  gymId: number
   gymName: string
   gymWebsite?: string
   gymPhones?: string[]
@@ -30,7 +33,7 @@ function maskPhone(phone: string): string {
   return `(***) ***-${last4}`
 }
 
-export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhones }: ClaimBusinessModalProps) {
+export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, gymWebsite, gymPhones }: ClaimBusinessModalProps) {
   // Step 1: Account info
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
@@ -55,6 +58,11 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
   const fileInputRef = useRef<HTMLInputElement>(null)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
+  // API state
+  const [claimId, setClaimId] = useState<number | null>(null)
+  const [availableMethods, setAvailableMethods] = useState<string[]>([])
+  const [initiating, setInitiating] = useState(false)
+
   const [verificationError, setVerificationError] = useState<string | null>(null)
   const [sendingCode, setSendingCode] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -63,8 +71,6 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
   const [underReview, setUnderReview] = useState(false)
 
   const gymDomain = gymWebsite ? extractDomain(gymWebsite) : null
-  const emailDomain = email ? email.split('@')[1]?.toLowerCase() : null
-  const emailDomainMatches = !!(gymDomain && emailDomain && emailDomain === gymDomain.toLowerCase())
 
   const validateStep1 = () => {
     const errors = { name: '', email: '', phone: '', role: '' }
@@ -87,49 +93,85 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
     return errors
   }
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const errors = validateStep1()
     if (Object.values(errors).some(Boolean)) {
       setFieldErrors(errors)
       return
     }
     setFieldErrors({ name: '', email: '', phone: '', role: '' })
-    setStep(2)
+    setInitiating(true)
+    setSubmitError(null)
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/initiate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          gym_id: gymId,
+          full_name: name,
+          job_title: role,
+          business_email: email,
+          phone_number: phone,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSubmitError(data.message ?? 'Failed to initiate claim. Please try again.')
+        return
+      }
+      setClaimId(data.claim_id)
+      setAvailableMethods(data.available_methods ?? [])
+      setBizEmail(email)
+      setStep(2)
+    } catch {
+      setSubmitError('Network error. Please check your connection and try again.')
+    } finally {
+      setInitiating(false)
+    }
   }
 
   const handleSendEmailCode = async () => {
-    if (!bizEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bizEmail.trim())) {
-      setVerificationError('Please enter a valid email address.')
-      return
-    }
-    if (gymDomain) {
-      const emailDomain = bizEmail.split('@')[1]?.toLowerCase()
-      if (emailDomain !== gymDomain.toLowerCase()) {
-        setVerificationError(
-          `Your email domain doesn't match ${gymDomain}. Use your business email or choose a different verification method.`
-        )
-        return
-      }
-    }
+    if (!claimId) return
     setVerificationError(null)
     setSendingCode(true)
-    // TODO: call API to send verification code to bizEmail
-    await new Promise((r) => setTimeout(r, 600))
-    setSendingCode(false)
-    setBizEmailCodeSent(true)
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/send-email-code`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setVerificationError(data.message ?? 'Failed to send verification code.')
+        return
+      }
+      setBizEmailCodeSent(true)
+    } catch {
+      setVerificationError('Network error. Please try again.')
+    } finally {
+      setSendingCode(false)
+    }
   }
 
   const handleSendPhoneCode = async () => {
-    if (!selectedPhone) {
-      setVerificationError('Please select a phone number to receive the code.')
-      return
-    }
+    if (!claimId) return
     setVerificationError(null)
     setSendingCode(true)
-    // TODO: call API to send SMS to selectedPhone
-    await new Promise((r) => setTimeout(r, 600))
-    setSendingCode(false)
-    setPhoneCodeSent(true)
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/send-phone-code`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setVerificationError(data.message ?? 'Failed to send SMS code.')
+        return
+      }
+      setPhoneCodeSent(true)
+    } catch {
+      setVerificationError('Network error. Please try again.')
+    } finally {
+      setSendingCode(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,18 +201,49 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
       }
     }
 
+    if (!claimId) {
+      setSubmitError('Session expired. Please close and try again.')
+      return
+    }
+
     setSubmitError(null)
     setLoading(true)
     try {
-      // TODO: wire up to actual claim API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      let res: Response
+      if (verificationMethod === 'email') {
+        res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/verify-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ code: bizEmailCode }),
+        })
+      } else if (verificationMethod === 'phone') {
+        res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/verify-phone`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ code: phoneCode }),
+        })
+      } else {
+        const formData = new FormData()
+        formData.append('document', uploadedFile!)
+        res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/upload-document`, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: formData,
+        })
+      }
+
+      const data = await res.json()
+      if (!res.ok) {
+        setSubmitError(data.message ?? 'Something went wrong. Please try again.')
+        return
+      }
       if (verificationMethod === 'document') {
         setUnderReview(true)
       } else {
         setSubmitted(true)
       }
     } catch {
-      setSubmitError('Something went wrong. Please try again.')
+      setSubmitError('Network error. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -183,6 +256,9 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
     setPhone('')
     setRole('')
     setFieldErrors({ name: '', email: '', phone: '', role: '' })
+    setClaimId(null)
+    setAvailableMethods([])
+    setInitiating(false)
     setVerificationMethod(null)
     setBizEmail('')
     setBizEmailCode('')
@@ -207,18 +283,16 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
   // Auto-select the first available verification method when entering step 2
   useEffect(() => {
     if (step !== 2) return
-    const first = gymDomain ? 'email' : (gymPhones?.length ? 'phone' : 'document')
+    const methodMap: Record<string, VerificationMethod> = {
+      email_domain: 'email',
+      phone_sms: 'phone',
+      document: 'document',
+    }
+    const first = availableMethods.map((m) => methodMap[m]).find(Boolean) ?? 'document'
     setVerificationMethod(first)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
-  // Pre-fill business email when domain matches the gym's website domain
-  useEffect(() => {
-    if (verificationMethod === 'email' && emailDomainMatches) {
-      setBizEmail(email)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verificationMethod])
 
   useEffect(() => {
     if (!open) return
@@ -233,29 +307,29 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
   if (!open) return null
 
   const verificationMethods = [
-    ...(gymDomain ? [{
+    ...(availableMethods.includes('email_domain') ? [{
       id: 'email' as const,
       icon: Mail,
       title: 'Business Email',
-      description: `Verify with an email matching @${gymDomain}.`,
+      description: gymDomain ? `Verify with an email matching @${gymDomain}.` : 'Verify using your business email address.',
       badge: 'Instant',
     }] : []),
-    ...(gymPhones?.length ? [{
+    ...(availableMethods.includes('phone_sms') ? [{
       id: 'phone' as const,
       icon: Phone,
       title: 'Phone Verification',
-      description: gymPhones.length === 1
+      description: gymPhones && gymPhones.length === 1
         ? `Send a code to the number on file (${maskPhone(gymPhones[0])}).`
-        : `Send a code to one of ${gymPhones.length} numbers on file.`,
+        : `Send a code to one of ${gymPhones?.length ?? 'the'} numbers on file.`,
       badge: 'Instant',
     }] : []),
-    {
+    ...(availableMethods.includes('document') ? [{
       id: 'document' as const,
       icon: FileText,
       title: 'Document Upload',
       description: 'Upload a business license or tax document for manual review.',
       badge: '24–48 hrs',
-    },
+    }] : []),
   ]
 
   const modalContent = (
@@ -316,7 +390,10 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
             </p>
             <button
               type="button"
-              onClick={handleClose}
+              onClick={() => {
+                handleClose()
+                onClaimed?.()
+              }}
               className="mt-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             >
               Done
@@ -451,6 +528,11 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
                       <p className="mt-1 text-xs text-destructive">{fieldErrors.role}</p>
                     )}
                   </div>
+                  {submitError && (
+                    <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2" role="alert">
+                      {submitError}
+                    </p>
+                  )}
                   <div className="flex gap-2 pt-2">
                     <button
                       type="button"
@@ -462,9 +544,10 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
                     <button
                       type="button"
                       onClick={handleNextStep}
-                      className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                      disabled={initiating}
+                      className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                     >
-                      Next
+                      {initiating ? 'Please wait…' : 'Next'}
                     </button>
                   </div>
                 </div>
@@ -618,87 +701,38 @@ export function ClaimBusinessModal({ open, onClose, gymName, gymWebsite, gymPhon
                           {/* Business Email fields */}
                           {id === 'email' && verificationMethod === 'email' && (
                             <div className="mt-2 space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                              {emailDomainMatches ? (
-                                <>
-                                  {/* Domain match detected */}
-                                  <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-900/20">
-                                    <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
-                                    <p className="text-xs text-green-800 dark:text-green-300">
-                                      Your email{' '}
-                                      <strong>{email}</strong> matches this business&apos;s domain.
-                                      We&apos;ll send a verification code to confirm ownership.
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <label
-                                      htmlFor="biz-email"
-                                      className="block text-xs font-medium text-muted-foreground mb-1"
-                                    >
-                                      Verification email
-                                    </label>
-                                    <div className="flex gap-2">
-                                      <input
-                                        id="biz-email"
-                                        type="text"
-                                        value={bizEmail}
-                                        readOnly
-                                        className="flex-1 rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground"
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={handleSendEmailCode}
-                                        disabled={sendingCode}
-                                        className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap"
-                                      >
-                                        {sendingCode ? '…' : 'Send code'}
-                                      </button>
-                                    </div>
-                                  </div>
-                                </>
-                              ) : gymDomain ? (
-                                /* Email domain does not match — suggest Method 2 */
-                                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-800 dark:bg-amber-900/20">
-                                  <Mail className="h-4 w-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-                                  <div className="text-xs text-amber-800 dark:text-amber-300 space-y-1">
-                                    <p>
-                                      Your email <strong>{email || 'on file'}</strong> doesn&apos;t
-                                      match <strong>@{gymDomain}</strong>.
-                                    </p>
-                                    <p>Please use <strong>Phone Verification</strong> or <strong>Document Upload</strong> below.</p>
-                                  </div>
-                                </div>
-                              ) : (
-                                /* No gym domain on record — open-ended business email flow */
-                                <div>
-                                  <label
-                                    htmlFor="biz-email"
-                                    className="block text-xs font-medium text-muted-foreground mb-1"
+                              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-900/20">
+                                <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
+                                <p className="text-xs text-green-800 dark:text-green-300">
+                                  Your email <strong>{bizEmail}</strong> matches this business&apos;s domain.
+                                  We&apos;ll send a verification code to confirm ownership.
+                                </p>
+                              </div>
+                              <div>
+                                <label
+                                  htmlFor="biz-email"
+                                  className="block text-xs font-medium text-muted-foreground mb-1"
+                                >
+                                  Verification email
+                                </label>
+                                <div className="flex gap-2">
+                                  <input
+                                    id="biz-email"
+                                    type="text"
+                                    value={bizEmail}
+                                    readOnly
+                                    className="flex-1 rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleSendEmailCode}
+                                    disabled={sendingCode}
+                                    className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap"
                                   >
-                                    Business email address
-                                  </label>
-                                  <div className="flex gap-2">
-                                    <input
-                                      id="biz-email"
-                                      type="text"
-                                      value={bizEmail}
-                                      onChange={(e) => {
-                                        setBizEmail(e.target.value)
-                                        setVerificationError(null)
-                                      }}
-                                      className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                      placeholder="you@yourgym.com"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={handleSendEmailCode}
-                                      disabled={sendingCode}
-                                      className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap"
-                                    >
-                                      {sendingCode ? '…' : 'Send code'}
-                                    </button>
-                                  </div>
+                                    {sendingCode ? '…' : 'Send code'}
+                                  </button>
                                 </div>
-                              )}
+                              </div>
                             </div>
                           )}
 

@@ -5,14 +5,16 @@ import { Building2 } from 'lucide-react'
 import { ClaimBusinessModal } from './claim-business-modal'
 
 interface ClaimBusinessButtonProps {
+  gymId: number
   gymName: string
   gymWebsite?: string
   gymPhones?: string[]
   className?: string
   label?: string
+  onClaimed?: () => void
 }
 
-export function ClaimBusinessButton({ gymName, gymWebsite, gymPhones, className, label }: ClaimBusinessButtonProps) {
+export function ClaimBusinessButton({ gymId, gymName, gymWebsite, gymPhones, className, label, onClaimed }: ClaimBusinessButtonProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
@@ -32,6 +34,8 @@ export function ClaimBusinessButton({ gymName, gymWebsite, gymPhones, className,
       <ClaimBusinessModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        onClaimed={onClaimed}
+        gymId={gymId}
         gymName={gymName}
         gymWebsite={gymWebsite}
         gymPhones={gymPhones}

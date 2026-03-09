@@ -152,6 +152,7 @@ export interface Gym {
   updated_at?: string
   addresses_count?: number
   is_claimed?: boolean
+  is_verified?: boolean
 }
 
 export interface ReviewWithGym {

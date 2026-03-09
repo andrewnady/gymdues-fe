@@ -1,7 +1,11 @@
+'use client'
+
+import { useState } from 'react'
 import { ShieldCheck } from 'lucide-react'
 import { ClaimBusinessButton } from './claim-business-button'
 
 interface GymClaimBannerProps {
+  gymId: number
   gymName: string
   isClaimed: boolean
   updatedAt?: string
@@ -22,8 +26,10 @@ function formatUpdatedDate(dateStr?: string): string {
   }
 }
 
-export function GymClaimBanner({ gymName, isClaimed, updatedAt, gymWebsite, gymPhones }: GymClaimBannerProps) {
-  if (isClaimed) {
+export function GymClaimBanner({ gymId, gymName, isClaimed, updatedAt, gymWebsite, gymPhones }: GymClaimBannerProps) {
+  const [claimed, setClaimed] = useState(isClaimed)
+
+  if (claimed) {
     const formattedDate = formatUpdatedDate(updatedAt)
     return (
       <div className='flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm dark:border-green-800 dark:bg-green-950/40'>
@@ -49,11 +55,13 @@ export function GymClaimBanner({ gymName, isClaimed, updatedAt, gymWebsite, gymP
       </p>
       <div className='flex-shrink-0'>
         <ClaimBusinessButton
+          gymId={gymId}
           gymName={gymName}
           gymWebsite={gymWebsite}
           gymPhones={gymPhones}
           label='Claim This Business'
           className='inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition-colors whitespace-nowrap'
+          onClaimed={() => setClaimed(true)}
         />
       </div>
     </div>
