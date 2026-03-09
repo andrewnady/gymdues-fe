@@ -3,10 +3,10 @@ import Link from 'next/link'
 import { getListPage } from '@/lib/gymsdata-api'
 import type { GymsdataTypeItem } from '@/lib/gymsdata-api'
 import { getTypeBySlug, typeGymsdataPath } from '@/lib/gymsdata-utils'
-import { ShoppingCart, ChevronRight, BarChart3, Target, MapPin, List } from 'lucide-react'
+import { ChevronRight, BarChart3, Target, MapPin, List } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../../_constants'
-import { BuyDataPrice } from '../../_components/buy-data-price'
+import { BuyDataButton } from '../../_components/buy-data-button'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -114,15 +114,13 @@ export default async function GymsdataTypePage({ params }: Props) {
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <DownloadSampleButton variant="primary" filter={{ type: typeItem.type }} />
-            <Link
+            <DownloadSampleButton variant="outline" filter={{ type: typeItem.type }} />
+            <BuyDataButton
               href={`/gymsdata/checkout?type=${encodeURIComponent(typeItem.type)}`}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/30"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Buy data
-            </Link>
-            <BuyDataPrice priceFromServer={typeItem.formattedPrice ? { formattedPrice: typeItem.formattedPrice, price: typeItem.price, rowCount: typeItem.count } : undefined} fallbackLabel={FULL_DATA_PRICE_LABEL} className="text-sm text-muted-foreground" />
+              label="Buy data"
+              priceFromServer={typeItem.formattedPrice ? { formattedPrice: typeItem.formattedPrice, price: typeItem.price, rowCount: typeItem.count } : undefined}
+              fallbackLabel={FULL_DATA_PRICE_LABEL}
+            />
             <Link
               href={typesPath}
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-5 py-2.5 text-sm font-medium hover:bg-muted"

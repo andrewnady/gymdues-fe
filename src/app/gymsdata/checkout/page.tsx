@@ -1,6 +1,10 @@
 import { getListPage, getStatePage, getCityPage } from '@/lib/gymsdata-api'
+import { buildWebPageSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 import type { PriceFromServer } from '../_components/buy-data-price'
 import { CheckoutClient } from './checkout-client'
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 export interface CheckoutScope {
   state?: string
@@ -90,11 +94,26 @@ export default async function GymsdataCheckoutPage({ searchParams }: PageProps) 
   const scope: CheckoutScope = { state, city, type }
   const { priceFromServer, scopeDetails } = await getCheckoutData(scope)
 
+  const checkoutSchema = buildWebPageSchema({
+    baseUrl: siteUrl,
+    name: 'Checkout – US Gym Leads Dataset | Gymdues',
+    description: 'Complete your gym dataset purchase. Enter your details and proceed to secure payment.',
+    path: '/gymsdata/checkout',
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Gym database', url: '/gymsdata' },
+      { name: 'Checkout', url: '/gymsdata/checkout' },
+    ],
+  })
+
   return (
-    <CheckoutClient
-      scope={scope}
-      priceFromServer={priceFromServer}
-      scopeDetails={scopeDetails}
-    />
+    <>
+      <JsonLdSchema data={checkoutSchema} />
+      <CheckoutClient
+        scope={scope}
+        priceFromServer={priceFromServer}
+        scopeDetails={scopeDetails}
+      />
+    </>
   )
 }

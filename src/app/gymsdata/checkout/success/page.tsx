@@ -1,11 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CheckCircle2, Mail, FileSpreadsheet, ArrowRight } from 'lucide-react'
+import { buildWebPageSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 
 export const metadata: Metadata = {
   title: 'Thank You – Order Confirmed | Gymdues',
   description: 'Your gym dataset order is confirmed. Your download link will be sent by email.',
 }
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 type PageProps = { searchParams: Promise<{ session_id?: string }> }
 
@@ -13,8 +17,23 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const params = await searchParams
   const sessionId = typeof params.session_id === 'string' ? params.session_id.trim() || undefined : undefined
 
+  const successSchema = buildWebPageSchema({
+    baseUrl: siteUrl,
+    name: 'Thank You – Order Confirmed | Gymdues',
+    description: 'Your gym dataset order is confirmed. Your download link will be sent by email.',
+    path: '/gymsdata/checkout/success',
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Gym database', url: '/gymsdata' },
+      { name: 'Checkout', url: '/gymsdata/checkout' },
+      { name: 'Order confirmed', url: '/gymsdata/checkout/success' },
+    ],
+  })
+
   return (
-    <main className="min-h-screen bg-background">
+    <>
+      <JsonLdSchema data={successSchema} />
+      <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-20">
         <div className="max-w-2xl mx-auto text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-6" aria-hidden>
@@ -78,5 +97,6 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
         </div>
       </div>
     </main>
+    </>
   )
 }

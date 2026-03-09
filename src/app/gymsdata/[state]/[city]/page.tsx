@@ -10,11 +10,11 @@ import {
   formatDataDate,
   toUrlSegment,
 } from '@/lib/gymsdata-utils'
-import { MapPin, ShoppingCart } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../../_constants'
-import { BuyDataPrice } from '../../_components/buy-data-price'
+import { BuyDataButton } from '../../_components/buy-data-button'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -179,15 +179,13 @@ export default async function GymsdataCityPage({ params }: Props) {
 
           {/* Download CTA */}
           <div className='mt-6 flex flex-wrap items-center gap-3'>
-            <DownloadSampleButton variant='primary' filter={{ state: stateParam, city: cityParam }} />
-            <Link
+            <DownloadSampleButton variant='outline' filter={{ state: stateParam, city: cityParam }} />
+            <BuyDataButton
               href={`/gymsdata/checkout?state=${encodeURIComponent(stateParam)}&city=${encodeURIComponent(cityParam)}`}
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted hover:border-primary/40'
-            >
-              <ShoppingCart className='h-4 w-4' />
-              Buy data
-            </Link>
-            <BuyDataPrice priceFromServer={data.cityPage?.formattedPrice ? { formattedPrice: data.cityPage.formattedPrice, price: data.cityPage.price, rowCount: data.cityPage.totalGyms } : undefined} fallbackLabel={FULL_DATA_PRICE_LABEL} className='text-sm text-muted-foreground' />
+              label='Buy data'
+              priceFromServer={data.cityPage?.formattedPrice ? { formattedPrice: data.cityPage.formattedPrice, price: data.cityPage.price, rowCount: data.cityPage.totalGyms } : undefined}
+              fallbackLabel={FULL_DATA_PRICE_LABEL}
+            />
           </div>
         </div>
       </div>

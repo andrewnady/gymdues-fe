@@ -1,15 +1,34 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, ShoppingCart } from 'lucide-react'
+import { buildWebPageSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 
 export const metadata: Metadata = {
   title: 'Checkout Cancelled | Gymdues',
   description: 'Your checkout was cancelled. Return to the gym database to try again.',
 }
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
 export default function CheckoutCancelPage() {
+  const cancelSchema = buildWebPageSchema({
+    baseUrl: siteUrl,
+    name: 'Checkout Cancelled | Gymdues',
+    description: 'Your checkout was cancelled. Return to the gym database to try again.',
+    path: '/gymsdata/checkout/cancel',
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Gym database', url: '/gymsdata' },
+      { name: 'Checkout', url: '/gymsdata/checkout' },
+      { name: 'Cancelled', url: '/gymsdata/checkout/cancel' },
+    ],
+  })
+
   return (
-    <main className="min-h-screen bg-background">
+    <>
+      <JsonLdSchema data={cancelSchema} />
+      <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-20">
         <div className="max-w-xl mx-auto text-center">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-2">
@@ -39,5 +58,6 @@ export default function CheckoutCancelPage() {
         </div>
       </div>
     </main>
+    </>
   )
 }

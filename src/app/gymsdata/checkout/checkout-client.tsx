@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Loader2, AlertCircle, Shield, FileSpreadsheet, Zap, Mail } from 'lucide-react'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
 import { BuyDataPrice } from '../_components/buy-data-price'
+import { BUY_BUTTON_CLASSES } from '../_components/buy-data-button'
 import type { PriceFromServer } from '../_components/buy-data-price'
 import type { CheckoutScope, CheckoutScopeDetails } from './page'
 
@@ -105,18 +106,6 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
                       <span>{rowCount.toLocaleString('en-US')} verified rows</span>
                     </p>
                   )}
-                  <div className="pt-3 border-t border-border/60">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-sm text-muted-foreground">Total</span>
-                      <BuyDataPrice
-                        priceFromServer={priceFromServer ?? undefined}
-                        fallbackLabel={FULL_DATA_PRICE_LABEL}
-                        className="text-lg font-bold text-foreground"
-                        suffixOneTime
-                        hideRowCount
-                      />
-                    </div>
-                  </div>
                 </div>
                 <div className="px-5 py-4 bg-muted/20 border-t border-border/60 space-y-3">
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -203,7 +192,7 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 transition-colors"
+                      className={`flex-1 justify-center focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 ${BUY_BUTTON_CLASSES}`}
                     >
                       {loading ? (
                         <>
@@ -211,7 +200,10 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
                           Redirecting to payment…
                         </>
                       ) : (
-                        'Proceed to payment'
+                        <>
+                          Proceed to payment
+                          <span className="opacity-90 ml-1">(<BuyDataPrice priceFromServer={priceFromServer ?? undefined} fallbackLabel={FULL_DATA_PRICE_LABEL} className="font-medium" hideRowCount />)</span>
+                        </>
                       )}
                     </button>
                   </div>

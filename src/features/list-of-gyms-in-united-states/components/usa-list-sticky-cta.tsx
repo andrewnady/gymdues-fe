@@ -53,7 +53,7 @@ export function UsaListStickyCta({ totalGyms }: UsaListStickyCtaProps) {
             className="rounded-lg border border-input px-4 py-2.5"
           >
             <Download className="h-4 w-4" aria-hidden />
-            Download Sample
+            Download Free Sample
           </DownloadSampleButton>
           <Link href="#us-map" className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted md:sr-only md:focus:not-sr-only">
             <MapPin className="h-3.5 w-3.5" /> Map
