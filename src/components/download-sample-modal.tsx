@@ -183,7 +183,7 @@ export function DownloadSampleModal({ open, onClose, onSubmit, error, successEma
               className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               <Download className="h-4 w-4" aria-hidden />
-              {loading ? 'Sending…' : 'Download sample'}
+              {loading ? 'Sending…' : 'Download Free Sample'}
             </button>
           </div>
         </form>

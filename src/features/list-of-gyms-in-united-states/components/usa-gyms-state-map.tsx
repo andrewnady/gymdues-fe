@@ -315,8 +315,8 @@ export function UsaGymsStateMap({ states, layer: controlledLayer, compact = fals
                 )}
               </div>
               <div className='mt-1 flex justify-between text-[10px] text-muted-foreground'>
-                {legendStops.map((val) => (
-                  <span key={val}>{val.toLocaleString('en-US')}</span>
+                {legendStops.map((val, i) => (
+                  <span key={`legend-${i}-${val}`}>{val.toLocaleString('en-US')}</span>
                 ))}
               </div>
             </div>

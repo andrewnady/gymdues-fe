@@ -121,6 +121,8 @@ export interface GymsdataChainComparisonResponse {
     amenitiesScore: number
     amenitiesScoreLabel: string
     userRating: number
+    /** Slug for link to /gyms/{path} (e.g. "la-fitness"). */
+    path?: string
   }>
 }
 

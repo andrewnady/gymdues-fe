@@ -54,19 +54,20 @@ export function DownloadSampleButton({
     }
   }
 
+  /* Same format/style as Buy button: px-5 py-3, rounded-xl, gap-2, text-sm font-semibold */
   const baseClass =
-    'inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors cursor-pointer'
+    'inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors cursor-pointer'
   const variantClass =
     variant === 'primary'
-      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-      : 'border-2 border-input bg-background hover:bg-muted'
+      ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
+      : 'border-2 border-input bg-background hover:bg-muted hover:border-primary/40'
 
   return (
     <>
       <Link
         href={SAMPLE_DATA_HREF}
         className={`${baseClass} ${variantClass} ${className}`.trim()}
-        aria-label="Download sample (opens form)"
+        aria-label="Download Free Sample (opens form)"
         onClick={(e) => {
           e.preventDefault()
           setModalOpen(true)
@@ -75,7 +76,7 @@ export function DownloadSampleButton({
         {children ?? (
           <>
             <Download className="h-4 w-4" aria-hidden />
-            Download sample
+            Download Free Sample
           </>
         )}
       </Link>
