@@ -7,8 +7,15 @@ function redirectHome(request: NextRequest): NextResponse {
   return NextResponse.redirect(`${request.nextUrl.origin}/`, { status: 301 })
 }
 
+/** Resolve host (use X-Forwarded-Host when behind a proxy so subdomain rewrite works). */
+function getHost(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-host')
+  if (forwarded) return forwarded.split(',')[0]?.trim() || ''
+  return request.headers.get('host') || ''
+}
+
 export function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || ''
+  const hostname = getHost(request)
 
   // Route bestgyms subdomain to /best-gyms/* pages
   if (hostname.startsWith('bestgyms.')) {
@@ -85,15 +92,20 @@ export function middleware(request: NextRequest) {
     //   return NextResponse.redirect(new URL(`${bestGymsUrl}${canonicalPath}`), 301)
     // }
 
-    // Root → /best-gyms browse page
-    if (path === '/') {
-      url.pathname = '/gymsdata'
+    // Root → /gymsdata (dataset list page); use trailing slash to match next.config trailingSlash
+    if (path === '/' || path === '') {
+      url.pathname = '/gymsdata/'
       const canonicalUrl = `${gymsDataUrl}/`
       const requestHeaders = new Headers(request.headers)
       requestHeaders.set('x-pathname', '/')
       const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
       response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
       return response
+    }
+
+    // /gymsdata, /gymsdata/* → pass through (allow direct /gymsdata/ on subdomain)
+    if (path.startsWith('/gymsdata')) {
+      return NextResponse.next()
     }
 
     // No pattern matched on the gymsdata subdomain — redirect to the base URL
