@@ -179,12 +179,15 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
         // Handle different response formats
         let post: Record<string, unknown> | null = null
-        if (data.data) {
+        if (data && typeof data === 'object' && data.data != null) {
           post = data.data as Record<string, unknown>
-        } else if (data.post) {
+        } else if (data && typeof data === 'object' && data.post != null) {
           post = data.post as Record<string, unknown>
-        } else {
+        } else if (data && typeof data === 'object' && data !== null) {
           post = data as Record<string, unknown>
+        }
+        if (!post || typeof post !== 'object' || Array.isArray(post)) {
+          return null
         }
 
         // Normalize the post data

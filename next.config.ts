@@ -60,6 +60,11 @@ const nextConfig: NextConfig = {
         hostname: 'cms.gymdues.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'gymdues.com',
+        pathname: '/**',
+      },
     ],
   },
 
