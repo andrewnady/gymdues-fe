@@ -3,33 +3,28 @@
  * Handles different API URLs for server-side (Docker) vs client-side (browser) calls
  */
 
+const DEFAULT_CMS_URL = 'https://cms.gymdues.com'
+
 /**
  * Gets the API base URL based on the environment
  * - Server-side (Docker): use API_BASE_URL when set (e.g. http://nginx:80)
- * - Server-side (local/cPanel): when API_BASE_URL is not set, use public URL so fetches work
- * - Client-side (browser): uses cms.gymdues.com in dev, localhost:8080 otherwise
+ * - Server-side (production): use NEXT_PUBLIC_API_BASE_URL or default to cms.gymdues.com so fetches work
+ * - Server-side (local dev): use cms.gymdues.com when NEXT_PUBLIC_API_BASE_URL not set
+ * - Client-side (browser): same; avoid localhost in production so live site can reach CMS
  */
 export function getApiBaseUrl(): string {
-  const isDev = process.env.NODE_ENV === 'development'
-
   // Check if we're on the server side (Node.js environment)
   if (typeof window === 'undefined') {
     // Server-side: prefer API_BASE_URL when set (Docker internal URL)
     if (process.env.API_BASE_URL) {
       return process.env.API_BASE_URL
     }
-    // When not in Docker (e.g. local dev or cPanel), server must use a reachable URL
-    if (isDev && !process.env.NEXT_PUBLIC_API_BASE_URL) {
-      return 'https://cms.gymdues.com'
-    }
-    return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+    // Production or dev: use explicit env or default to public CMS so server can reach API
+    return process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_CMS_URL
   }
 
-  // Client-side: use public URL that browser can access
-  if (isDev && !process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return 'https://cms.gymdues.com'
-  }
-  return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+  // Client-side: use explicit env or default to public CMS (never localhost in production)
+  return process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_CMS_URL
 }
 
 /**
