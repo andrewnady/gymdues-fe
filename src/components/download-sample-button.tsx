@@ -17,7 +17,7 @@ interface DownloadSampleButtonProps {
   filter?: SampleDownloadFilters
 }
 
-/** With JS: opens modal; on submit calls gymsdata/sample-download and triggers Excel download. Without JS: link goes to sample data page. */
+/** With JS: opens modal; on submit calls gymsdata/sample-download and triggers CSV download. Without JS: link goes to sample data page. */
 export function DownloadSampleButton({
   className = '',
   children,

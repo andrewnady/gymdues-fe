@@ -984,9 +984,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   <th scope='col' className='px-4 py-3.5 text-right font-medium text-muted-foreground w-28 tabular-nums'>
                     User Rating
                   </th>
-                  <th scope='col' className='px-4 py-3.5 text-center font-medium text-muted-foreground w-24'>
-                    Action
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1044,18 +1041,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                             </span>
                             {badge(i === mostRatingIdx, 'Most')}
                           </div>
-                        </td>
-                        <td className='px-4 py-3 text-center align-top w-24'>
-                          {chain.path ? (
-                            <Link
-                              href={`${siteUrl}/gyms/${encodeURIComponent(chain.path)}`}
-                              className='inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors'
-                            >
-                              View gym
-                            </Link>
-                          ) : (
-                            <span className='text-muted-foreground text-xs'>—</span>
-                          )}
                         </td>
                       </tr>
                     ))
@@ -1255,7 +1240,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 '95%+ Accuracy Rate',
                 'Money-Back Guarantee',
                 'Instant delivery',
-                'CSV / Excel / JSON',
+                'CSV / JSON',
                 'CRM-Ready',
               ].map((label) => (
                 <span
@@ -1293,9 +1278,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               <div className='flex flex-wrap gap-2'>
                 <span className='rounded-lg border border-border bg-background/80 px-3 py-1.5 text-xs font-medium'>
                   CSV
-                </span>
-                <span className='rounded-lg border border-border bg-background/80 px-3 py-1.5 text-xs font-medium'>
-                  Excel (XLSX)
                 </span>
                 <span className='rounded-lg border border-border bg-background/80 px-3 py-1.5 text-xs font-medium'>
                   JSON
@@ -1337,7 +1319,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 <ul className='space-y-3'>
                   <li className='flex items-start gap-3'>
                     <CheckCircle2 className='h-5 w-5 text-primary shrink-0 mt-0.5' />
-                    <span className='text-foreground'>Export in CSV, Excel (XLSX), or JSON — CRM-ready</span>
+                    <span className='text-foreground'>Export in CSV or JSON — CRM-ready</span>
                   </li>
                   <li className='flex items-start gap-3'>
                     <CheckCircle2 className='h-5 w-5 text-primary shrink-0 mt-0.5' />

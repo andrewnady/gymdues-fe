@@ -52,7 +52,7 @@ export default function CheckoutCancelPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium hover:bg-muted transition-colors"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />
-              Back to gym database
+              Back to Home
             </Link>
           </div>
         </div>
