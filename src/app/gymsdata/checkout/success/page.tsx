@@ -66,7 +66,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
                 <div>
                   <p className="font-medium text-foreground">Download your data</p>
                   <p className="text-sm text-muted-foreground">
-                    Use the link in the email to download your dataset (CSV/XLSX). The link may take a few minutes to
+                    Use the link in the email to download your dataset (CSV). The link may take a few minutes to
                     become active while we prepare your file.
                   </p>
                 </div>
@@ -84,7 +84,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
               href="/gymsdata"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              Back to gym database
+              Back to Home
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
             <Link

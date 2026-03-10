@@ -83,7 +83,7 @@ export default async function GrowthTrendsPage() {
 
         <div className="max-w-6xl mx-auto mt-12 pt-8 border-t text-center space-y-2">
           <Link href="/gymsdata/" className="text-primary font-medium hover:underline">
-            ← Back to data in United States
+            ← Back to Home
           </Link>
           {/* <span className="mx-2 text-muted-foreground">·</span>
           <Link href="/gymsdata/competitive-intelligence" className="text-primary font-medium hover:underline">

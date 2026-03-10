@@ -114,7 +114,7 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
                   </p>
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">
                     <FileSpreadsheet className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden />
-                    CSV &amp; XLSX · Weekly updates
+                    CSV · Weekly updates
                   </p>
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Mail className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden />
@@ -187,7 +187,7 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
                       href="/gymsdata"
                       className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm font-medium hover:bg-muted text-center transition-colors"
                     >
-                      Back to data in United States
+                      Back to Home
                     </Link>
                     <button
                       type="submit"
