@@ -92,6 +92,15 @@ export function middleware(request: NextRequest) {
     //   return NextResponse.redirect(new URL(`${bestGymsUrl}${canonicalPath}`), 301)
     // }
 
+    // On subdomain: canonical URLs must NOT include /gymsdata (e.g. /california/ not /gymsdata/california/)
+    // Redirect /gymsdata and /gymsdata/* to clean path so production never shows /gymsdata/ in the URL
+    if (path === '/gymsdata' || path === '/gymsdata/' || path.startsWith('/gymsdata/')) {
+      const cleanPath = path.replace(/^\/gymsdata\/?/, '/') || '/'
+      const pathWithSlash = cleanPath === '/' || cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`
+      const redirectUrl = new URL(pathWithSlash + url.search, gymsDataUrl)
+      return NextResponse.redirect(redirectUrl, 301)
+    }
+
     // Root → /gymsdata (dataset list page); use trailing slash to match next.config trailingSlash
     if (path === '/' || path === '') {
       url.pathname = '/gymsdata/'
@@ -103,13 +112,16 @@ export function middleware(request: NextRequest) {
       return response
     }
 
-    // /gymsdata, /gymsdata/* → pass through (allow direct /gymsdata/ on subdomain)
-    if (path.startsWith('/gymsdata')) {
-      return NextResponse.next()
-    }
-
-    // No pattern matched on the gymsdata subdomain — redirect to the base URL
-    return NextResponse.redirect(new URL(gymsDataUrl), { status: 301 })
+    // Any other path on subdomain (e.g. /california/, /california/los-angeles/, /types/fitness-centers/)
+    // → rewrite to /gymsdata/* so the app serves the right page; URL stays clean (no /gymsdata in browser)
+    const pathWithSlash = path.endsWith('/') ? path : `${path}/`
+    url.pathname = `/gymsdata${pathWithSlash}`
+    const canonicalUrl = `${gymsDataUrl}${pathWithSlash}`
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-pathname', pathWithSlash)
+    const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+    response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
+    return response
   }
 
   // ── Bulk 404 redirect rules ──────────────────────────────────────────────
