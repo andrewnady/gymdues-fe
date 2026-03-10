@@ -247,7 +247,7 @@ export async function submitSampleDownload(
   if (filters?.type) filename += `-${filters.type.replace(/\s+/g, '-').toLowerCase()}`
   if (filters?.state) filename += `-${filters.state.replace(/\s+/g, '-').toLowerCase()}`
   if (filters?.city) filename += `-${filters.city.replace(/\s+/g, '-').toLowerCase()}`
-  filename += '.xlsx'
+  filename += '.csv'
   const disposition = res.headers.get('Content-Disposition')
   if (disposition) {
     const match = /filename\*?=(?:UTF-8'')?["']?([^"'\s;]+)["']?/i.exec(disposition) ?? /filename=["']?([^"'\s;]+)["']?/i.exec(disposition)
@@ -491,9 +491,12 @@ export interface GymsdataMainPageResult {
  * Fetches all data for the main /gymsdata page in one go (list-page, listPageData fallback, top-cities, testimonials).
  * Use this to integrate all gymsdata endpoints for the main listing page.
  */
+/** Number of sample rows to request from list-page for the "Live sample" preview table (backend returns these in listPage.sample). */
+const LIST_PAGE_SAMPLE_SIZE = 10
+
 export async function getGymsdata(): Promise<GymsdataMainPageResult> {
   const [listPage, listPageData, topCitiesRaw, testimonialsRes] = await Promise.all([
-    getListPage(),
+    getListPage(LIST_PAGE_SAMPLE_SIZE),
     getListPageData(),
     getTopCities(10),
     getTestimonials(),

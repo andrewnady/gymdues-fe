@@ -7,12 +7,22 @@ const BASE_URL =
 
 const URLS_PER_SITEMAP = 100
 
+/** For subdomain gymsdata.gymdues.com, sitemap should list clean paths (no /gymsdata/ in URL). */
+function pathSegmentToUrlPath(pathSegment: string, host: string | null): string {
+  const isGymsdataSubdomain = host?.startsWith('gymsdata.')
+  const segment = isGymsdataSubdomain
+    ? (pathSegment || '').replace(/^gymsdata\/?/, '') || ''
+    : pathSegment || ''
+  return segment ? `/${segment}/` : '/'
+}
+
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params
   const match = slug?.match(/^(\d+)\.xml$/)
+  const host = req.headers.get('host')
 
   if (!match) {
     return new NextResponse('Not Found', { status: 404 })
@@ -35,11 +45,13 @@ export async function GET(
 
     const urls = pageEntries
       .map((pathSegment: string) => {
-        const loc = pathSegment ? `${BASE_URL}/${pathSegment}/` : `${BASE_URL}/`
+        const pathPart = pathSegmentToUrlPath(pathSegment, host)
+        const loc = `${BASE_URL}${pathPart}`
+        const priority = pathSegment === '' || pathSegment === 'gymsdata' ? 0.9 : 0.8
         return `  <url>
     <loc>${loc}</loc>
     <changefreq>weekly</changefreq>
-    <priority>${pathSegment === '' || pathSegment === 'gymsdata' ? 0.9 : 0.8}</priority>
+    <priority>${priority}</priority>
   </url>`
       })
       .join('\n')
