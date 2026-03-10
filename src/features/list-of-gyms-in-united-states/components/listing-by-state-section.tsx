@@ -19,36 +19,25 @@ interface ListingByStateSectionProps {
 
 const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL
 
-// Unique image per state (no repeats). Picsum: seed = state code → deterministic, one image per state.
-const STATE_CODES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA',
-  'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
-  'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA',
-  'WV', 'WI', 'WY',
-] as const
-const stateImageUrl = (stateCode: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(stateCode)}/800/600`
-const stateImages: Record<string, string> = Object.fromEntries(
-  STATE_CODES.map((code) => [code, stateImageUrl(code)])
-)
-const DEFAULT_IMAGE = stateImageUrl('US')
+// Same default image as best-gym city-card for consistent look
+const DEFAULT_IMAGE = '/images/bg-header.jpg'
 
 function StateCard({ state }: { state: StateWithCount }) {
-  const image = stateImages[state.state] || DEFAULT_IMAGE
-  return (
-    <Link
-      href={stateGymsdataPath(state)}
-      className='group relative overflow-hidden rounded-xl h-56 md:h-64 cursor-pointer block'
-    >
-      <div
-        className='absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110'
-        style={{ backgroundImage: `url(${image})` }}
+  const s = state as StateWithCount & { imageUrl?: string; featuredImage?: string }
+  const image = s.imageUrl ?? s.featuredImage ?? DEFAULT_IMAGE
+
+  const cardContent = (
+    <div className='relative group overflow-hidden rounded-lg'>
+      <img
+        src={image}
+        alt={state.stateName ?? state.state ?? 'State'}
+        className='w-full h-56 md:h-64 object-cover rounded-lg group-hover:scale-105 transition-all'
       />
-      <div className='absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent' />
-      <div className='absolute bottom-0 left-0 right-0 p-5'>
+      <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent' />
+      <div className='absolute bottom-0 left-0 right-0 p-5 text-white'>
         <div className='flex items-center gap-2 mb-1'>
           <MapPin className='h-4 w-4 text-primary shrink-0' />
-          <h3 className='text-xl font-bold text-white'>{state.stateName}</h3>
+          <h3 className='text-xl font-bold'>{state.stateName}</h3>
         </div>
         <p className='text-white/90 text-sm'>
           {typeof state.count === 'number'
@@ -56,6 +45,12 @@ function StateCard({ state }: { state: StateWithCount }) {
             : 'Fitness, Gym, and Health Services available'}
         </p>
       </div>
+    </div>
+  )
+
+  return (
+    <Link href={stateGymsdataPath(state)} className='block cursor-pointer'>
+      {cardContent}
     </Link>
   )
 }

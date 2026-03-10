@@ -62,6 +62,44 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(bestGymsUrl), { status: 301 })
   }
 
+  // Route gymsdata subdomain to /gymsdata/* pages
+  if (hostname.startsWith('gymsdata.')) {
+    const url = request.nextUrl.clone()
+    const path = url.pathname
+    const gymsDataUrl = process.env.NEXT_PUBLIC_GYMSDATA_BASE_URL || 'https://gymsdata.gymdues.com'
+
+    // Serve sitemap index for gymsdata subdomain
+    if (path === '/sitemap.xml' || path === '/sitemap.xml/') {
+      url.pathname = '/api/sitemap-gymsdata-index'
+      return NextResponse.rewrite(url)
+    }
+
+    // Skip static files, Next.js internals, and API routes
+    if (path.startsWith('/_next') || path.startsWith('/api') || path.includes('.')) {
+      return NextResponse.next()
+    }
+
+    // // Redirect trailing slashes to canonical (no trailing slash), except root
+    // if (path !== '/' && path.endsWith('/')) {
+    //   const canonicalPath = path.replace(/\/$/, '')
+    //   return NextResponse.redirect(new URL(`${bestGymsUrl}${canonicalPath}`), 301)
+    // }
+
+    // Root → /best-gyms browse page
+    if (path === '/') {
+      url.pathname = '/gymsdata'
+      const canonicalUrl = `${gymsDataUrl}/`
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-pathname', '/')
+      const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+      response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
+      return response
+    }
+
+    // No pattern matched on the gymsdata subdomain — redirect to the base URL
+    return NextResponse.redirect(new URL(gymsDataUrl), { status: 301 })
+  }
+
   // ── Bulk 404 redirect rules ──────────────────────────────────────────────
   // All redirects use redirectHome(request) which builds the destination from
   // request.nextUrl.origin (scheme+host only) so query params are always stripped.

@@ -45,7 +45,7 @@ export default function CompetitiveIntelligencePage() {
 
         <div className="max-w-4xl mx-auto mt-12 pt-8 border-t text-center">
           <Link href="/gymsdata/" className="text-primary font-medium hover:underline">
-            Back to data in United States
+            Back to Home
           </Link>
         </div>
       </div>

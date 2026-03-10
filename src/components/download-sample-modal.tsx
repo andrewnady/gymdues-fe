@@ -104,7 +104,7 @@ export function DownloadSampleModal({ open, onClose, onSubmit, error, successEma
         ) : (
           <>
         <p className="text-sm text-muted-foreground mb-4">
-          Enter your details to receive the sample Excel file. A copy will be sent to your email.
+          Enter your details to receive the sample CSV file. A copy will be sent to your email.
         </p>
         {error && (
           <p className="text-sm text-destructive mb-3 rounded-lg bg-destructive/10 px-3 py-2" role="alert">
