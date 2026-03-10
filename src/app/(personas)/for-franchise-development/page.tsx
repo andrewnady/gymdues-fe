@@ -52,7 +52,7 @@ export default function ForFranchiseDevelopmentPage() {
         ),
       }}
       ctaPrimaryText='Download Free Sample'
-      ctaSecondaryLabel='Browse full gym database'
+      ctaSecondaryLabel='Browse full data'
     />
   )
 }

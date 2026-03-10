@@ -26,7 +26,7 @@ export default async function GrowthTrendsPage() {
           <ol className="flex flex-wrap items-center gap-1">
             <li><Link href="/" className="hover:text-primary">Home</Link></li>
             <li aria-hidden>/</li>
-            <li><Link href="/gymsdata/" className="hover:text-primary">List of Gyms in United States</Link></li>
+            <li><Link href="/gymsdata/" className="hover:text-primary">List of Fitness, Gym, and Health Services in United States</Link></li>
             <li aria-hidden>/</li>
             <li className="text-foreground font-medium">Gym Industry Trends</li>
           </ol>
@@ -83,7 +83,7 @@ export default async function GrowthTrendsPage() {
 
         <div className="max-w-6xl mx-auto mt-12 pt-8 border-t text-center space-y-2">
           <Link href="/gymsdata/" className="text-primary font-medium hover:underline">
-            ← Back to full gym database
+            ← Back to Home
           </Link>
           {/* <span className="mx-2 text-muted-foreground">·</span>
           <Link href="/gymsdata/competitive-intelligence" className="text-primary font-medium hover:underline">

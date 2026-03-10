@@ -20,7 +20,7 @@ export function GymsdataHeroBanner() {
           </h1>
 
           <p className="text-sm md:text-[0.95rem] text-muted-foreground max-w-xl mb-5 leading-relaxed">
-            GymDues maintains one of the largest verified gym databases in the US — with owner contacts,
+            GymDues maintains one of the largest verified data in the US — with owner contacts,
             equipment signals, software usage, membership pricing, and ratings data. Built for equipment
             brands, SaaS companies, and supplement wholesalers who need warm prospects, not cold lists.
           </p>

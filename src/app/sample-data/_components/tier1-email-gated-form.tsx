@@ -65,7 +65,7 @@ export function Tier1EmailGatedForm() {
         disabled={loading}
         className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
       >
-        {loading ? 'Sending…' : 'Get free sample'}
+        {loading ? 'Sending…' : 'Download Free Sample'}
       </button>
     </form>
   )

@@ -19,41 +19,52 @@ interface ListingByStateSectionProps {
 
 const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL
 
-// City/state hero images for featured cards
-const stateImages: Record<string, string> = {
-  NY: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop&q=80',
-  CA: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=600&fit=crop&q=80',
-  TX: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?w=800&h=600&fit=crop&q=80',
-  FL: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600&fit=crop&q=80',
-  IL: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop&q=80',
-  PA: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop&q=80',
-  OH: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop&q=80',
-  GA: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop&q=80',
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
+// Default image from frontend site (not CMS); same asset as best-gym city-card
+const DEFAULT_IMAGE = `${SITE_URL.replace(/\/$/, '')}/images/bg-header.jpg`
+
+const CMS_MEDIA_BASE = 'https://cms.gymdues.com/storage/app/media'
+
+function resolveStateImageUrl(path: string | undefined | null): string {
+  if (!path?.trim()) return DEFAULT_IMAGE
+  const p = path.trim()
+  if (p.startsWith('http://') || p.startsWith('https://')) return p
+  const base = CMS_MEDIA_BASE.endsWith('/') ? CMS_MEDIA_BASE : `${CMS_MEDIA_BASE}/`
+  const relative = p.startsWith('/') ? p.slice(1) : p
+  return `${base}${relative}`
 }
-const DEFAULT_IMAGE =
-  'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop&q=80'
 
 function StateCard({ state }: { state: StateWithCount }) {
-  const image = stateImages[state.state] || DEFAULT_IMAGE
-  return (
-    <Link
-      href={stateGymsdataPath(state)}
-      className='group relative overflow-hidden rounded-xl h-56 md:h-64 cursor-pointer block'
-    >
-      <div
-        className='absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110'
-        style={{ backgroundImage: `url(${image})` }}
+  const s = state as StateWithCount & { imageUrl?: string; featuredImage?: string }
+  const raw = s.imageUrl ?? s.featuredImage
+  const image = raw ? resolveStateImageUrl(raw) : DEFAULT_IMAGE
+
+  const cardContent = (
+    <div className='relative group overflow-hidden rounded-lg'>
+      <img
+        src={image}
+        alt={state.stateName ?? state.state ?? 'State'}
+        className='w-full h-56 md:h-64 object-cover rounded-lg group-hover:scale-105 transition-all'
       />
-      <div className='absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent' />
-      <div className='absolute bottom-0 left-0 right-0 p-5'>
+      <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent' />
+      <div className='absolute bottom-0 left-0 right-0 p-5 text-white'>
         <div className='flex items-center gap-2 mb-1'>
           <MapPin className='h-4 w-4 text-primary shrink-0' />
-          <h3 className='text-xl font-bold text-white'>{state.stateName}</h3>
+          <h3 className='text-xl font-bold'>{state.stateName}</h3>
         </div>
         <p className='text-white/90 text-sm'>
-          {state.count.toLocaleString('en-US')} {state.count === 1 ? 'gym' : 'gyms'} available
+          {typeof state.count === 'number'
+            ? `${state.count.toLocaleString('en-US')} Fitness, Gym, and Health Services`
+            : 'Fitness, Gym, and Health Services available'}
         </p>
       </div>
+    </div>
+  )
+
+  return (
+    <Link href={stateGymsdataPath(state)} className='block cursor-pointer'>
+      {cardContent}
     </Link>
   )
 }
@@ -71,16 +82,16 @@ export function ListingByStateSection({ states }: ListingByStateSectionProps) {
                 <Globe2 className='h-5 w-5 text-primary' />
               </div>
               <h2 id='browse-by-state-heading' className='text-2xl md:text-3xl font-bold tracking-tight'>
-                Browse Gyms By State
+                Browse Fitness, Gym, and Health Services By State
               </h2>
             </div>
             <ReadMoreText lines={2} className='text-muted-foreground text-base max-w-4xl'>
-              Start your search locally and find the best gym options near you. Explore verified
+              Start your search locally and find the best Fitness, Gym, and Health Services options near you. Explore verified
               listings by state and compare amenities, location, and pricing—whether you&apos;re
               researching <strong>LA Fitness membership cost</strong>,{' '}
               <strong>Anytime Fitness membership cost</strong>,{' '}
               <strong>24 Hour Fitness membership cost</strong>, or{' '}
-              <strong>NYSC membership cost</strong>, narrow down choices fast and find gyms that
+              <strong>NYSC membership cost</strong>, narrow down choices fast and find Fitness, Gym, and Health Services that
               match your budget and goals.
             </ReadMoreText>
           </div>
