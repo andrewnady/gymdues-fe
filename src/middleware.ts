@@ -14,6 +14,14 @@ function getHost(request: NextRequest): string {
   return request.headers.get('host') || ''
 }
 
+/** True when request is for gymsdata subdomain (Host, X-Forwarded-Host, or request URL host). */
+function isGymsdataSubdomain(request: NextRequest): boolean {
+  const host = getHost(request)
+  if (host.startsWith('gymsdata.')) return true
+  const urlHost = request.nextUrl.hostname
+  return urlHost.startsWith('gymsdata.')
+}
+
 export function middleware(request: NextRequest) {
   const hostname = getHost(request)
 
@@ -69,8 +77,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(bestGymsUrl), { status: 301 })
   }
 
-  // Route gymsdata subdomain to /gymsdata/* pages
-  if (hostname.startsWith('gymsdata.')) {
+  // Route gymsdata subdomain to /gymsdata/* pages (use isGymsdataSubdomain so request URL host is used when Host header is stripped by proxy)
+  if (isGymsdataSubdomain(request)) {
     const url = request.nextUrl.clone()
     const path = url.pathname
     const gymsDataUrl = process.env.NEXT_PUBLIC_GYMSDATA_BASE_URL || 'https://gymsdata.gymdues.com'
@@ -125,11 +133,14 @@ export function middleware(request: NextRequest) {
   }
 
   // ── Bulk 404 redirect rules ──────────────────────────────────────────────
+  // Skip for gymsdata subdomain so state/city/type paths are never sent home
+  // (they are handled above via rewrite when isGymsdataSubdomain is true).
+  if (isGymsdataSubdomain(request)) {
+    return NextResponse.next()
+  }
+
   // All redirects use redirectHome(request) which builds the destination from
   // request.nextUrl.origin (scheme+host only) so query params are always stripped.
-  // next.config.ts redirects forward query strings by default, so all legacy
-  // redirect logic lives here for clean param-free destinations.
-
   const pathname = request.nextUrl.pathname
 
   // Pattern 0a: legacy path prefixes from previous site platforms
