@@ -15,14 +15,15 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  try {
+    const { slug } = await params;
+    const post = await getBlogPostBySlug(slug);
 
-  if (!post) {
-    return {
-      title: 'Post Not Found - GymDues',
-    };
-  }
+    if (!post) {
+      return {
+        title: 'Post Not Found - GymDues',
+      };
+    }
 
   // Get the current pathname from headers to match the requested URL
   const headersList = await headers()
@@ -102,6 +103,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return metadata;
+  } catch {
+    return { title: 'Post Not Found - GymDues' };
+  }
 }
 
 export async function generateStaticParams() {
@@ -117,17 +121,23 @@ export async function generateStaticParams() {
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  try {
+    const { slug } = await params;
+    const post = await getBlogPostBySlug(slug);
 
-  if (!post) {
-    notFound();
-  }
+    if (!post) {
+      notFound();
+    }
 
-  let featuredGyms = await getTrendingGyms(3);
-  if (featuredGyms.length === 0) {
-    featuredGyms = await getLatestGyms(10);
-  }
+    let featuredGyms: Awaited<ReturnType<typeof getTrendingGyms>> = [];
+    try {
+      featuredGyms = await getTrendingGyms(3);
+      if (featuredGyms.length === 0) {
+        featuredGyms = await getLatestGyms(10);
+      }
+    } catch {
+      // Non-blocking: show post without sidebar gyms
+    }
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
@@ -345,5 +355,8 @@ export default async function BlogPostPage({ params }: PageProps) {
       </article>
     </div>
   );
+  } catch {
+    notFound();
+  }
 }
 
