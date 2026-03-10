@@ -18,6 +18,7 @@ export interface GymsdataStateItem {
   count: number
   pct?: number
   imageUrl?: string
+  featuredImage?: string
   price?: number
   formattedPrice?: string
 }
@@ -308,6 +309,8 @@ export async function getStates(): Promise<StateWithCount[]> {
     state: s.state,
     stateName: s.stateName,
     count: s.count,
+    ...(s.imageUrl != null && { imageUrl: s.imageUrl }),
+    ...(s.featuredImage != null && { featuredImage: s.featuredImage }),
   }))
 }
 
@@ -503,7 +506,13 @@ export async function getGymsdata(): Promise<GymsdataMainPageResult> {
   ])
   const states =
     listPage && Array.isArray(listPage.states) && listPage.states.length > 0
-      ? listPage.states.map((s) => ({ state: s.state, stateName: s.stateName ?? s.state, count: s.count ?? 0 }))
+      ? listPage.states.map((s) => ({
+          state: s.state,
+          stateName: s.stateName ?? s.state,
+          count: s.count ?? 0,
+          ...(s.imageUrl != null && { imageUrl: s.imageUrl }),
+          ...(s.featuredImage != null && { featuredImage: s.featuredImage }),
+        }))
       : listPageData.states
   const locations = listPageData.locations
   const totalGyms = listPage?.totalGyms ?? states.reduce((sum, s) => sum + (s.count ?? 0), 0)
