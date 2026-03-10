@@ -18,6 +18,7 @@ export interface GymsdataStateItem {
   count: number
   pct?: number
   imageUrl?: string
+  featuredImage?: string
   price?: number
   formattedPrice?: string
 }
@@ -212,7 +213,7 @@ export interface SampleDownloadFilters {
 }
 
 /**
- * POST /api/v1/gymsdata/sample-download – submit name + email; optional state, city (with state), type; returns Excel + email copy.
+ * POST /api/v1/gymsdata/sample-download – submit name + email; optional state, city (with state), type; returns CSV + email copy.
  * Call from client (browser) to trigger file download. Returns blob and suggested filename; throws on error.
  */
 export async function submitSampleDownload(
@@ -247,7 +248,7 @@ export async function submitSampleDownload(
   if (filters?.type) filename += `-${filters.type.replace(/\s+/g, '-').toLowerCase()}`
   if (filters?.state) filename += `-${filters.state.replace(/\s+/g, '-').toLowerCase()}`
   if (filters?.city) filename += `-${filters.city.replace(/\s+/g, '-').toLowerCase()}`
-  filename += '.xlsx'
+  filename += '.csv'
   const disposition = res.headers.get('Content-Disposition')
   if (disposition) {
     const match = /filename\*?=(?:UTF-8'')?["']?([^"'\s;]+)["']?/i.exec(disposition) ?? /filename=["']?([^"'\s;]+)["']?/i.exec(disposition)
@@ -308,6 +309,8 @@ export async function getStates(): Promise<StateWithCount[]> {
     state: s.state,
     stateName: s.stateName,
     count: s.count,
+    ...(s.imageUrl != null && { imageUrl: s.imageUrl }),
+    ...(s.featuredImage != null && { featuredImage: s.featuredImage }),
   }))
 }
 
@@ -491,16 +494,25 @@ export interface GymsdataMainPageResult {
  * Fetches all data for the main /gymsdata page in one go (list-page, listPageData fallback, top-cities, testimonials).
  * Use this to integrate all gymsdata endpoints for the main listing page.
  */
+/** Number of sample rows to request from list-page for the "Live sample" preview table (backend returns these in listPage.sample). */
+const LIST_PAGE_SAMPLE_SIZE = 10
+
 export async function getGymsdata(): Promise<GymsdataMainPageResult> {
   const [listPage, listPageData, topCitiesRaw, testimonialsRes] = await Promise.all([
-    getListPage(),
+    getListPage(LIST_PAGE_SAMPLE_SIZE),
     getListPageData(),
     getTopCities(10),
     getTestimonials(),
   ])
   const states =
     listPage && Array.isArray(listPage.states) && listPage.states.length > 0
-      ? listPage.states.map((s) => ({ state: s.state, stateName: s.stateName ?? s.state, count: s.count ?? 0 }))
+      ? listPage.states.map((s) => ({
+          state: s.state,
+          stateName: s.stateName ?? s.state,
+          count: s.count ?? 0,
+          ...(s.imageUrl != null && { imageUrl: s.imageUrl }),
+          ...(s.featuredImage != null && { featuredImage: s.featuredImage }),
+        }))
       : listPageData.states
   const locations = listPageData.locations
   const totalGyms = listPage?.totalGyms ?? states.reduce((sum, s) => sum + (s.count ?? 0), 0)
@@ -667,5 +679,83 @@ export async function getGymsdataForCity(stateSlug: string, citySlug: string): P
     neighborhoods,
     nearbyCities,
     notFound: false,
+  }
+}
+
+/** toUrlSegment for sitemap path building (fallback when backend sitemap endpoint is unavailable) */
+function toUrlSegment(name: string): string {
+  return (name ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/** Fallback: build sitemap paths from list-page + state-page (used when GET /api/v1/gymsdata/sitemap is not available). */
+async function getGymsdataSitemapFallback(): Promise<{ data: string[] }> {
+  const paths: string[] = ['', 'gymsdata']
+  try {
+    const listPage = await getListPage()
+    if (!listPage) return { data: paths }
+
+    const states = listPage.states ?? []
+    const types = listPage.types ?? []
+
+    for (const s of states) {
+      const stateName = s.stateName ?? s.state ?? ''
+      if (!stateName) continue
+      paths.push(`gymsdata/${toUrlSegment(stateName)}`)
+    }
+    for (const t of types) {
+      const typeSlug = (t.typeSlug ?? t.type ?? '').trim().toLowerCase().replace(/\s+/g, '-')
+      if (!typeSlug) continue
+      paths.push(`gymsdata/types/${encodeURIComponent(typeSlug)}`)
+    }
+
+    const citiesLimit = 150
+    const statePages = await Promise.all(
+      states.slice(0, 51).map((s) => {
+        const stateParam = toUrlSegment(s.stateName ?? s.state ?? '')
+        return stateParam ? getStatePage(stateParam, { include_cities: true, cities_limit: citiesLimit }) : Promise.resolve(null)
+      })
+    )
+
+    for (let i = 0; i < states.length && i < statePages.length; i++) {
+      const page = statePages[i]
+      const stateName = states[i]?.stateName ?? states[i]?.state ?? ''
+      const stateSlug = toUrlSegment(stateName)
+      if (!stateSlug || !page?.cities?.length) continue
+      for (const c of page.cities) {
+        const cityName = c.city ?? c.label?.split(',')[0]?.trim() ?? ''
+        if (!cityName) continue
+        const citySlug = toUrlSegment(cityName)
+        if (citySlug) paths.push(`gymsdata/${stateSlug}/${citySlug}`)
+      }
+    }
+    return { data: paths }
+  } catch (e) {
+    if (e instanceof Error) console.warn('getGymsdataSitemap fallback failed:', e.message)
+    return { data: paths }
+  }
+}
+
+/**
+ * Collects all gymsdata URLs for sitemap. Calls GET /api/v1/gymsdata/sitemap once (cached ~1 hour).
+ * Falls back to list-page + N× state-page if the endpoint is unavailable.
+ */
+export async function getGymsdataSitemap(): Promise<{ data: string[] }> {
+  try {
+    const url = `${GYMSDATA_BASE}/sitemap`
+    const res = await fetch(url, {
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return getGymsdataSitemapFallback()
+    const raw = await res.json()
+    const data = Array.isArray(raw) ? raw : raw?.data
+    if (!Array.isArray(data) || data.length === 0) return getGymsdataSitemapFallback()
+    return { data }
+  } catch {
+    return getGymsdataSitemapFallback()
   }
 }

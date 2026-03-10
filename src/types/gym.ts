@@ -178,6 +178,8 @@ export interface StateWithCount {
   state: string
   stateName: string
   count: number
+  imageUrl?: string
+  featuredImage?: string
   city?: string
 }
 

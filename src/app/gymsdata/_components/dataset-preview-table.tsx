@@ -15,7 +15,7 @@ const COLUMNS = [
   { key: 'website', label: 'Business website', schemaKey: 'business_website', icon: Globe, width: 'min-w-[80px]' },
 ] as const
 
-/** Full dataset columns (CSV/Excel download) – matches DB schema */
+/** Full dataset columns (CSV download) – matches DB schema */
 export const FULL_DOWNLOAD_COLUMNS = [
   'google_id', 'google_place_url', 'review_url', 'contact_page',
   'business_name', 'aka', 'type', 'sub_types', 'years_in_business', 'areas_serviced', 'bbb_rating',

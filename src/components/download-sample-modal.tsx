@@ -104,7 +104,7 @@ export function DownloadSampleModal({ open, onClose, onSubmit, error, successEma
         ) : (
           <>
         <p className="text-sm text-muted-foreground mb-4">
-          Enter your details to receive the sample Excel file. A copy will be sent to your email.
+          Enter your details to receive the sample CSV file. A copy will be sent to your email.
         </p>
         {error && (
           <p className="text-sm text-destructive mb-3 rounded-lg bg-destructive/10 px-3 py-2" role="alert">
@@ -180,9 +180,9 @@ export function DownloadSampleModal({ open, onClose, onSubmit, error, successEma
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap"
             >
-              <Download className="h-4 w-4" aria-hidden />
+              <Download className="h-4 w-4 shrink-0" aria-hidden />
               {loading ? 'Sending…' : 'Download Free Sample'}
             </button>
           </div>
