@@ -448,7 +448,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                 </div>
                 <h1 className='text-4xl md:text-5xl font-bold mb-2'>
                   {gym.name}: Memberships, Fees, Classes, and Facilities
-                  {gym.is_verified && <VerifiedBadge gymName={gym.name} />}
+                  {gym.is_verified && <VerifiedBadge gymName={gym.name} gymId={Number(gym.id)} />}
                 </h1>
                 <div className='flex flex-wrap items-center gap-4 mb-4'>
                   <div className='flex items-center gap-1'>
