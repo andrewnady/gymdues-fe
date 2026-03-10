@@ -7,23 +7,8 @@ function redirectHome(request: NextRequest): NextResponse {
   return NextResponse.redirect(`${request.nextUrl.origin}/`, { status: 301 })
 }
 
-/** Resolve host (use X-Forwarded-Host when behind a proxy so subdomain rewrite works). */
-function getHost(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-host')
-  if (forwarded) return forwarded.split(',')[0]?.trim() || ''
-  return request.headers.get('host') || ''
-}
-
-/** True when request is for gymsdata subdomain (Host, X-Forwarded-Host, or request URL host). */
-function isGymsdataSubdomain(request: NextRequest): boolean {
-  const host = getHost(request)
-  if (host.startsWith('gymsdata.')) return true
-  const urlHost = request.nextUrl.hostname
-  return urlHost.startsWith('gymsdata.')
-}
-
 export function middleware(request: NextRequest) {
-  const hostname = getHost(request)
+  const hostname = request.headers.get('host') || ''
 
   // Route bestgyms subdomain to /best-gyms/* pages
   if (hostname.startsWith('bestgyms.')) {
@@ -77,8 +62,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(bestGymsUrl), { status: 301 })
   }
 
-  // Route gymsdata subdomain to /gymsdata/* pages (use isGymsdataSubdomain so request URL host is used when Host header is stripped by proxy)
-  if (isGymsdataSubdomain(request)) {
+  // Route gymsdata subdomain to /gymsdata/* pages (same pattern as bestgyms: clean URLs, internal rewrite)
+  if (hostname.startsWith('gymsdata.')) {
     const url = request.nextUrl.clone()
     const path = url.pathname
     const gymsDataUrl = process.env.NEXT_PUBLIC_GYMSDATA_BASE_URL || 'https://gymsdata.gymdues.com'
@@ -94,14 +79,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    // // Redirect trailing slashes to canonical (no trailing slash), except root
-    // if (path !== '/' && path.endsWith('/')) {
-    //   const canonicalPath = path.replace(/\/$/, '')
-    //   return NextResponse.redirect(new URL(`${bestGymsUrl}${canonicalPath}`), 301)
-    // }
-
-    // On subdomain: canonical URLs must NOT include /gymsdata (e.g. /california/ not /gymsdata/california/)
-    // Redirect /gymsdata and /gymsdata/* to clean path so production never shows /gymsdata/ in the URL
+    // On subdomain: canonical URLs must NOT include /gymsdata (same idea as bestgyms clean URLs)
+    // Redirect /gymsdata and /gymsdata/* → clean path so URL bar shows e.g. /california/ not /gymsdata/california/
     if (path === '/gymsdata' || path === '/gymsdata/' || path.startsWith('/gymsdata/')) {
       const cleanPath = path.replace(/^\/gymsdata\/?/, '/') || '/'
       const pathWithSlash = cleanPath === '/' || cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`
@@ -109,7 +88,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl, 301)
     }
 
-    // Root → /gymsdata (dataset list page); use trailing slash to match next.config trailingSlash
+    // Root → /gymsdata (dataset list page); trailing slash to match next.config trailingSlash
     if (path === '/' || path === '') {
       url.pathname = '/gymsdata/'
       const canonicalUrl = `${gymsDataUrl}/`
@@ -121,8 +100,10 @@ export function middleware(request: NextRequest) {
     }
 
     // Any other path on subdomain (e.g. /california/, /california/los-angeles/, /types/fitness-centers/)
-    // → rewrite to /gymsdata/* so the app serves the right page; URL stays clean (no /gymsdata in browser)
-    const pathWithSlash = path.endsWith('/') ? path : `${path}/`
+    // → rewrite to /gymsdata/* (same as bestgyms: /best-houston-gyms → /best-gyms/houston)
+    let pathWithSlash = path.endsWith('/') ? path : `${path}/`
+    // /type/xxx → /types/xxx so it matches app route /gymsdata/types/[typeSlug]
+    if (pathWithSlash.startsWith('/type/')) pathWithSlash = '/types' + pathWithSlash.slice(5)
     url.pathname = `/gymsdata${pathWithSlash}`
     const canonicalUrl = `${gymsDataUrl}${pathWithSlash}`
     const requestHeaders = new Headers(request.headers)
@@ -132,39 +113,10 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // ── Main domain: /{state}, /{state}/{city}, /types/{type} → rewrite to /gymsdata/* so they open normally (no redirect to home)
-  const pathname = request.nextUrl.pathname
-  const pathSegments = pathname.replace(/^\/|\/$/g, '').split('/').filter(Boolean)
-  const reservedFirstSegments = new Set([
-    'blog', 'about', 'contact', 'gyms', 'best-gyms', 'privacy-policy', 'terms-of-service',
-    'dataset', 'sample-data', 'api', '_next', 'sitemap', 'robots', 'checkout',
-    'competitive-intelligence', 'trends', 'for-software-companies', 'for-marketing-agencies',
-    'for-equipment-suppliers', 'for-franchise-development',
-  ])
-  const isGymsdataStylePath =
-    (pathSegments.length === 1 && !reservedFirstSegments.has(pathSegments[0])) ||
-    (pathSegments.length === 2 && !reservedFirstSegments.has(pathSegments[0])) ||
-    (pathSegments.length >= 2 && (pathSegments[0] === 'types' || pathSegments[0] === 'type'))
-  if (isGymsdataStylePath && !pathname.startsWith('/gymsdata')) {
-    const url = request.nextUrl.clone()
-    let targetPath = pathname.endsWith('/') ? pathname : `${pathname}/`
-    // /type/xxx → /gymsdata/types/xxx (app route is types not type)
-    if (pathSegments[0] === 'type' && pathSegments.length >= 2) {
-      targetPath = `/types/${pathSegments.slice(1).join('/')}/`
-    }
-    url.pathname = targetPath.startsWith('/') ? `/gymsdata${targetPath}` : `/gymsdata/${targetPath}`
-    return NextResponse.rewrite(url)
-  }
-
   // ── Bulk 404 redirect rules ──────────────────────────────────────────────
-  // Skip for gymsdata subdomain so state/city/type paths are never sent home
-  // (they are handled above via rewrite when isGymsdataSubdomain is true).
-  if (isGymsdataSubdomain(request)) {
-    return NextResponse.next()
-  }
-
   // All redirects use redirectHome(request) which builds the destination from
   // request.nextUrl.origin (scheme+host only) so query params are always stripped.
+  const pathname = request.nextUrl.pathname
 
   // Pattern 0a: legacy path prefixes from previous site platforms
   // e.g. /item/u185/26807/, /webapp/wcs/stores/…, /b/Bath/N-5yc1vZbzb3

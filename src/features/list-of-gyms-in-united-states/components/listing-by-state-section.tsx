@@ -19,8 +19,10 @@ interface ListingByStateSectionProps {
 
 const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL
 
-// Same default image as best-gym city-card for consistent look
-const DEFAULT_IMAGE = '/images/bg-header.jpg'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
+// Default image from frontend site (not CMS); same asset as best-gym city-card
+const DEFAULT_IMAGE = `${SITE_URL.replace(/\/$/, '')}/images/bg-header.jpg`
 
 const CMS_MEDIA_BASE = 'https://cms.gymdues.com/storage/app/media'
 
