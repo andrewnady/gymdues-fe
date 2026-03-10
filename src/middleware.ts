@@ -132,6 +132,30 @@ export function middleware(request: NextRequest) {
     return response
   }
 
+  // ── Main domain: /{state}, /{state}/{city}, /types/{type} → rewrite to /gymsdata/* so they open normally (no redirect to home)
+  const pathname = request.nextUrl.pathname
+  const pathSegments = pathname.replace(/^\/|\/$/g, '').split('/').filter(Boolean)
+  const reservedFirstSegments = new Set([
+    'blog', 'about', 'contact', 'gyms', 'best-gyms', 'privacy-policy', 'terms-of-service',
+    'dataset', 'sample-data', 'api', '_next', 'sitemap', 'robots', 'checkout',
+    'competitive-intelligence', 'trends', 'for-software-companies', 'for-marketing-agencies',
+    'for-equipment-suppliers', 'for-franchise-development',
+  ])
+  const isGymsdataStylePath =
+    (pathSegments.length === 1 && !reservedFirstSegments.has(pathSegments[0])) ||
+    (pathSegments.length === 2 && !reservedFirstSegments.has(pathSegments[0])) ||
+    (pathSegments.length >= 2 && (pathSegments[0] === 'types' || pathSegments[0] === 'type'))
+  if (isGymsdataStylePath && !pathname.startsWith('/gymsdata')) {
+    const url = request.nextUrl.clone()
+    let targetPath = pathname.endsWith('/') ? pathname : `${pathname}/`
+    // /type/xxx → /gymsdata/types/xxx (app route is types not type)
+    if (pathSegments[0] === 'type' && pathSegments.length >= 2) {
+      targetPath = `/types/${pathSegments.slice(1).join('/')}/`
+    }
+    url.pathname = targetPath.startsWith('/') ? `/gymsdata${targetPath}` : `/gymsdata/${targetPath}`
+    return NextResponse.rewrite(url)
+  }
+
   // ── Bulk 404 redirect rules ──────────────────────────────────────────────
   // Skip for gymsdata subdomain so state/city/type paths are never sent home
   // (they are handled above via rewrite when isGymsdataSubdomain is true).
@@ -141,7 +165,6 @@ export function middleware(request: NextRequest) {
 
   // All redirects use redirectHome(request) which builds the destination from
   // request.nextUrl.origin (scheme+host only) so query params are always stripped.
-  const pathname = request.nextUrl.pathname
 
   // Pattern 0a: legacy path prefixes from previous site platforms
   // e.g. /item/u185/26807/, /webapp/wcs/stores/…, /b/Bath/N-5yc1vZbzb3

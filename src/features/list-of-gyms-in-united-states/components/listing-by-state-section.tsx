@@ -22,9 +22,21 @@ const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL
 // Same default image as best-gym city-card for consistent look
 const DEFAULT_IMAGE = '/images/bg-header.jpg'
 
+const CMS_MEDIA_BASE = 'https://cms.gymdues.com/storage/app/media'
+
+function resolveStateImageUrl(path: string | undefined | null): string {
+  if (!path?.trim()) return DEFAULT_IMAGE
+  const p = path.trim()
+  if (p.startsWith('http://') || p.startsWith('https://')) return p
+  const base = CMS_MEDIA_BASE.endsWith('/') ? CMS_MEDIA_BASE : `${CMS_MEDIA_BASE}/`
+  const relative = p.startsWith('/') ? p.slice(1) : p
+  return `${base}${relative}`
+}
+
 function StateCard({ state }: { state: StateWithCount }) {
   const s = state as StateWithCount & { imageUrl?: string; featuredImage?: string }
-  const image = s.imageUrl ?? s.featuredImage ?? DEFAULT_IMAGE
+  const raw = s.imageUrl ?? s.featuredImage
+  const image = raw ? resolveStateImageUrl(raw) : DEFAULT_IMAGE
 
   const cardContent = (
     <div className='relative group overflow-hidden rounded-lg'>
