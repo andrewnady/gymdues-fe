@@ -13,12 +13,15 @@ export function Navigation() {
   const [isBestGymsSubdomain, setIsBestGymsSubdomain] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isGymsdataSubdomain, setIsGymsdataSubdomain] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const isHomePage = pathname === '/' && !isBestGymsSubdomain
 
   useEffect(() => {
-    setIsBestGymsSubdomain(window.location.hostname.startsWith('bestgyms.'))
+    const hostname = window.location.hostname
+    setIsBestGymsSubdomain(hostname.startsWith('bestgyms.'))
+    setIsGymsdataSubdomain(hostname.startsWith('gymsdata.'))
     setIsAuthenticated(!!getAuthToken())
   }, [pathname])
 
@@ -28,9 +31,7 @@ export function Navigation() {
       setIsScrolled(scrollPosition > 50)
     }
 
-    // Check initial scroll position
     handleScroll()
-
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -64,13 +65,14 @@ export function Navigation() {
     }
   }, [isMobileMenuOpen])
 
-  // On home page: transparent with white text at top, white with dark text when scrolled
+  // On gymsdata subdomain (production): always solid white header so it's visible on white page
+  // On home page: transparent with white text at top, solid with dark text when scrolled
   // On other pages: white background with dark text from the start
-  const shouldShowWhiteText = isHomePage && !isScrolled
-  const navBackground =
-    isHomePage && !isScrolled
-      ? 'bg-transparent backdrop-blur-sm'
-      : 'bg-white/95 backdrop-blur-md shadow-md border-b'
+  const useSolidHeader = isGymsdataSubdomain || (isHomePage && isScrolled) || !isHomePage
+  const shouldShowWhiteText = isHomePage && !isScrolled && !isGymsdataSubdomain
+  const navBackground = useSolidHeader
+    ? 'bg-white/95 backdrop-blur-md shadow-md border-b'
+    : 'bg-transparent backdrop-blur-sm'
 
   const handleLogout = async () => {
     const token = getAuthToken()

@@ -36,7 +36,6 @@ import { stateGymsdataPath, cityPagePathForLocation } from '@/lib/gymsdata-utils
 import { buildDatasetSchema, buildOrganizationSchema, buildBreadcrumbSchema } from '@/lib/schema-builder'
 import { JsonLdSchema } from '@/components/json-ld-schema'
 import { DownloadSampleButton } from '@/components/download-sample-button'
-import { ExitIntentPopup } from '@/components/exit-intent-popup'
 import {
   Carousel,
   CarouselContent,
@@ -1557,7 +1556,6 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
 
       </div>
       <div className='js-only'>
-        <ExitIntentPopup />
         {/* <UsaListStickyCta totalGyms={totalGyms} /> */}
       </div>
       {/* <div className='no-js-only fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-background shadow-[0_-4px_20px_rgba(0,0,0,0.06)]'>
