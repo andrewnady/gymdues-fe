@@ -100,6 +100,11 @@ export default function DashboardPage() {
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button asChild size="sm">
+                  <Link href="/dashboard/profile">
+                    Manage Profile
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
                   <Link href={`/gyms/${encodeURIComponent(gym.name.toLowerCase().replace(/\s+/g, '-'))}`} target="_blank">
                     View Public Listing
                   </Link>
