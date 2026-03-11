@@ -11,6 +11,12 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { getAuthToken } from '@/lib/gym-owner-auth'
 import {
+  apiListTeamMembers,
+  apiInviteTeamMember,
+  apiRevokeTeamMember,
+  type TeamMember,
+} from '@/lib/gym-team-api'
+import {
   apiGetLocations,
   apiGetDescription,
   apiUpdateDescription,
@@ -882,6 +888,188 @@ function ReviewsTab({ token, locations }: { token: string; locations: Location[]
   )
 }
 
+// ─── Team Tab (Owner Only) ─────────────────────────────────────────────────────
+
+const STATUS_BADGE: Record<string, string> = {
+  pending:  'bg-yellow-100 text-yellow-800 border-yellow-200',
+  accepted: 'bg-green-100 text-green-800 border-green-200',
+  revoked:  'bg-gray-100 text-gray-500 border-gray-200',
+}
+
+function TeamTab({ token }: { token: string }) {
+  const [members, setMembers] = useState<TeamMember[]>([])
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [revokingId, setRevokingId] = useState<number | null>(null)
+  const [form, setForm] = useState({ email: '', name: '', role: 'manager' as 'manager' | 'staff' })
+  const [inviting, setInviting] = useState(false)
+  const fetchedRef = useRef(false)
+
+  const loadMembers = useCallback(async () => {
+    const res = await apiListTeamMembers(token)
+    if (res.success) setMembers(res.members ?? [])
+    setLoading(false)
+  }, [token])
+
+  useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+    loadMembers()
+  }, [loadMembers])
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault()
+    setInviting(true)
+    setMessage(null)
+    const res = await apiInviteTeamMember(token, form.email, form.name, form.role)
+    setInviting(false)
+    if (res.success && res.member) {
+      setMembers((prev) => [res.member!, ...prev])
+      setForm({ email: '', name: '', role: 'manager' })
+      setMessage({ type: 'success', text: res.message ?? 'Invitation sent.' })
+    } else {
+      setMessage({ type: 'error', text: res.message ?? 'Failed to send invitation.' })
+    }
+  }
+
+  async function handleRevoke(id: number) {
+    if (!confirm('Revoke this member\'s access? They will be immediately logged out.')) return
+    setRevokingId(id)
+    const res = await apiRevokeTeamMember(token, id)
+    setRevokingId(null)
+    if (res.success) {
+      setMembers((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, status: 'revoked' } : m)),
+      )
+      setMessage({ type: 'success', text: 'Access revoked.' })
+    } else {
+      setMessage({ type: 'error', text: res.message ?? 'Failed to revoke access.' })
+    }
+  }
+
+  if (loading) return <TabSkeleton />
+
+  return (
+    <div className="space-y-6">
+      {/* Invite Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Invite Team Member</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Invite a manager or staff member to co-manage your gym listing. They will receive an email with a login link.
+          </p>
+          <form onSubmit={handleInvite} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Email Address *</label>
+                <Input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="colleague@example.com"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Full Name</label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Optional"
+                  maxLength={255}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Role</label>
+                <select
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as 'manager' | 'staff' })}
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="manager">Manager</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </div>
+            </div>
+            {message && (
+              <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
+                {message.text}
+              </p>
+            )}
+            <Button type="submit" size="sm" disabled={inviting}>
+              {inviting ? 'Sending Invite…' : 'Send Invitation'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Members List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Team Members</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {members.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">
+              No team members yet. Invite someone above.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-start justify-between gap-4 rounded-lg border p-4"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-sm truncate">
+                        {member.name || member.email}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_BADGE[member.status] ?? ''}`}
+                      >
+                        {member.status}
+                      </span>
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {member.role}
+                      </Badge>
+                    </div>
+                    {member.name && (
+                      <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Invited{' '}
+                      {member.invited_at
+                        ? new Date(member.invited_at).toLocaleDateString()
+                        : '—'}
+                      {member.accepted_at && (
+                        <> · Accepted {new Date(member.accepted_at).toLocaleDateString()}</>
+                      )}
+                    </p>
+                  </div>
+                  {member.status !== 'revoked' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => handleRevoke(member.id)}
+                      disabled={revokingId === member.id}
+                    >
+                      {revokingId === member.id ? '…' : 'Revoke'}
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function TabSkeleton() {
@@ -905,6 +1093,7 @@ export default function ProfilePage() {
   const [token, setToken] = useState<string | null>(null)
   const [locations, setLocations] = useState<Location[]>([])
   const [loadingLocations, setLoadingLocations] = useState(true)
+  const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
     const t = getAuthToken()
@@ -913,8 +1102,12 @@ export default function ProfilePage() {
       return
     }
     setToken(t)
-    apiGetLocations(t).then((res) => {
-      if (res.success) setLocations(res.locations ?? [])
+    Promise.all([
+      apiGetLocations(t),
+      apiListTeamMembers(t),
+    ]).then(([locRes, teamRes]) => {
+      if (locRes.success) setLocations(locRes.locations ?? [])
+      setIsOwner(teamRes.success === true)
       setLoadingLocations(false)
     })
   }, [router])
@@ -953,6 +1146,7 @@ export default function ProfilePage() {
             <TabsTrigger value="pricing">Pricing & Plans</TabsTrigger>
             <TabsTrigger value="hours">Hours</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            {isOwner && <TabsTrigger value="team">Team</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="description">
@@ -974,6 +1168,12 @@ export default function ProfilePage() {
           <TabsContent value="reviews">
             <ReviewsTab token={token} locations={locations} />
           </TabsContent>
+
+          {isOwner && (
+            <TabsContent value="team">
+              <TeamTab token={token} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
