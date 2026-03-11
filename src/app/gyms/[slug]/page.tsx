@@ -530,6 +530,7 @@ export default async function GymDetailPage({ params }: PageProps) {
         <GymClaimBanner
           gymId={Number(gym.id)}
           gymName={gym.name}
+          gymSlug={slug}
           isClaimed={gym.is_claimed ?? false}
           updatedAt={gym.updated_at}
           gymWebsite={gym.website}
