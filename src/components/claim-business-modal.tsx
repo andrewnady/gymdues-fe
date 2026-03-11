@@ -159,7 +159,8 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/send-phone-code`, {
         method: 'POST',
-        headers: { Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ phone_number: selectedPhone }),
       })
       const data = await res.json()
       if (!res.ok) {

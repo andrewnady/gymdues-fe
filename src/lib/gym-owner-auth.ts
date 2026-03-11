@@ -9,6 +9,7 @@ export interface GymOwnerUser {
 export interface GymInfo {
   id: number
   name: string
+  slug?: string
 }
 
 export interface AuthResponse {

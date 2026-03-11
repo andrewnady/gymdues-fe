@@ -105,7 +105,7 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link href={`/gyms/${encodeURIComponent(gym.name.toLowerCase().replace(/\s+/g, '-'))}`} target="_blank">
+                  <Link href={`/gyms/${gym.slug ?? encodeURIComponent(gym.name.toLowerCase().replace(/\s+/g, '-'))}`} target="_blank">
                     View Public Listing
                   </Link>
                 </Button>
