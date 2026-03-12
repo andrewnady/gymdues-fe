@@ -3,6 +3,8 @@ import { headers } from 'next/headers'
 import { getGymBySlug, getNearbyGyms, getAddressesByGymId } from '@/lib/gyms-api'
 import { getReviewCount, getGymHeroImagePath } from '@/lib/utils'
 import { GymHeroImage } from '@/components/gym-hero-image'
+import { GymClaimBanner } from '@/components/gym-claim-banner'
+import { VerifiedBadge } from '@/components/verified-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -446,6 +448,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                 </div>
                 <h1 className='text-4xl md:text-5xl font-bold mb-2'>
                   {gym.name}: Memberships, Fees, Classes, and Facilities
+                  {gym.is_verified && <VerifiedBadge gymName={gym.name} gymId={Number(gym.id)} />}
                 </h1>
                 <div className='flex flex-wrap items-center gap-4 mb-4'>
                   <div className='flex items-center gap-1'>
@@ -522,6 +525,17 @@ export default async function GymDetailPage({ params }: PageProps) {
             <GymAboutSection description={gym.description} />
           </CardContent>
         </Card>
+
+        {/* Claim / Verified Banner */}
+        <GymClaimBanner
+          gymId={Number(gym.id)}
+          gymName={gym.name}
+          gymSlug={slug}
+          isClaimed={gym.is_claimed ?? false}
+          updatedAt={gym.updated_at}
+          gymWebsite={gym.website}
+          gymPhones={gym.contacts?.filter(c => c.type === 'business_phone').map(c => c.value)}
+        />
 
         {/* Map and address sections: #location= (address id) is read from hash on the client */}
         <GymSlugAddressBlock slug={slug} gym={gym} initialAddresses={gymAddresses} />
