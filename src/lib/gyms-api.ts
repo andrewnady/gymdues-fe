@@ -30,6 +30,7 @@ export interface GymsPaginationMeta {
   prev_page_url?: string | null
   filterType?: string
   filterValue?: string
+  featuredImage?: string
 }
 
 export interface PaginatedGymsResponse {
@@ -371,6 +372,17 @@ export async function getPaginatedGyms(options: {
       prev_page_url: null,
       filterType: data.page.filterType,
       filterValue: data.page.filterType === 'state' ? data.page.state : data.page.city,
+      featuredImage: (() => {
+        const raw: string | undefined = data.page.featuredImage || data.page.featured_image
+        if (!raw) return undefined
+        // Already absolute — sanitize internal hostnames only
+        if (raw.startsWith('http://') || raw.startsWith('https://')) return transformApiUrl(raw)
+        // Storage path — prepend base URL
+        const base = API_BASE_URL.replace(/\/$/, '')
+        if (raw.startsWith('/storage/')) return `${base}${raw}`
+        // Plain filename (WinterCMS Media Manager)
+        return `${base}/storage/app/media/${raw.startsWith('/') ? raw.slice(1) : raw}`
+      })(),
     }
 
     return { gyms, meta }
