@@ -24,19 +24,25 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const { city: filter } = await params
   const { type = 'city' } = await searchParams
 
-  // Strip "best-gyms-in-" prefix to get the location slug, then capitalize for display
-  // const filterSlug = slug.startsWith('best-gyms-in-') ? slug.replace('best-gyms-in-', '') : slug
-  const slug = filter
+  const slug = `best-${filter}-gyms`
 
   const headersList = await headers()
-  // x-pathname is set by middleware to the original subdomain path (e.g. /best-houston-gyms)
-  const pathname = headersList.get('x-pathname') || `/best-${slug}-gyms`
+  const pathname = headersList.get('x-pathname') || `/best-${filter}-gyms`
   const base = siteUrl.replace(/\/$/, '')
   const canonicalUrl = `${base}${pathname}/`
 
   const locationLabel = type === 'state' ? `${filter} State` : filter
   const title = `Best Gyms in ${locationLabel} | Gymdues`
   const description = `Discover the top-rated gyms in ${locationLabel}. Compare membership prices, ratings, and amenities to find the best gym near you.`
+
+  // Fetch page data to get the featured image for OG/Twitter tags
+  let ogImage = `${siteUrl}/images/bg-header.jpg`
+  try {
+    const { meta } = await getPaginatedGyms({ slug, page: 1, perPage: 1, fields: 'topgyms' })
+    if (meta.featuredImage) ogImage = meta.featuredImage
+  } catch {
+    // fall back to default image
+  }
 
   return {
     title,
@@ -65,7 +71,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       type: 'website',
       images: [
         {
-          url: `${siteUrl}/images/bg-header.jpg`,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: title,
@@ -77,7 +83,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       card: 'summary_large_image',
       title,
       description,
-      images: [`${siteUrl}/images/bg-header.jpg`],
+      images: [ogImage],
       creator: '@gymdues',
       site: '@gymdues',
     },
@@ -213,7 +219,7 @@ const canonicalUrl = `${siteUrl.replace(/\/$/, '')}/${slug}/`
         }}
       />
 
-      <BestGymsByLocation filter={filter} type={type} initialGyms={gyms} initialMeta={meta} />
+      <BestGymsByLocation filter={filter} type={type} initialGyms={gyms} initialMeta={meta} featuredImage={meta.featuredImage ?? `${siteUrl}/images/bg-header.jpg`} />
       <div className='container mx-auto px-4'>
         <section className='mt-16 mb-12' aria-labelledby='fav-gym-heading'>
           <FavGymSlider gyms={favGyms} />
