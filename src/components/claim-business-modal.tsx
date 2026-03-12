@@ -319,9 +319,11 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
       id: 'phone' as const,
       icon: Phone,
       title: 'Phone Verification',
-      description: gymPhones && gymPhones.length === 1
-        ? `Send a code to the number on file (${maskPhone(gymPhones[0])}).`
-        : `Send a code to one of ${gymPhones?.length ?? 'the'} numbers on file.`,
+      description: gymPhones && gymPhones.length > 0
+        ? gymPhones.length === 1
+          ? `Send a code to the number on file (${maskPhone(gymPhones[0])}) or your own number.`
+          : `Send a code to one of ${gymPhones.length} numbers on file, or your own number.`
+        : 'Send a code to your phone number to verify ownership.',
       badge: 'Instant',
     }] : []),
     ...(availableMethods.includes('document') ? [{
@@ -740,53 +742,64 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
                           {/* Phone Verification fields */}
                           {id === 'phone' && verificationMethod === 'phone' && (
                             <div className="mt-2 space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                              {gymPhones && gymPhones.length > 0 ? (
-                                <>
-                                  <div>
-                                    <p className="text-xs font-medium text-muted-foreground mb-1.5">
-                                      {gymPhones.length === 1 ? 'Number on file' : 'Select a number to receive the code'}
-                                    </p>
-                                    <div className="space-y-1.5">
-                                      {gymPhones.map((num) => (
-                                        <label
-                                          key={num}
-                                          className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
-                                            selectedPhone === num
-                                              ? 'border-primary bg-primary/5'
-                                              : 'border-input bg-background hover:border-primary/50'
-                                          }`}
-                                        >
-                                          <input
-                                            type="radio"
-                                            name="gym-phone"
-                                            value={num}
-                                            checked={selectedPhone === num}
-                                            onChange={() => {
-                                              setSelectedPhone(num)
-                                              setVerificationError(null)
-                                            }}
-                                            className="accent-primary"
-                                          />
-                                          <span className="text-sm font-mono font-medium">{maskPhone(num)}</span>
-                                        </label>
-                                      ))}
+                              {(() => {
+                                const userPhoneNorm = phone.replace(/\D/g, '')
+                                const businessPhones = gymPhones ?? []
+                                const isUserPhoneInList = businessPhones.some(
+                                  (n) => n.replace(/\D/g, '') === userPhoneNorm
+                                )
+                                const allPhones: { num: string; isUser: boolean }[] = [
+                                  ...businessPhones.map((n) => ({ num: n, isUser: false })),
+                                  ...(phone && !isUserPhoneInList ? [{ num: phone, isUser: true }] : []),
+                                ]
+                                return (
+                                  <>
+                                    <div>
+                                      <p className="text-xs font-medium text-muted-foreground mb-1.5">
+                                        Select a number to receive the code
+                                      </p>
+                                      <div className="space-y-1.5">
+                                        {allPhones.map(({ num, isUser }) => (
+                                          <label
+                                            key={num}
+                                            className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                                              selectedPhone === num
+                                                ? 'border-primary bg-primary/5'
+                                                : 'border-input bg-background hover:border-primary/50'
+                                            }`}
+                                          >
+                                            <input
+                                              type="radio"
+                                              name="gym-phone"
+                                              value={num}
+                                              checked={selectedPhone === num}
+                                              onChange={() => {
+                                                setSelectedPhone(num)
+                                                setVerificationError(null)
+                                              }}
+                                              className="accent-primary"
+                                            />
+                                            <span className="text-sm font-mono font-medium">{maskPhone(num)}</span>
+                                            {isUser && (
+                                              <span className="ml-auto text-[10px] font-medium rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                                                Your number
+                                              </span>
+                                            )}
+                                          </label>
+                                        ))}
+                                      </div>
                                     </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={handleSendPhoneCode}
-                                    disabled={sendingCode || !selectedPhone}
-                                    className="w-full rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                                  >
-                                    {sendingCode ? 'Sending…' : 'Send verification code'}
-                                  </button>
-                                </>
-                              ) : (
-                                <p className="text-xs text-muted-foreground">
-                                  No phone number is on file for this business. Please use another
-                                  verification method.
-                                </p>
-                              )}
+                                    <button
+                                      type="button"
+                                      onClick={handleSendPhoneCode}
+                                      disabled={sendingCode || !selectedPhone}
+                                      className="w-full rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                                    >
+                                      {sendingCode ? 'Sending…' : 'Send verification code'}
+                                    </button>
+                                  </>
+                                )
+                              })()}
                             </div>
                           )}
 
