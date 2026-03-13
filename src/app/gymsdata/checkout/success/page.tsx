@@ -18,17 +18,19 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
   const [params, base] = await Promise.all([searchParams, getGymsdataBasePath()])
   const sessionId = typeof params.session_id === 'string' ? params.session_id.trim() || undefined : undefined
   const homeHref = base === '' ? '/' : `${base}/`
+  const checkoutPath = base === '' ? '/checkout' : `${base}/checkout`
+  const successPath = base === '' ? '/checkout/success' : `${base}/checkout/success`
 
   const successSchema = buildWebPageSchema({
     baseUrl: siteUrl,
     name: 'Thank You – Order Confirmed | Gymdues',
     description: 'Your gym dataset order is confirmed. Your download link will be sent by email.',
-    path: '/gymsdata/checkout/success',
+    path: successPath,
     breadcrumbs: [
-      { name: 'Home', url: '/' },
-      { name: 'Gym database', url: '/gymsdata' },
-      { name: 'Checkout', url: '/gymsdata/checkout' },
-      { name: 'Order confirmed', url: '/gymsdata/checkout/success' },
+      { name: 'Home', url: homeHref },
+      { name: 'Gym database', url: homeHref },
+      { name: 'Checkout', url: checkoutPath },
+      { name: 'Order confirmed', url: successPath },
     ],
   })
 

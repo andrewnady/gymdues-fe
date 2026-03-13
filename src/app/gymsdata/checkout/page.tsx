@@ -98,15 +98,17 @@ export default async function GymsdataCheckoutPage({ searchParams }: PageProps) 
     getCheckoutData(scope),
   ])
 
+  const checkoutPath = base === '' ? '/checkout' : `${base}/checkout`
+  const homePath = base === '' ? '/' : `${base}/`
   const checkoutSchema = buildWebPageSchema({
     baseUrl: siteUrl,
     name: 'Checkout – US Gym Leads Dataset | Gymdues',
     description: 'Complete your gym dataset purchase. Enter your details and proceed to secure payment.',
-    path: '/gymsdata/checkout',
+    path: checkoutPath,
     breadcrumbs: [
-      { name: 'Home', url: '/' },
-      { name: 'Gym database', url: '/gymsdata' },
-      { name: 'Checkout', url: '/gymsdata/checkout' },
+      { name: 'Home', url: homePath },
+      { name: 'Gym database', url: homePath },
+      { name: 'Checkout', url: checkoutPath },
     ],
   })
 
