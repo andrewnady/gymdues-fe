@@ -15,6 +15,8 @@ import {
 
 interface ListingByStateSectionProps {
   states: StateWithCount[]
+  /** On gymsdata subdomain pass '' for clean URLs (e.g. /california/). */
+  base?: string
 }
 
 const bestGymsUrl = process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL
@@ -35,7 +37,7 @@ function resolveStateImageUrl(path: string | undefined | null): string {
   return `${base}${relative}`
 }
 
-function StateCard({ state }: { state: StateWithCount }) {
+function StateCard({ state, base }: { state: StateWithCount; base?: string }) {
   const s = state as StateWithCount & { imageUrl?: string; featuredImage?: string }
   const raw = s.imageUrl ?? s.featuredImage
   const image = raw ? resolveStateImageUrl(raw) : DEFAULT_IMAGE
@@ -63,13 +65,13 @@ function StateCard({ state }: { state: StateWithCount }) {
   )
 
   return (
-    <Link href={stateGymsdataPath(state)} className='block cursor-pointer'>
+    <Link href={stateGymsdataPath(state, base)} className='block cursor-pointer'>
       {cardContent}
     </Link>
   )
 }
 
-export function ListingByStateSection({ states }: ListingByStateSectionProps) {
+export function ListingByStateSection({ states, base }: ListingByStateSectionProps) {
   if (states.length === 0) return null
 
   return (
@@ -119,7 +121,7 @@ export function ListingByStateSection({ states }: ListingByStateSectionProps) {
                   key={state.state}
                   className='pl-4 md:pl-5 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4'
                 >
-                  <StateCard state={state} />
+                  <StateCard state={state} base={base} />
                 </CarouselItem>
               ))}
             </CarouselContent>
