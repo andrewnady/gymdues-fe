@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { submitCheckout } from '@/lib/gymsdata-api'
+import { getGymsdataFrontendOriginFromRequest } from '@/app/gymsdata/_lib/get-gymsdata-base-path'
 
 /**
  * POST /api/gymsdata/checkout
  * Body (JSON): name, email; optional state, city, type.
- * Proxies to backend POST /api/v1/gymsdata/checkout. Returns { url: stripeSessionUrl }.
+ * Proxies to backend POST /api/v1/gymsdata/checkout. Sends frontend_origin so backend
+ * can set Stripe success_url and cancel_url (subdomain vs main domain).
+ * Returns { url: stripeSessionUrl }.
  */
 export async function POST(request: Request) {
   try {
@@ -26,8 +29,9 @@ export async function POST(request: Request) {
     const state = typeof body.state === 'string' ? body.state.trim() || undefined : undefined
     const city = typeof body.city === 'string' ? body.city.trim() || undefined : undefined
     const type = typeof body.type === 'string' ? body.type.trim() || undefined : undefined
+    const frontendOrigin = getGymsdataFrontendOriginFromRequest(request)
 
-    const { url } = await submitCheckout(name, email, { state, city, type })
+    const { url } = await submitCheckout(name, email, { state, city, type }, frontendOrigin)
     return NextResponse.json({ url })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Checkout failed'

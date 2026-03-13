@@ -265,13 +265,14 @@ export interface GymsdataCheckoutResponse {
 
 /**
  * POST /api/v1/gymsdata/checkout – create Stripe Checkout session.
- * Body: name, email; optional state, city (with state), type. Amount from scope (row count).
+ * Body: name, email; optional state, city (with state), type; optional frontend_origin for success/cancel URLs.
  * Returns session URL to redirect the user to Stripe Checkout.
  */
 export async function submitCheckout(
   name: string,
   email: string,
-  filters?: SampleDownloadFilters
+  filters?: SampleDownloadFilters,
+  frontendOrigin?: string
 ): Promise<GymsdataCheckoutResponse> {
   const url = `${GYMSDATA_BASE}/checkout`
   const headers: Record<string, string> = {
@@ -284,6 +285,7 @@ export async function submitCheckout(
   if (filters?.state) body.state = filters.state.trim()
   if (filters?.city) body.city = filters.city.trim()
   if (filters?.type) body.type = filters.type.trim()
+  if (frontendOrigin?.trim()) body.frontend_origin = frontendOrigin.trim()
 
   const res = await fetch(url, {
     method: 'POST',
