@@ -211,7 +211,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
   return (
     <div className='min-h-screen bg-background'>
       <JsonLdSchema data={[schemaDataset, schemaOrganization, schemaBreadcrumb]} />
-      <div className='container mx-auto px-4 py-12 lg:py-16 pb-24'>
+      <div className='container mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16 pb-20 sm:pb-24'>
         {/* Breadcrumb */}
         <nav className='max-w-6xl mx-auto mb-6 text-sm text-muted-foreground' aria-label='Breadcrumb'>
           <ol className='flex flex-wrap items-center gap-1'>
@@ -222,7 +222,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         </nav>
 
         {/* First section: List of Fitness, Gym, and Health Services in United States – dataset overview, stats, pricing, CTAs */}
-        <section className='max-w-6xl mx-auto mb-12 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10'>
+        <section className='max-w-6xl mx-auto mb-10 sm:mb-12 grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10'>
           <div className='flex flex-col justify-center'>
             <h1 className='text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl mb-4'>
               List of Fitness, Gym, and Health Services in United States
@@ -242,7 +242,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               Over {Math.round(ratedCount).toLocaleString('en-US')} Fitness, Gym, and Health Services have been rated by real users — useful for reputation management, review monitoring, and B2B outreach.
             </p>
 
-            <div className='grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-foreground mb-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:gap-y-2 text-sm text-foreground mb-4'>
               <ul className='space-y-1.5' aria-label='Dataset stats'>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> {totalGyms.toLocaleString('en-US')} Number of Fitness, Gym, and Health Services</li>
                 <li className='flex items-center gap-2'><span className='flex h-5 w-5 items-center justify-center rounded-full bg-primary/15'><CheckCircle2 className='h-3 w-3 text-primary' aria-hidden /></span> 13 Business types </li>
@@ -269,7 +269,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               <p className='text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4'>
                 Data updated on {lastUpdateDateLong}
               </p>
-              <div className='flex flex-wrap items-center gap-3'>
+              <div className='flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3'>
                 <BuyDataButton
                   href='/gymsdata/checkout'
                   label='Purchase The Data'
@@ -285,7 +285,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </div>
           </div>
 
-          <div className='relative flex items-center justify-center lg:justify-end'>
+          <div className='relative flex items-center justify-center lg:justify-end min-w-0 w-full overflow-hidden'>
             <DatasetPreviewTable rows={sampleRows} />
           </div>
         </section>
@@ -314,7 +314,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         )}
         
         {/* Overview strip – local gyms data + why choose section (inspired by GymsListsHQ) */}
-        <section className='max-w-6xl mx-auto mb-10 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'>
+        <section className='max-w-6xl mx-auto mb-8 sm:mb-10 grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]'>
           {/* Left: data-backed promise */}
           <div className='rounded-2xl border border-emerald-100 bg-emerald-50/60 px-5 py-5 sm:px-6 sm:py-6 lg:px-7 lg:py-7 shadow-[0_14px_35px_rgba(16,185,129,0.15)]'>
             <p className='text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-900 mb-2 flex items-center gap-2'>
@@ -329,7 +329,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               GymDues database is tied to a real Fitness, Gym, and Health Services location you can contact and close.
             </p>
 
-            <div className='mt-4 grid grid-cols-2 gap-3 sm:gap-4 max-w-md'>
+            <div className='mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-md'>
               <div className='rounded-xl bg-white/90 px-3 py-3 shadow-sm border border-emerald-100'>
                 <p className='text-xs font-medium text-muted-foreground mb-1'>Fitness, Gym, and Health Services locations</p>
                 <p className='text-lg sm:text-xl font-semibold text-emerald-700 tabular-nums'>
@@ -407,7 +407,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         {/* Data & use cases – enhanced section with clear CTAs and relation to main site */}
         <section
           id='use-cases-heading'
-          className='max-w-6xl mx-auto mb-16 rounded-2xl border border-border/60 bg-muted/20 px-5 py-8 md:px-8 md:py-10'
+          className='max-w-6xl mx-auto mb-12 sm:mb-16 rounded-2xl border border-border/60 bg-muted/20 px-4 py-6 sm:px-5 sm:py-8 md:px-8 md:py-10'
           aria-labelledby='data-use-cases-title'
         >
           <div className='text-center mb-8'>
@@ -480,7 +480,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
 
           <div>
             <h3 className='text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4'>Guides by role</h3>
-            <div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-4'>
+            <div className='grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
               <div className='group flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30'>
                 <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary mb-4 transition-colors group-hover:bg-primary/25'>
                   <Megaphone className='h-5 w-5' aria-hidden />
@@ -650,7 +650,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         </section>
 
         {/* U.S. Fitness, Gym, and Health Services map by state – switch between map and table (same section) */}
-        <section id='us-map' className='max-w-6xl mx-auto mb-16' aria-labelledby='us-map-heading'>
+        <section id='us-map' className='max-w-6xl mx-auto mb-12 sm:mb-16 overflow-hidden' aria-labelledby='us-map-heading'>
           <h2 id='us-map-heading' className='text-lg font-semibold text-foreground md:text-xl mb-2'>
             U.S. Fitness, Gym, and Health Services map by state
           </h2>
