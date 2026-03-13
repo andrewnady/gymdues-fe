@@ -30,6 +30,7 @@ export interface GymsPaginationMeta {
   prev_page_url?: string | null
   filterType?: string
   filterValue?: string
+  featuredImage?: string
 }
 
 export interface PaginatedGymsResponse {
@@ -101,10 +102,26 @@ function normalizeGym(gym: Record<string, unknown>): Gym {
     }
   }
 
+  // Extract phone, website, email from contacts array if present
+  const contacts = Array.isArray(gym.contacts)
+    ? (gym.contacts as Array<{ type: string; value: string }>)
+    : []
+
+  const contactPhone =
+    contacts.find((c) => c.type === 'business_phone')?.value ?? undefined
+  const contactWebsite =
+    contacts.find((c) => c.type === 'business_website')?.value ?? undefined
+  const contactEmail =
+    contacts.find((c) => c.type === 'email')?.value ?? undefined
+
   return {
     ...normalizedGym,
     reviewCount: Number(reviewCount) || 0,
     addresses_count: addressesCount,
+    // Prefer contacts array values; fall back to direct fields for legacy data
+    phone: contactPhone ?? (normalizedGym.phone as string) ?? '',
+    website: contactWebsite ?? (normalizedGym.website as string | undefined),
+    email: contactEmail ?? (normalizedGym.email as string) ?? '',
     // Preserve date fields if they exist
     created_at: normalizedGym.created_at ? String(normalizedGym.created_at) : undefined,
     updated_at: normalizedGym.updated_at ? String(normalizedGym.updated_at) : undefined,
@@ -355,6 +372,17 @@ export async function getPaginatedGyms(options: {
       prev_page_url: null,
       filterType: data.page.filterType,
       filterValue: data.page.filterType === 'state' ? data.page.state : data.page.city,
+      featuredImage: (() => {
+        const raw: string | undefined = data.page.featuredImage || data.page.featured_image
+        if (!raw) return undefined
+        // Already absolute — sanitize internal hostnames only
+        if (raw.startsWith('http://') || raw.startsWith('https://')) return transformApiUrl(raw)
+        // Storage path — prepend base URL
+        const base = API_BASE_URL.replace(/\/$/, '')
+        if (raw.startsWith('/storage/')) return `${base}${raw}`
+        // Plain filename (WinterCMS Media Manager)
+        return `${base}/storage/app/media/${raw.startsWith('/') ? raw.slice(1) : raw}`
+      })(),
     }
 
     return { gyms, meta }
