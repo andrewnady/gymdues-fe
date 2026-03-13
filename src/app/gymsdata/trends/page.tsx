@@ -21,7 +21,6 @@ export const metadata: Metadata = {
 export default async function GrowthTrendsPage() {
   const [base, trends] = await Promise.all([getGymsdataBasePath(), getIndustryTrends()])
   const homeHref = base === '' ? '/' : `${base}/`
-  const competitiveHref = base ? `${base}/competitive-intelligence` : '/competitive-intelligence'
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-16">

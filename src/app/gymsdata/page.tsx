@@ -41,7 +41,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
-import { StateByStateComparisonTable } from './_components/state-by-state-comparison-table'
+//import { StateByStateComparisonTable } from './_components/state-by-state-comparison-table'
 //import { buildStateComparisonRows } from './_data/state-comparison-stats'
 import { GymsdataHeroBanner } from './_components/gymsdata-hero-banner'
 import { DatasetPreviewTable } from './_components/dataset-preview-table'
