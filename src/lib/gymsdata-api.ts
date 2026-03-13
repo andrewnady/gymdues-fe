@@ -710,7 +710,7 @@ async function getGymsdataSitemapFallback(): Promise<{ data: string[] }> {
     for (const t of types) {
       const typeSlug = (t.typeSlug ?? t.type ?? '').trim().toLowerCase().replace(/\s+/g, '-')
       if (!typeSlug) continue
-      paths.push(`gymsdata/types/${encodeURIComponent(typeSlug)}`)
+      paths.push(`gymsdata/${encodeURIComponent(typeSlug)}`)
     }
 
     const citiesLimit = 150

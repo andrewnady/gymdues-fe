@@ -13,9 +13,11 @@ type SortBy = 'count' | 'name'
 interface StateCitiesFilterProps {
   cities: LocationWithCount[]
   stateSlug: string
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function StateCitiesFilter({ cities, stateSlug }: StateCitiesFilterProps) {
+export function StateCitiesFilter({ cities, stateSlug, base }: StateCitiesFilterProps) {
   const [sortBy, setSortBy] = useState<SortBy>('count')
   const [expanded, setExpanded] = useState(false)
 
@@ -69,7 +71,7 @@ export function StateCitiesFilter({ cities, stateSlug }: StateCitiesFilterProps)
         {visibleCities.map((loc) => (
           <li key={loc.label ?? `${loc.city}-${loc.state}`}>
             <Link
-              href={cityGymsdataPath(stateSlug, loc.city ?? '')}
+              href={cityGymsdataPath(stateSlug, loc.city ?? '', base)}
               className='flex items-center justify-between rounded-xl border border-border/80 bg-card px-4 py-3 shadow-sm hover:bg-muted/50 hover:border-primary/40 transition-colors'
             >
               <div className='flex items-center gap-3'>

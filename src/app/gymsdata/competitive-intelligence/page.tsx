@@ -19,11 +19,7 @@ export default function CompetitiveIntelligencePage() {
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-4xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><Link href="/" className="hover:text-primary">Home</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href="/gymsdata/" className="hover:text-primary">List of Fitness, Gym, and Health Services in United States</Link></li>
-            <li aria-hidden>/</li>
-            <li className="text-foreground font-medium">Competitive Intelligence</li>
+            <li><Link href="/gymsdata/" className="hover:text-primary">Home</Link></li>
           </ol>
         </nav>
 
