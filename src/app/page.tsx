@@ -250,10 +250,6 @@ export default async function Home() {
               const d = new Date(review.reviewed_at)
               return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : undefined
             })(),
-            itemReviewed: {
-              '@type': 'LocalBusiness',
-              name: review.gymName || review.gym?.name,
-            },
           })),
         }
       : null
