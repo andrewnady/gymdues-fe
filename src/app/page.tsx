@@ -19,6 +19,7 @@ import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
+import { CalorieCalculatorSection } from '@/components/calorie-calculator-section'
 import { RatedGymsSection } from '@/components/rated-gyms-section'
 import { BestGymsLocationSection } from '@/components/best-gyms-location-section'
 import { PopularCitiesSlider } from '@/components/popular-cities-slider'
@@ -268,6 +269,7 @@ export default async function Home() {
       )}
       <RedirectGymsHash />
       <HeroSection popularGyms={popularGyms} />
+      <CalorieCalculatorSection />
       {/* <WhyChooseSection /> */}
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
