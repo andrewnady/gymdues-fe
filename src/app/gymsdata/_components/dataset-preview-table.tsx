@@ -81,10 +81,10 @@ export function DatasetPreviewTable({ rows }: { rows?: RowRecord[] }) {
   const handleHeaderLeave = useCallback(() => setHighlightedColumn(null), [])
 
   return (
-    <div className='relative w-full max-w-2xl'>
+    <div className='relative w-full min-w-0 max-w-2xl'>
       <div className='relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl shadow-black/5 dark:shadow-none dark:border-border/80'>
         {/* Top bar */}
-        <div className='flex items-center justify-between gap-3 border-b border-border/60 bg-muted/30 px-4 py-3'>
+        <div className='flex flex-wrap items-center justify-between gap-2 sm:gap-3 border-b border-border/60 bg-muted/30 px-3 sm:px-4 py-3'>
           <div className='flex items-center gap-2'>
             <div className='flex h-2 w-2 rounded-full bg-emerald-500' aria-hidden />
             <span className='text-xs font-medium text-muted-foreground'>Live sample</span>
@@ -95,9 +95,9 @@ export function DatasetPreviewTable({ rows }: { rows?: RowRecord[] }) {
         </div>
 
         {/* Callout: full download has all schema columns */}
-        <div className='flex items-center gap-2 border-b border-border/50 bg-primary/5 px-4 py-2.5'>
-          <Download className='h-4 w-4 shrink-0 text-primary' aria-hidden />
-          <p className='text-[11px] text-foreground/90'>
+        <div className='flex items-start gap-2 border-b border-border/50 bg-primary/5 px-3 sm:px-4 py-2.5'>
+          <Download className='h-4 w-4 shrink-0 text-primary mt-0.5' aria-hidden />
+          <p className='text-[11px] text-foreground/90 min-w-0'>
             <span className='font-medium'>Full download includes {FULL_DOWNLOAD_COUNT} columns</span>
             <span className='text-muted-foreground'> — business_name, full_address, emails (1–3), business_phone, business_website, facebook, instagram, total_reviews, average_rating, latitude, longitude, and more. This preview shows 8 columns; scroll right.</span>
           </p>
@@ -122,7 +122,7 @@ export function DatasetPreviewTable({ rows }: { rows?: RowRecord[] }) {
           <div
             ref={scrollRef}
             onScroll={updateScrollState}
-            className='dataset-preview-table-scroll overflow-x-auto overflow-y-auto max-h-[340px] overscroll-contain'
+            className='dataset-preview-table-scroll overflow-x-auto overflow-y-auto max-h-[280px] sm:max-h-[340px] overscroll-contain -mx-1 px-1'
             style={{ scrollbarGutter: 'stable' }}
           >
             <style
