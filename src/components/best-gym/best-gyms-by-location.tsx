@@ -133,7 +133,7 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta, fea
               src={featuredImage}
               alt=""
               aria-hidden="true"
-              className='absolute inset-0 w-full h-full object-cover object-top blur-sm'
+              className='absolute inset-0 w-full h-full object-cover blur-sm'
             />
             <div className='absolute inset-0 bg-black/55' />
           </>
