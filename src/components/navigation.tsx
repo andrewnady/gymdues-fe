@@ -156,7 +156,7 @@ export function Navigation() {
             ) : (
               <Link
                 href={`${siteUrl}/dashboard/auth/login`}
-                className={`text-sm font-medium border rounded-md px-3 py-1.5 transition-colors ${
+                className={`hidden text-sm font-medium border rounded-md px-3 py-1.5 transition-colors ${
                   shouldShowWhiteText
                     ? 'border-white/60 text-white hover:bg-white/10'
                     : 'border-input text-foreground hover:bg-accent'
@@ -220,7 +220,7 @@ export function Navigation() {
               ) : (
                 <Link
                   href={`${siteUrl}/dashboard/auth/login`}
-                  className='text-foreground hover:text-primary transition-colors py-2 text-lg font-medium'
+                  className='hidden text-foreground hover:text-primary transition-colors py-2 text-lg font-medium'
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Gym Owner Login
