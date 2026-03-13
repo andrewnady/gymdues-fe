@@ -15,17 +15,18 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 export default async function CheckoutCancelPage() {
   const base = await getGymsdataBasePath()
   const homeHref = base === '' ? '/' : `${base}/`
-  const checkoutHref = base ? `${base}/checkout` : '/checkout'
+  const checkoutHref = base === '' ? '/checkout' : `${base}/checkout`
+  const cancelPath = base === '' ? '/checkout/cancel' : `${base}/checkout/cancel`
   const cancelSchema = buildWebPageSchema({
     baseUrl: siteUrl,
     name: 'Checkout Cancelled | Gymdues',
     description: 'Your checkout was cancelled. Return to the gym database to try again.',
-    path: '/gymsdata/checkout/cancel',
+    path: cancelPath,
     breadcrumbs: [
-      { name: 'Home', url: '/' },
-      { name: 'Gym database', url: '/gymsdata' },
-      { name: 'Checkout', url: '/gymsdata/checkout' },
-      { name: 'Cancelled', url: '/gymsdata/checkout/cancel' },
+      { name: 'Home', url: homeHref },
+      { name: 'Gym database', url: homeHref },
+      { name: 'Checkout', url: checkoutHref },
+      { name: 'Cancelled', url: cancelPath },
     ],
   })
 
