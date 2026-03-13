@@ -3,6 +3,7 @@ import { buildWebPageSchema } from '@/lib/schema-builder'
 import { JsonLdSchema } from '@/components/json-ld-schema'
 import type { PriceFromServer } from '../_components/buy-data-price'
 import { CheckoutClient } from './checkout-client'
+import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -92,7 +93,10 @@ export default async function GymsdataCheckoutPage({ searchParams }: PageProps) 
   const city = typeof params.city === 'string' ? params.city.trim() || undefined : undefined
   const type = typeof params.type === 'string' ? params.type.trim() || undefined : undefined
   const scope: CheckoutScope = { state, city, type }
-  const { priceFromServer, scopeDetails } = await getCheckoutData(scope)
+  const [base, { priceFromServer, scopeDetails }] = await Promise.all([
+    getGymsdataBasePath(),
+    getCheckoutData(scope),
+  ])
 
   const checkoutSchema = buildWebPageSchema({
     baseUrl: siteUrl,
@@ -113,6 +117,7 @@ export default async function GymsdataCheckoutPage({ searchParams }: PageProps) 
         scope={scope}
         priceFromServer={priceFromServer}
         scopeDetails={scopeDetails}
+        base={base}
       />
     </>
   )

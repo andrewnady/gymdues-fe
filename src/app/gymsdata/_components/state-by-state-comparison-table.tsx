@@ -10,9 +10,11 @@ type SortKey = 'stateName' | 'count' | 'densityPer100k' | 'avgPriceMonthly' | 's
 
 interface StateByStateComparisonTableProps {
   rows: StateComparisonRow[]
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function StateByStateComparisonTable({ rows }: StateByStateComparisonTableProps) {
+export function StateByStateComparisonTable({ rows, base }: StateByStateComparisonTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('count')
   const [asc, setAsc] = useState(false)
 
@@ -94,7 +96,7 @@ export function StateByStateComparisonTable({ rows }: StateByStateComparisonTabl
           {sortedRows.map((row) => (
             <tr key={row.state} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40'>
               <td className='px-4 py-3 font-medium'>
-                <Link href={stateGymsdataPath({ state: row.state, stateName: row.stateName, count: row.count })} className='text-primary hover:underline'>
+                <Link href={stateGymsdataPath({ state: row.state, stateName: row.stateName, count: row.count }, base)} className='text-primary hover:underline'>
                   {row.stateName}
                 </Link>
                 <span className='ml-1.5 text-muted-foreground font-mono text-xs'>({row.state})</span>

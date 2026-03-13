@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { CheckCircle2, Mail, FileSpreadsheet, ArrowRight } from 'lucide-react'
 import { buildWebPageSchema } from '@/lib/schema-builder'
 import { JsonLdSchema } from '@/components/json-ld-schema'
+import { getGymsdataBasePath } from '../../_lib/get-gymsdata-base-path'
 
 export const metadata: Metadata = {
   title: 'Thank You – Order Confirmed | Gymdues',
@@ -14,8 +15,9 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 type PageProps = { searchParams: Promise<{ session_id?: string }> }
 
 export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
-  const params = await searchParams
+  const [params, base] = await Promise.all([searchParams, getGymsdataBasePath()])
   const sessionId = typeof params.session_id === 'string' ? params.session_id.trim() || undefined : undefined
+  const homeHref = base === '' ? '/' : `${base}/`
 
   const successSchema = buildWebPageSchema({
     baseUrl: siteUrl,
@@ -81,7 +83,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/gymsdata"
+              href={homeHref}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Back to Home

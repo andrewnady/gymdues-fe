@@ -41,7 +41,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel'
-//import { StateByStateComparisonTable } from './_components/state-by-state-comparison-table'
+import { StateByStateComparisonTable } from './_components/state-by-state-comparison-table'
 //import { buildStateComparisonRows } from './_data/state-comparison-stats'
 import { GymsdataHeroBanner } from './_components/gymsdata-hero-banner'
 import { DatasetPreviewTable } from './_components/dataset-preview-table'
@@ -268,7 +268,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
                   fallbackLabel={FULL_DATA_PRICE_LABEL}
                 />
-                <DownloadSampleButton variant='outline' />
+                <DownloadSampleButton variant='outline' base={base} />
               </div>
               <p className='mt-4 flex items-center gap-2 text-sm font-medium text-primary'>
                 <Zap className='h-4 w-4' aria-hidden />
@@ -909,7 +909,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               Compare U.S. states by gym density per capita, average pricing, and market saturation. Click a column header to sort.
             </p>
             <div className='js-only'>
-              <StateByStateComparisonTable rows={stateComparisonRows} />
+              <StateByStateComparisonTable rows={stateComparisonRows} base={base} />
             </div>
             <div className='no-js-only overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm'>
               <table className='min-w-full text-left text-sm'>
@@ -1336,7 +1336,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
                 fallbackLabel={FULL_DATA_PRICE_LABEL}
               />
-              <DownloadSampleButton variant='outline' />
+              <DownloadSampleButton variant='outline' base={base} />
               {/* <Link
                 href='#states-table'
                 className='inline-flex items-center gap-2 rounded-xl border border-input bg-background px-5 py-3 text-sm font-medium hover:bg-muted transition-colors'
@@ -1489,7 +1489,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
               fallbackLabel={FULL_DATA_PRICE_LABEL}
             />
-            <DownloadSampleButton variant='outline' />
+            <DownloadSampleButton variant='outline' base={base} />
           </div>
         </section>
 
@@ -1560,7 +1560,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               <Filter className='h-4 w-4' />
               Filter Now
             </Link>
-            <DownloadSampleButton variant='outline' />
+            <DownloadSampleButton variant='outline' base={base} />
           </div>
           <p className='text-center text-xs text-muted-foreground mt-2'>
             1,247 businesses downloaded this month · ★★★★★ 4.8/5 from 300+ reviews

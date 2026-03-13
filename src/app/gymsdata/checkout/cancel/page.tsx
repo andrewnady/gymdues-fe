@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { buildWebPageSchema } from '@/lib/schema-builder'
 import { JsonLdSchema } from '@/components/json-ld-schema'
+import { getGymsdataBasePath } from '../../_lib/get-gymsdata-base-path'
 
 export const metadata: Metadata = {
   title: 'Checkout Cancelled | Gymdues',
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
-export default function CheckoutCancelPage() {
+export default async function CheckoutCancelPage() {
+  const base = await getGymsdataBasePath()
+  const homeHref = base === '' ? '/' : `${base}/`
+  const checkoutHref = base ? `${base}/checkout` : '/checkout'
   const cancelSchema = buildWebPageSchema({
     baseUrl: siteUrl,
     name: 'Checkout Cancelled | Gymdues',
@@ -41,14 +45,14 @@ export default function CheckoutCancelPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/gymsdata/checkout"
+              href={checkoutHref}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <ShoppingCart className="h-4 w-4" aria-hidden />
               Try checkout again
             </Link>
             <Link
-              href="/gymsdata"
+              href={homeHref}
               className="inline-flex items-center gap-2 rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium hover:bg-muted transition-colors"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />
