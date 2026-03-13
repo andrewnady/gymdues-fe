@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { BadgeCheck, X } from 'lucide-react'
 import { DisputeModal } from './dispute-modal'
+import { getAuthToken, apiGetMe } from '@/lib/gym-owner-auth'
 
 interface VerifiedBadgeProps {
   gymName: string
@@ -12,7 +13,19 @@ interface VerifiedBadgeProps {
 export function VerifiedBadge({ gymName, gymId }: VerifiedBadgeProps) {
   const [open, setOpen] = useState(false)
   const [disputeOpen, setDisputeOpen] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
+
+  // Check if the authenticated user is the owner of this gym
+  useEffect(() => {
+    const token = getAuthToken()
+    if (!token) return
+    apiGetMe(token).then((me) => {
+      if (me.success && me.gym?.id === gymId) {
+        setIsOwner(true)
+      }
+    })
+  }, [gymId])
 
   // Close on outside click
   useEffect(() => {
@@ -72,16 +85,18 @@ export function VerifiedBadge({ gymName, gymId }: VerifiedBadgeProps) {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                setDisputeOpen(true)
-              }}
-              className="w-full rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Submit a dispute
-            </button>
+            {!isOwner && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false)
+                  setDisputeOpen(true)
+                }}
+                className="w-full rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Submit a dispute
+              </button>
+            )}
           </span>
           </span>
         )}
