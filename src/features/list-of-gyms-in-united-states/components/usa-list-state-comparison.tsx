@@ -25,7 +25,7 @@ interface UsaListStateComparisonProps {
 type MetricKey = 'totalGyms' | 'withEmail' | 'withPhone' | 'avgRating' | 'densityPer100k'
 
 const METRICS: { key: MetricKey; label: string; format: (v: number) => string; higherIsBetter: boolean }[] = [
-  { key: 'totalGyms', label: 'Total Fitness, Gym, and Health Services', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
+  { key: 'totalGyms', label: 'Total', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
   { key: 'withEmail', label: 'With Email', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
   { key: 'withPhone', label: 'With Phone', format: (v) => v.toLocaleString('en-US'), higherIsBetter: true },
   { key: 'avgRating', label: 'Avg Rating', format: (v) => v.toFixed(1), higherIsBetter: true },

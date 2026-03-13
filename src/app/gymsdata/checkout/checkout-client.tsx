@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Loader2, AlertCircle, Shield, FileSpreadsheet, Zap, Mail } from 'lucide-react'
+import { typeGymsdataPath, stateGymsdataPath, cityGymsdataPath, toSlug } from '@/lib/gymsdata-utils'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
 import { BuyDataPrice } from '../_components/buy-data-price'
 import { BUY_BUTTON_CLASSES } from '../_components/buy-data-button'
@@ -61,16 +62,45 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
 
   const rowCount = priceFromServer?.rowCount
 
+  // Breadcrumb: Home / [scope context] / Checkout
+  const breadcrumbSegments: { label: string; href?: string }[] = [{ label: 'Home', href: '/gymsdata/' }]
+  if (scope.type) {
+    const typeSlug = toSlug(scope.type)
+    breadcrumbSegments.push({ label: scopeDetails.scopeLabel, href: typeSlug ? typeGymsdataPath(typeSlug) : undefined })
+  } else if (scope.state && scope.city) {
+    breadcrumbSegments.push({
+      label: scopeDetails.scopeLabel.split(',')[1]?.trim() || scope.state,
+      href: stateGymsdataPath({ stateName: scope.state, state: scope.state, count: 0 }),
+    })
+    breadcrumbSegments.push({
+      label: scopeDetails.scopeLabel.split(',')[0]?.trim() || scope.city,
+      href: cityGymsdataPath(scope.state, scope.city),
+    })
+  } else if (scope.state) {
+    breadcrumbSegments.push({
+      label: scopeDetails.scopeLabel,
+      href: stateGymsdataPath({ stateName: scopeDetails.scopeLabel, state: scope.state, count: 0 }),
+    })
+  }
+  breadcrumbSegments.push({ label: 'Checkout' })
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 md:py-12 lg:py-16">
         <nav className="max-w-5xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><Link href="/" className="hover:text-primary">Home</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href="/gymsdata" className="hover:text-primary">List of Fitness, Gym, and Health Services in United States</Link></li>
-            <li aria-hidden>/</li>
-            <li className="text-foreground font-medium">Checkout</li>
+            {breadcrumbSegments.flatMap((seg, i) => [
+              i > 0 ? <li key={`sep-${i}`} aria-hidden>/</li> : null,
+              <li key={i}>
+                {seg.href ? (
+                  <Link href={seg.href} className="hover:text-primary">{seg.label}</Link>
+                ) : (
+                  <span className={i === breadcrumbSegments.length - 1 ? 'text-foreground font-medium' : undefined}>
+                    {seg.label}
+                  </span>
+                )}
+              </li>,
+            ]).filter(Boolean)}
           </ol>
         </nav>
 

@@ -86,18 +86,43 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
           <div className='overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm'>
             <div className='flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-b border-border/60'>
               <p className='text-xs text-muted-foreground'>
-                Showing {layerLabel} by state
+                Showing {layerLabel} by state (sorted by total)
               </p>
             </div>
             <table className='min-w-full text-left text-sm' aria-describedby='map-table-details'>
               <thead className='bg-muted/40 border-b border-border/60'>
                 <tr>
-                  <th scope='col' className='px-3 py-3 w-12 text-center text-xs font-medium text-muted-foreground'>#</th>
-                  <th scope='col' className='px-3 py-3 text-xs font-medium text-muted-foreground min-w-[120px]'>State</th>
-                  <th scope='col' className='px-3 py-3 hidden sm:table-cell w-16 text-xs font-medium text-muted-foreground'>Code</th>
-                  <th scope='col' className='px-3 py-3 text-right w-28 text-xs font-medium text-muted-foreground'>{layer === 'all' ? 'Fitness, Gym, and Health Services' : 'Count'}</th>
-                  <th scope='col' className='px-3 py-3 hidden md:table-cell w-36 text-xs font-medium text-muted-foreground text-right'>% of total</th>
-                  <th scope='col' className='px-3 py-3 text-center w-40 min-w-[10rem] text-xs font-medium text-muted-foreground'>Action</th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 w-12 text-center text-xs font-medium text-muted-foreground'
+                  >
+                    #
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 text-xs font-medium text-muted-foreground min-w-[140px]'
+                  >
+                    State
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 hidden sm:table-cell w-16 text-xs font-medium text-muted-foreground text-center'
+                  >
+                    Code
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 text-right w-32 text-xs font-medium text-muted-foreground tabular-nums'
+                  >
+                    Count
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 hidden md:table-cell w-40 text-xs font-medium text-muted-foreground text-right tabular-nums'
+                  >
+                    % of total
+                  </th>
+                  {/* <th scope='col' className='px-3 py-3 text-center w-40 min-w-[10rem] text-xs font-medium text-muted-foreground'>Action</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -114,15 +139,19 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                           </Link>
                           <span
                             className='inline-flex shrink-0 text-muted-foreground hover:text-foreground'
-                            title={`${state.stateName} (${state.state}): ${state.layerCount.toLocaleString('en-US')} ${layerLabel} — view Fitness, Gym, and Health Services`}
-                            aria-label={`Details for ${state.stateName}`}
+                            title={`${state.stateName} (${state.state}): ${state.layerCount.toLocaleString('en-US')} ${layerLabel} (${pct}% of US total)`}
+                            aria-label={`${state.stateName} has ${state.layerCount.toLocaleString('en-US')} ${layerLabel}, about ${pct}% of the US total`}
                           >
                             <Info className='h-3.5 w-3.5' aria-hidden />
                           </span>
                         </span>
                       </td>
-                      <td className='px-3 py-3 text-muted-foreground hidden sm:table-cell font-mono text-xs'>{state.state}</td>
-                      <td className='px-3 py-3 text-right font-semibold tabular-nums'>{state.layerCount.toLocaleString('en-US')}</td>
+                      <td className='px-3 py-3 text-muted-foreground hidden sm:table-cell font-mono text-xs text-center'>
+                        {state.state}
+                      </td>
+                      <td className='px-3 py-3 text-right font-semibold tabular-nums'>
+                        {state.layerCount.toLocaleString('en-US')}
+                      </td>
                       <td className='px-3 py-3 hidden md:table-cell align-middle'>
                         <div className='flex items-center gap-2 min-w-[100px]'>
                           <div className='flex-1 min-w-0 h-2 rounded-full bg-muted overflow-hidden'>
@@ -135,7 +164,7 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                           <span className='text-muted-foreground tabular-nums text-xs shrink-0 w-9 text-right'>{pct}%</span>
                         </div>
                       </td>
-                      <td className='px-3 py-3 text-center align-middle'>
+                      {/* <td className='px-3 py-3 text-center align-middle'>
                         <Link
                           href={stateGymsdataPath(state)}
                           title={`View Fitness, Gym, and Health Services in ${state.stateName}`}
@@ -144,15 +173,17 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                           <span className='sm:hidden'>View</span>
                           <span className='hidden sm:inline'>View Fitness, Gym, and Health Services</span>
                         </Link>
-                      </td>
+                      </td> */}
                     </tr>
                   )
                 })}
                 <tr className='bg-muted/50 border-t-2 border-border font-semibold'>
                   <td className='px-3 py-3 text-center text-muted-foreground'>—</td>
                   <td className='px-3 py-3'>Total</td>
-                  <td className='px-3 py-3 text-muted-foreground hidden sm:table-cell'>—</td>
-                  <td className='px-3 py-3 text-right tabular-nums'>{totalForLayer.toLocaleString('en-US')}</td>
+                  <td className='px-3 py-3 text-muted-foreground hidden sm:table-cell text-center'>—</td>
+                  <td className='px-3 py-3 text-right tabular-nums font-semibold'>
+                    {totalForLayer.toLocaleString('en-US')}
+                  </td>
                   <td className='px-3 py-3 hidden md:table-cell'>
                     <div className='flex items-center gap-2 min-w-[100px]'>
                       <div className='flex-1 min-w-0 h-2 rounded-full bg-muted overflow-hidden'>
@@ -161,7 +192,6 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                       <span className='text-muted-foreground tabular-nums text-xs shrink-0 w-9 text-right'>100%</span>
                     </div>
                   </td>
-                  <td className='px-3 py-3 text-center' />
                 </tr>
               </tbody>
             </table>

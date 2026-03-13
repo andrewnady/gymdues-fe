@@ -20,9 +20,6 @@ import {
   TrendingUp,
   //BarChart2,
   //Gift,
-  Megaphone,
-  Code,
-  Package,
   ChevronRight,
 } from 'lucide-react'
 import { usaListPageFaqs } from '@/usa-list/data/usa-list-page-faqs'
@@ -200,13 +197,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
     totalStates,
   })
   const schemaOrganization = buildOrganizationSchema(siteUrl)
-  const schemaBreadcrumb = buildBreadcrumbSchema(
-    [
-      { name: 'Home', url: '/' },
-      { name: 'List of Fitness, Gym, and Health Services in United States', url: '/gymsdata/' },
-    ],
-    siteUrl
-  )
+  const schemaBreadcrumb = buildBreadcrumbSchema([{ name: 'Home', url: '/gymsdata/' }], siteUrl)
 
   return (
     <div className='min-h-screen bg-background'>
@@ -215,9 +206,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         {/* Breadcrumb */}
         <nav className='max-w-6xl mx-auto mb-6 text-sm text-muted-foreground' aria-label='Breadcrumb'>
           <ol className='flex flex-wrap items-center gap-1'>
-            <li><Link href='/' className='hover:text-primary'>Home</Link></li>
-            <li aria-hidden>/</li>
-            <li className='text-foreground font-medium'>List of Fitness, Gym, and Health Services in United States</li>
+            <li><Link href='/gymsdata/' className='hover:text-primary'>Home</Link></li>
           </ol>
         </nav>
 
@@ -416,15 +405,15 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               Part of Gymdues
             </Link>
             <h2 id='data-use-cases-title' className='text-lg font-semibold text-foreground md:text-xl mb-2'>
-              Data & use cases
+              Industry insights &amp; tools
             </h2>
             <p className='text-muted-foreground max-w-2xl mx-auto'>
-              Interactive tools and dedicated guides for marketing agencies, software companies, equipment suppliers, and franchise development.
+              Explore trends, growth by city and category, and franchise vs. independent breakdowns—backed by the same dataset you can download above.
             </p>
           </div>
 
           <div className='mb-8'>
-            <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3'>Interactive tools</p>
+            <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3'>Reports &amp; tools</p>
             <div className='grid gap-4 sm:grid-cols-1 lg:grid-cols-1'>
               <Link
                 href='/gymsdata/trends'
@@ -478,7 +467,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </div>
           </div>
 
-          <div>
+          {/* <div>
             <h3 className='text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4'>Guides by role</h3>
             <div className='grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'>
               <div className='group flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30'>
@@ -534,7 +523,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                 </ul>
               </div>
             </div>
-          </div>
+          </div> */}
         </section>
 
         {/* How many gyms are there in the United States? */}

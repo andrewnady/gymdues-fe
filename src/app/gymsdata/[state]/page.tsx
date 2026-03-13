@@ -60,11 +60,11 @@ export default async function GymsdataStatePage({ params }: Props) {
       <div className='border-b bg-muted/30'>
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
-            <Link href='/' className='hover:text-primary'>Home</Link>
-            <span className='mx-2'>/</span>
-            <Link href='/gymsdata/' className='hover:text-primary'>List of Fitness, Gym, and Health Services in United States</Link>
-            <span className='mx-2'>/</span>
-            <span className='text-foreground font-medium'>{displayState.stateName}</span>
+            <ol className='flex flex-wrap items-center gap-1'>
+              <li><Link href='/gymsdata/' className='hover:text-primary'>Home</Link></li>
+              <li aria-hidden>/</li>
+              <li className='text-foreground font-medium'>{displayState.stateName}</li>
+            </ol>
           </nav>
           <h1 className='text-3xl md:text-4xl font-bold tracking-tight'>
             List of Gyms in {displayState.stateName} - {displayState.count.toLocaleString('en-US')} Verified Contacts
