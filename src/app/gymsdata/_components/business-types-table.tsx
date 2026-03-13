@@ -9,9 +9,11 @@ interface BusinessTypesTableProps {
   types: GymsdataTypeItem[]
   typesCovered: number
   totalGyms: number
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function BusinessTypesTable({ types, typesCovered, totalGyms }: BusinessTypesTableProps) {
+export function BusinessTypesTable({ types, typesCovered, totalGyms, base }: BusinessTypesTableProps) {
   const maxPct = Math.max(...types.map((t) => t.pct ?? 0), 1)
 
   return (
@@ -52,7 +54,7 @@ export function BusinessTypesTable({ types, typesCovered, totalGyms }: BusinessT
                   </td>
                   <td className="pl-3 pr-4 py-3 font-medium">
                     <Link
-                      href={typeGymsdataPath(t.typeSlug)}
+                      href={typeGymsdataPath(t.typeSlug, base)}
                       className="text-primary hover:underline underline-offset-2 inline-flex items-center gap-1.5"
                     >
                       {t.type}

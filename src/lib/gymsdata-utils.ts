@@ -3,6 +3,12 @@ import type { LocationWithCount, StateWithCount } from '@/types/gym'
 /** Base path for all gymsdata pages. Use this prefix for any action/link from /gymsdata. */
 export const GYMSDATA_BASE = '/gymsdata/'
 
+/** Prefix for hrefs: when base is '' (subdomain) use '/', else use base or GYMSDATA_BASE. */
+function gymsdataPrefix(base?: string): string {
+  if (base === '') return '/'
+  return base !== undefined ? (base.endsWith('/') ? base : `${base}/`) : GYMSDATA_BASE
+}
+
 /** Convert "Los Angeles" → "los-angeles", "New York" → "new-york" */
 export function toSlug(name: string): string {
   return name
@@ -81,19 +87,19 @@ export function getCityBySlug(
   }) ?? null
 }
 
-/** Build path for state: /gymsdata/north-carolina (lowercase, spaces → hyphens). Backend accepts this. */
-export function stateGymsdataPath(state: StateWithCount): string {
+/** Build path for state. Pass base '' on gymsdata subdomain for clean URLs (e.g. /california/). */
+export function stateGymsdataPath(state: StateWithCount, base?: string): string {
   const name = state.stateName?.trim()
-  if (!name) return GYMSDATA_BASE
-  return `${GYMSDATA_BASE}${toUrlSegment(name)}`
+  if (!name) return gymsdataPrefix(base)
+  return `${gymsdataPrefix(base)}${toUrlSegment(name)}`
 }
 
-/** Build path for city: /gymsdata/north-carolina/holly-springs (lowercase, spaces → hyphens). Backend accepts this. */
-export function cityGymsdataPath(stateNameOrSegment: string, cityName: string): string {
+/** Build path for city. Pass base '' on gymsdata subdomain for clean URLs. */
+export function cityGymsdataPath(stateNameOrSegment: string, cityName: string, base?: string): string {
   const s = stateNameOrSegment?.trim()
   const c = cityName?.trim()
-  if (!s || !c) return GYMSDATA_BASE
-  return `${GYMSDATA_BASE}${toUrlSegment(s)}/${toUrlSegment(c)}`
+  if (!s || !c) return gymsdataPrefix(base)
+  return `${gymsdataPrefix(base)}${toUrlSegment(s)}/${toUrlSegment(c)}`
 }
 
 /** Type item shape for slug lookup (from list-page types). */
@@ -119,18 +125,19 @@ export function getTypeBySlug(
   }
 }
 
-/** Build path for type page: /gymsdata/types/health-clubs. Encodes & and other reserved chars so types like "exercise-&-physical-fitness-programs" work. */
-export function typeGymsdataPath(typeSlug: string): string {
+/** Build path for type page. Pass base '' on gymsdata subdomain for clean URLs (e.g. /health-clubs/). */
+export function typeGymsdataPath(typeSlug: string, base?: string): string {
   const slug = (typeSlug ?? '').trim()
-  if (!slug) return `${GYMSDATA_BASE}types/`
+  if (!slug) return gymsdataPrefix(base)
   const segment = toUrlSegment(slug)
-  return `${GYMSDATA_BASE}types/${encodeURIComponent(segment)}`
+  return `${gymsdataPrefix(base)}${encodeURIComponent(segment)}`
 }
 
-/** City page path from a location (e.g. top-cities list). Returns path or null if state/city cannot be resolved. */
+/** City page path from a location. Pass base '' on gymsdata subdomain for clean URLs. */
 export function cityPagePathForLocation(
   loc: LocationWithCount,
-  states: StateWithCount[]
+  states: StateWithCount[],
+  base?: string
 ): string | null {
   const stateRef = loc.state?.trim()
   const cityName = loc.city ?? (loc.label ? loc.label.split(',')[0]?.trim() : null)
@@ -139,7 +146,7 @@ export function cityPagePathForLocation(
     states.find((s) => s.state?.toUpperCase() === stateRef.toUpperCase()) ??
     states.find((s) => s.stateName && toSlug(s.stateName) === toSlug(stateRef))
   if (!state?.stateName) return null
-  return cityGymsdataPath(state.stateName, cityName)
+  return cityGymsdataPath(state.stateName, cityName, base)
 }
 
 /** Derived stats for a state page (until API provides). */

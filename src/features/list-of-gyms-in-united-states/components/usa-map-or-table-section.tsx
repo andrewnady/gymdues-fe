@@ -16,9 +16,11 @@ type View = 'map' | 'table'
 interface UsaMapOrTableSectionProps {
   sortedStates: StateWithCount[]
   totalGyms: number
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps) {
+export function UsaMapOrTableSection({ sortedStates, base }: UsaMapOrTableSectionProps) {
   const [view, setView] = useState<View>('map')
   const layer: MapLayer = 'all'
   const [showAllStates, setShowAllStates] = useState(false)
@@ -134,7 +136,7 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                       <td className='px-3 py-3 text-center text-muted-foreground font-medium tabular-nums'>{idx + 1}</td>
                       <td className='px-3 py-3 font-medium'>
                         <span className='inline-flex items-center gap-1.5'>
-                          <Link href={stateGymsdataPath(state)} className='text-primary hover:underline'>
+                          <Link href={stateGymsdataPath(state, base)} className='text-primary hover:underline'>
                             {state.stateName}
                           </Link>
                           <span
@@ -166,7 +168,7 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                       </td>
                       {/* <td className='px-3 py-3 text-center align-middle'>
                         <Link
-                          href={stateGymsdataPath(state)}
+                          href={stateGymsdataPath(state, base)}
                           title={`View Fitness, Gym, and Health Services in ${state.stateName}`}
                           className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors whitespace-nowrap min-w-[8rem] sm:min-w-[10rem]'
                         >

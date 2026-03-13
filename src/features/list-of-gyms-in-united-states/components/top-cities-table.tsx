@@ -13,9 +13,11 @@ interface TopCitiesTableProps {
   cities: LocationWithCount[]
   /** Pass states so city links go to /gymsdata/[state]/[city] page. */
   states?: StateWithCount[]
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function TopCitiesTable({ cities, states }: TopCitiesTableProps) {
+export function TopCitiesTable({ cities, states, base }: TopCitiesTableProps) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? cities : cities.slice(0, INITIAL_VISIBLE)
   const hasMore = cities.length > INITIAL_VISIBLE
@@ -51,7 +53,7 @@ export function TopCitiesTable({ cities, states }: TopCitiesTableProps) {
                   <td className='px-3 py-3 text-center text-muted-foreground font-medium tabular-nums'>{i + 1}</td>
                   <td className='px-3 py-3 font-medium'>
                     <Link
-                      href={states ? (cityPagePathForLocation(loc, states) ?? `/gymsdata/#location=${encodeURIComponent(loc.label)}`) : `/gymsdata/#location=${encodeURIComponent(loc.label)}`}
+                      href={states ? (cityPagePathForLocation(loc, states, base) ?? `${base === '' ? '/' : base || '/gymsdata'}#location=${encodeURIComponent(loc.label)}`) : `${base === '' ? '/' : base || '/gymsdata'}#location=${encodeURIComponent(loc.label)}`}
                       className='text-primary hover:underline underline-offset-2'
                     >
                       {loc.label}

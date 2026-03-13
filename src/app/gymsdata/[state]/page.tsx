@@ -1,45 +1,77 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
-import { getStateBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
+import { notFound } from 'next/navigation'
+import { getListPage, getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
+import { getStateBySlug, getTypeBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
 import { MapPin } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
 import { BuyDataButton } from '../_components/buy-data-button'
 import { GymsdataMiniMap } from '../_components/gymsdata-mini-map'
 import { StateCitiesFilter } from '../_components/state-cities-filter'
+import { GymsdataTypePageContent } from '../_components/gymsdata-type-page-content'
+import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 type Props = { params: Promise<{ state: string }> }
 
+/** Resolve first segment: type slug (13 types) takes precedence, then state. */
+async function resolveSegment(segment: string) {
+  const listPage = await getListPage()
+  const types = listPage?.types ?? []
+  const states = listPage?.states ?? []
+  const typeItem = getTypeBySlug(types, segment)
+  if (typeItem) return { kind: 'type' as const, typeItem, types }
+  const state = getStateBySlug(states, segment)
+  if (state) return { kind: 'state' as const, state }
+  return null
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { state: stateSegment } = await params
-  const stateParam = (stateSegment ?? '').trim()
-  const { states } = await getListPageData()
-  const state = getStateBySlug(states, stateParam)
-  if (!state) return { title: 'State Not Found | Gymdues' }
+  const segment = (stateSegment ?? '').trim()
+  const resolved = await resolveSegment(segment)
+  if (!resolved) return { title: 'Not Found | Gymdues' }
+  if (resolved.kind === 'type') {
+    const { typeItem } = resolved
+    const title = `${typeItem.type} - ${typeItem.count.toLocaleString('en-US')} Verified Contacts | Gymdues`
+    const description = `List of ${typeItem.type} in the United States. ${typeItem.count.toLocaleString('en-US')}+ verified contacts. Download sample or buy full dataset.`
+    const canonical = new URL(`/gymsdata/${encodeURIComponent(toUrlSegment(typeItem.typeSlug))}`, siteUrl).toString()
+    return { title, description, alternates: { canonical }, openGraph: { title, description, url: canonical } }
+  }
+  const { state } = resolved
   const title = `List of Gyms in ${state.stateName} - ${state.count.toLocaleString('en-US')} Verified Contacts | Gymdues`
   const description = `Browse gyms in ${state.stateName} by city. ${state.count.toLocaleString('en-US')}+ verified contacts. Download CSV or view by city.`
   const canonical = new URL(`/gymsdata/${toUrlSegment(state.stateName)}`, siteUrl).toString()
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: { title, description, url: canonical },
-  }
+  return { title, description, alternates: { canonical }, openGraph: { title, description, url: canonical } }
 }
 
 export async function generateStaticParams() {
+  const listPage = await getListPage()
   const { states } = await getListPageData()
-  return states.map((s) => ({ state: toUrlSegment(s.stateName) }))
+  const types = listPage?.types ?? []
+  const stateParams = states.map((s) => ({ state: toUrlSegment(s.stateName) }))
+  const typeParams = types.map((t) => ({ state: toUrlSegment(t.typeSlug) }))
+  return [...stateParams, ...typeParams]
 }
 
 export default async function GymsdataStatePage({ params }: Props) {
   const { state: stateSegment } = await params
-  const stateParam = (stateSegment ?? '').trim()
+  const segment = (stateSegment ?? '').trim()
+  const resolved = await resolveSegment(segment)
+  if (!resolved) notFound()
+
+  const base = await getGymsdataBasePath()
+  const homeHref = base === '' ? '/' : `${base}/`
+
+  if (resolved.kind === 'type') {
+    return <GymsdataTypePageContent typeItem={resolved.typeItem} types={resolved.types} base={base} />
+  }
+
+  const stateParam = segment
   const data = await getGymsdataForState(stateParam)
-  
+
   if (data.notFound || !data.state || !data.displayState) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
@@ -61,7 +93,7 @@ export default async function GymsdataStatePage({ params }: Props) {
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <ol className='flex flex-wrap items-center gap-1'>
-              <li><Link href='/gymsdata/' className='hover:text-primary'>Home</Link></li>
+              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
               <li aria-hidden>/</li>
               <li className='text-foreground font-medium'>{displayState.stateName}</li>
             </ol>
@@ -138,7 +170,7 @@ export default async function GymsdataStatePage({ params }: Props) {
           <div className='mt-6 flex flex-wrap items-center gap-3'>
             <DownloadSampleButton variant='outline' filter={{ state: stateParam }} />
             <BuyDataButton
-              href={`/gymsdata/checkout?state=${encodeURIComponent(stateParam)}`}
+              href={base ? `${base}/checkout?state=${encodeURIComponent(stateParam)}` : `/checkout?state=${encodeURIComponent(stateParam)}`}
               label='Buy data'
               priceFromServer={data.statePage?.formattedPrice ? { formattedPrice: data.statePage.formattedPrice, price: data.statePage.price, rowCount: data.statePage.totalGyms } : undefined}
               fallbackLabel={FULL_DATA_PRICE_LABEL}
@@ -153,11 +185,11 @@ export default async function GymsdataStatePage({ params }: Props) {
           Click a city to see the full list of gyms and verified contacts in that area.
         </p>
         {cities.length > 0 ? (
-          <StateCitiesFilter cities={cities} stateSlug={state.stateName} />
+          <StateCitiesFilter cities={cities} stateSlug={state.stateName} base={base} />
         ) : (
           <p className='text-muted-foreground'>
             City-level data for {state.stateName} is being updated. You can still{' '}
-            <Link href={`/gymsdata/#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+            <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
               browse all gyms in {state.stateName}
             </Link>.
           </p>
@@ -177,7 +209,7 @@ export default async function GymsdataStatePage({ params }: Props) {
                 {cities.slice(0, 10).map((loc) => (
                   <li key={loc.label ?? `${loc.city}-${loc.state}`}>
                     <Link
-                      href={cityGymsdataPath(state.stateName, loc.city ?? '')}
+                      href={cityGymsdataPath(state.stateName, loc.city ?? '', base)}
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40 text-primary'
                     >
                       <MapPin className='h-3.5 w-3.5 shrink-0' aria-hidden />
@@ -188,7 +220,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               </ul>
               {cities.length === 0 && (
                 <p className='text-sm text-muted-foreground'>
-                  <Link href={`/gymsdata/#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+                  <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
                     View gyms in {state.stateName}
                   </Link>
                 </p>
@@ -212,7 +244,7 @@ export default async function GymsdataStatePage({ params }: Props) {
                   </Link>
                 </li>
                 <li>
-                  <Link href={`/gymsdata/#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
+                  <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
                     View gyms in {state.stateName}
                   </Link>
                 </li>

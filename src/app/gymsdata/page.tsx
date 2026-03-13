@@ -30,6 +30,7 @@ import { TopCitiesTable } from '@/usa-list/components/top-cities-table'
 //import { DistributionByLocationChips } from '@/usa-list/components/distribution-by-location-chips'
 import { CheckCircle2, Zap } from 'lucide-react'
 import { stateGymsdataPath, cityPagePathForLocation } from '@/lib/gymsdata-utils'
+import { getGymsdataBasePath } from './_lib/get-gymsdata-base-path'
 import { buildDatasetSchema, buildOrganizationSchema, buildBreadcrumbSchema } from '@/lib/schema-builder'
 import { JsonLdSchema } from '@/components/json-ld-schema'
 import { DownloadSampleButton } from '@/components/download-sample-button'
@@ -197,7 +198,9 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
     totalStates,
   })
   const schemaOrganization = buildOrganizationSchema(siteUrl)
-  const schemaBreadcrumb = buildBreadcrumbSchema([{ name: 'Home', url: '/gymsdata/' }], siteUrl)
+  const base = await getGymsdataBasePath()
+  const homeHref = base === '' ? '/' : `${base}/`
+  const schemaBreadcrumb = buildBreadcrumbSchema([{ name: 'Home', url: homeHref || '/gymsdata/' }], siteUrl)
 
   return (
     <div className='min-h-screen bg-background'>
@@ -206,7 +209,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         {/* Breadcrumb */}
         <nav className='max-w-6xl mx-auto mb-6 text-sm text-muted-foreground' aria-label='Breadcrumb'>
           <ol className='flex flex-wrap items-center gap-1'>
-            <li><Link href='/gymsdata/' className='hover:text-primary'>Home</Link></li>
+            <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
           </ol>
         </nav>
 
@@ -260,7 +263,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               </p>
               <div className='flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3'>
                 <BuyDataButton
-                  href='/gymsdata/checkout'
+                  href={base ? `${base}/checkout` : '/checkout'}
                   label='Purchase The Data'
                   priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
                   fallbackLabel={FULL_DATA_PRICE_LABEL}
@@ -298,7 +301,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             <p className='text-sm text-muted-foreground mb-6 max-w-2xl'>
               Fitness, Gym, and Health Services in the United States by business type. Click a type to view its page, see counts by state, and download a sample filtered by that category.
             </p>
-            <BusinessTypesTable types={types} typesCovered={typesCovered} totalGyms={totalGyms} />
+            <BusinessTypesTable types={types} typesCovered={typesCovered} totalGyms={totalGyms} base={base} />
           </section>
         )}
         
@@ -416,7 +419,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3'>Reports &amp; tools</p>
             <div className='grid gap-4 sm:grid-cols-1 lg:grid-cols-1'>
               <Link
-                href='/gymsdata/trends'
+                href={base ? `${base}/trends` : '/trends'}
                 className='group flex flex-col rounded-xl border-2 border-primary/40 bg-card p-5 shadow-sm hover:shadow-lg hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200'
               >
                 <div className='flex items-start justify-between gap-2 mb-3'>
@@ -573,7 +576,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                     {sortedStates.map((s) => (
                       <Link
                         key={s.state}
-                        href={stateGymsdataPath(s)}
+                        href={stateGymsdataPath(s, base)}
                         className='inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors'
                       >
                         {s.stateName}
@@ -647,7 +650,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             See where Fitness, Gym, and Health Services are concentrated or view the full table. Switch between Map and Table below.
           </p>
           <div className='js-only'>
-            <UsaMapOrTableSection sortedStates={sortedStates} totalGyms={totalGyms} />
+            <UsaMapOrTableSection sortedStates={sortedStates} totalGyms={totalGyms} base={base} />
           </div>
           {/* No-JS: Map tab + Table tab — both visible (same as JS Map/Table tabs) */}
           <div className='no-js-only space-y-6'>
@@ -677,7 +680,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   {sortedStates.map((s) => (
                     <Link
                       key={s.state}
-                      href={stateGymsdataPath(s)}
+                      href={stateGymsdataPath(s, base)}
                       className='inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors'
                     >
                       {s.stateName}
@@ -722,7 +725,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                           <td className='px-4 py-2.5 text-center text-muted-foreground tabular-nums'>{idx + 1}</td>
                           <td className='px-4 py-2.5 font-medium'>
                             <span className='inline-flex items-center gap-1.5'>
-                              <Link href={stateGymsdataPath(state)} className='text-primary hover:underline'>
+                              <Link href={stateGymsdataPath(state, base)} className='text-primary hover:underline'>
                                 {state.stateName}
                               </Link>
                               <span
@@ -738,7 +741,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                           <td className='px-4 py-2.5 text-right font-semibold tabular-nums'>{state.count.toLocaleString('en-US')}</td>
                           <td className='px-4 py-2.5 text-right text-muted-foreground hidden md:table-cell tabular-nums'>{pct}%</td>
                           <td className='px-4 py-2.5 text-right'>
-                            <Link href={stateGymsdataPath(state)} className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'>
+                            <Link href={stateGymsdataPath(state, base)} className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'>
                               View Fitness, Gym, and Health Services
                             </Link>
                           </td>
@@ -785,7 +788,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                     </div>
                     <div className='w-28 md:w-40 shrink-0 text-sm font-medium'>
                       <Link
-                        href={stateGymsdataPath(s)}
+                        href={stateGymsdataPath(s, base)}
                         className='hover:underline underline-offset-2'
                       >
                         {s.stateName}
@@ -827,7 +830,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         {sortedStates.length > 0 && (
           <>
             <div className='js-only'>
-              <UsaListStateComparison sortedStates={sortedStates} />
+              <UsaListStateComparison sortedStates={sortedStates} base={base} />
             </div>
             {/* <div className='no-js-only max-w-4xl mx-auto mb-16'>
               <div className='rounded-2xl border border-border/80 bg-card p-6 md:p-8 text-center'>
@@ -858,7 +861,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               location and compare membership prices.
             </p>
             <div className='js-only'>
-              <TopCitiesTable cities={topCities} states={sortedStates} />
+              <TopCitiesTable cities={topCities} states={sortedStates} base={base} />
             </div>
             <div className='no-js-only rounded-2xl border border-border/80 bg-card shadow-sm overflow-hidden'>
               <div className='overflow-x-auto'>
@@ -875,7 +878,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                       <tr key={loc.label ?? `city-${i}`} className='border-b border-border/60 last:border-0 hover:bg-muted/40'>
                         <td className='px-4 py-3 text-center text-muted-foreground font-medium tabular-nums'>{i + 1}</td>
                         <td className='px-4 py-3 font-medium'>
-                          <Link href={cityPagePathForLocation(loc, sortedStates) ?? `/gymsdata/#location=${encodeURIComponent(loc.label)}`} className='text-primary hover:underline underline-offset-2'>
+                          <Link href={cityPagePathForLocation(loc, sortedStates, base) ?? `${base === '' ? '/' : base || '/gymsdata'}#location=${encodeURIComponent(loc.label)}`} className='text-primary hover:underline underline-offset-2'>
                             {loc.label}
                           </Link>
                         </td>
@@ -887,7 +890,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
               </div>
               {/* <div className='px-4 py-3 border-t border-border/60 bg-muted/20 flex flex-wrap justify-center gap-4 text-sm'>
                 <Link href='#states-table' className='font-medium text-primary hover:underline'>Show all data →</Link>
-                <Link href='/gymsdata/' className='text-muted-foreground hover:text-primary hover:underline'>Browse all gyms</Link>
+                <Link href={homeHref} className='text-muted-foreground hover:text-primary hover:underline'>Browse all gyms</Link>
               </div> */}
             </div>
           </section>
@@ -923,7 +926,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   {stateComparisonRows.map((row) => (
                     <tr key={row.state} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40'>
                       <td className='px-4 py-3 font-medium'>
-                        <Link href={stateGymsdataPath({ state: row.state, stateName: row.stateName, count: row.count })} className='text-primary hover:underline'>
+                        <Link href={stateGymsdataPath({ state: row.state, stateName: row.stateName, count: row.count }, base)} className='text-primary hover:underline'>
                           {row.stateName}
                         </Link>
                       </td>
@@ -1070,7 +1073,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                   {sortedStates.map((s) => (
                     <Link
                       key={s.state}
-                      href={stateGymsdataPath(s)}
+                      href={stateGymsdataPath(s, base)}
                       className='inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors'
                     >
                       <span>{s.stateName}</span>
@@ -1093,7 +1096,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
         {states.length > 0 && (
           <section className='mb-16' aria-labelledby='browse-by-state-heading'>
             <div className='js-only'>
-              <ListingByStateSection states={sortedStates} />
+              <ListingByStateSection states={sortedStates} base={base} />
             </div>
             <div className='no-js-only max-w-2xl mx-auto'>
               <div className='rounded-2xl border border-border/80 bg-muted/30 p-6 md:p-8 text-center'>
@@ -1151,7 +1154,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                           <td className='px-4 py-3 text-center text-muted-foreground font-medium tabular-nums'>{idx + 1}</td>
                           <td className='px-4 py-3 font-medium'>
                             <span className='inline-flex items-center gap-1.5'>
-                              <Link href={stateGymsdataPath(state)} className='text-primary hover:underline'>
+                              <Link href={stateGymsdataPath(state, base)} className='text-primary hover:underline'>
                                 {state.stateName}
                               </Link>
                               <span
@@ -1167,7 +1170,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
                           <td className='px-4 py-3 text-right font-semibold tabular-nums'>{state.count.toLocaleString('en-US')}</td>
                           <td className='px-4 py-3 text-right text-muted-foreground hidden md:table-cell tabular-nums'>{pct}%</td>
                           <td className='px-4 py-3 text-right'>
-                            <Link href={stateGymsdataPath(state)} className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'>
+                            <Link href={stateGymsdataPath(state, base)} className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'>
                               View gyms
                             </Link>
                           </td>
@@ -1328,7 +1331,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </p>
             <div className='flex flex-wrap items-center gap-3'>
               <BuyDataButton
-                href='/gymsdata/checkout'
+                href={base ? `${base}/checkout` : '/checkout'}
                 label='Buy dataset'
                 priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
                 fallbackLabel={FULL_DATA_PRICE_LABEL}
@@ -1481,7 +1484,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
           </p>
           <div className='flex flex-wrap items-center gap-3'>
             <BuyDataButton
-              href='/gymsdata/checkout'
+              href={base ? `${base}/checkout` : '/checkout'}
               label='Buy data'
               priceFromServer={data.listPage?.formattedPrice ? { formattedPrice: data.listPage.formattedPrice, price: data.listPage.price, rowCount: data.listPage.totalGyms } : undefined}
               fallbackLabel={FULL_DATA_PRICE_LABEL}
@@ -1550,7 +1553,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
       {/* <div className='no-js-only fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-background shadow-[0_-4px_20px_rgba(0,0,0,0.06)]'>
         <div className='container mx-auto px-4 py-3'>
           <div className='flex flex-wrap items-center justify-center gap-2 md:gap-3'>
-            <Link href='/gymsdata/' className='inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors'>
+            <Link href={homeHref} className='inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors'>
               Browse {totalGyms >= 60000 ? '60K+' : totalGyms.toLocaleString('en-US')}+ Gyms
             </Link>
             <Link href='#filter-by-location-heading' className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/30 transition-colors'>

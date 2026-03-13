@@ -82,7 +82,9 @@ export function middleware(request: NextRequest) {
     // On subdomain: canonical URLs must NOT include /gymsdata (same idea as bestgyms clean URLs)
     // Redirect /gymsdata and /gymsdata/* → clean path so URL bar shows e.g. /california/ not /gymsdata/california/
     if (path === '/gymsdata' || path === '/gymsdata/' || path.startsWith('/gymsdata/')) {
-      const cleanPath = path.replace(/^\/gymsdata\/?/, '/') || '/'
+      let cleanPath = path.replace(/^\/gymsdata\/?/, '/') || '/'
+      // Legacy: /types/health-clubs → /health-clubs (type pages now live at /{type})
+      if (cleanPath.startsWith('/types/')) cleanPath = cleanPath.replace(/^\/types\/?/, '/') || '/'
       const pathWithSlash = cleanPath === '/' || cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`
       const redirectUrl = new URL(pathWithSlash + url.search, gymsDataUrl)
       return NextResponse.redirect(redirectUrl, 301)
@@ -99,11 +101,9 @@ export function middleware(request: NextRequest) {
       return response
     }
 
-    // Any other path on subdomain (e.g. /california/, /california/los-angeles/, /types/fitness-centers/)
-    // → rewrite to /gymsdata/* (same as bestgyms: /best-houston-gyms → /best-gyms/houston)
+    // Any other path on subdomain (e.g. /california/, /california/los-angeles/, /health-clubs/)
+    // → rewrite to /gymsdata/* (single segment can be state or type, resolved in [state]/page)
     let pathWithSlash = path.endsWith('/') ? path : `${path}/`
-    // /type/xxx → /types/xxx so it matches app route /gymsdata/types/[typeSlug]
-    if (pathWithSlash.startsWith('/type/')) pathWithSlash = '/types' + pathWithSlash.slice(5)
     url.pathname = `/gymsdata${pathWithSlash}`
     const canonicalUrl = `${gymsDataUrl}${pathWithSlash}`
     const requestHeaders = new Headers(request.headers)

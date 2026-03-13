@@ -20,6 +20,8 @@ export interface StateComparisonItem {
 
 interface UsaListStateComparisonProps {
   sortedStates: StateWithCount[]
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
 type MetricKey = 'totalGyms' | 'withEmail' | 'withPhone' | 'avgRating' | 'densityPer100k'
@@ -165,7 +167,7 @@ function getInitialState(states: { state: string }[], index: number): string {
   return states[index]?.state ?? ''
 }
 
-export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonProps) {
+export function UsaListStateComparison({ sortedStates, base }: UsaListStateComparisonProps) {
   const [allStates, setAllStates] = useState<StateComparisonItem[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<'timeout' | 'error' | null>(null)
@@ -402,7 +404,7 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
                   <td className='py-4 px-4 text-center'>
                     {(cols[0] || byCode.get(stateA)) && (
                       <Link
-                        href={stateGymsdataPath(cols[0] ? { state: cols[0].state, stateName: cols[0].stateName, count: cols[0].totalGyms } : byCode.get(stateA)!)}
+                        href={stateGymsdataPath(cols[0] ? { state: cols[0].state, stateName: cols[0].stateName, count: cols[0].totalGyms } : byCode.get(stateA)!, base)}
                         className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
                       >
                         <MapPin className='h-4 w-4 shrink-0' />
@@ -413,7 +415,7 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
                   <td className='py-4 px-4 text-center'>
                     {(cols[1] || byCode.get(stateB)) && (
                       <Link
-                        href={stateGymsdataPath(cols[1] ? { state: cols[1].state, stateName: cols[1].stateName, count: cols[1].totalGyms } : byCode.get(stateB)!)}
+                        href={stateGymsdataPath(cols[1] ? { state: cols[1].state, stateName: cols[1].stateName, count: cols[1].totalGyms } : byCode.get(stateB)!, base)}
                         className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
                       >
                         <MapPin className='h-4 w-4 shrink-0' />
@@ -424,7 +426,7 @@ export function UsaListStateComparison({ sortedStates }: UsaListStateComparisonP
                   <td className='py-4 px-4 text-center'>
                     {(cols[2] || byCode.get(stateC)) && (
                       <Link
-                        href={stateGymsdataPath(cols[2] ? { state: cols[2].state, stateName: cols[2].stateName, count: cols[2].totalGyms } : byCode.get(stateC)!)}
+                        href={stateGymsdataPath(cols[2] ? { state: cols[2].state, stateName: cols[2].stateName, count: cols[2].totalGyms } : byCode.get(stateC)!, base)}
                         className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
                       >
                         <MapPin className='h-4 w-4 shrink-0' />
