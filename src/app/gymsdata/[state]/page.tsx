@@ -76,7 +76,7 @@ export default async function GymsdataStatePage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>State not found</h1>
-        <Link href='/gymsdata/' className='text-primary hover:underline'>
+        <Link href={homeHref} className='text-primary hover:underline'>
           View all states
         </Link>
       </main>
@@ -168,7 +168,7 @@ export default async function GymsdataStatePage({ params }: Props) {
 
           {/* Download CTA */}
           <div className='mt-6 flex flex-wrap items-center gap-3'>
-            <DownloadSampleButton variant='outline' filter={{ state: stateParam }} />
+            <DownloadSampleButton variant='outline' filter={{ state: stateParam }} base={base} />
             <BuyDataButton
               href={base ? `${base}/checkout?state=${encodeURIComponent(stateParam)}` : `/checkout?state=${encodeURIComponent(stateParam)}`}
               label='Buy data'
@@ -234,7 +234,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
+                  <Link href={homeHref} className='text-primary hover:underline font-medium'>
                     List of Fitness, Gym, and Health Services in United States
                   </Link>
                 </li>
@@ -258,7 +258,7 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
+                  <Link href={homeHref} className='text-primary hover:underline font-medium'>
                     Browse all gyms
                   </Link>
                 </li>

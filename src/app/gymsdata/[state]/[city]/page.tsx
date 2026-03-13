@@ -12,6 +12,7 @@ import {
 } from '@/lib/gymsdata-utils'
 import { MapPin } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
+import { getGymsdataBasePath } from '../../_lib/get-gymsdata-base-path'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../../_constants'
 import { BuyDataButton } from '../../_components/buy-data-button'
@@ -79,12 +80,14 @@ export default async function GymsdataCityPage({ params }: Props) {
   const { state: stateSegment, city: citySegment } = await params
   const stateParam = (stateSegment ?? '').trim()
   const cityParam = (citySegment ?? '').trim()
+  const base = await getGymsdataBasePath()
+  const homeHref = base === '' ? '/' : `${base}/`
   const data = await getGymsdataForCity(stateParam, cityParam)
   if (data.notFound || !data.state) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>City not found</h1>
-        <Link href={data.state ? stateGymsdataPath(data.state) : '/gymsdata/'} className='text-primary hover:underline'>
+        <Link href={data.state ? stateGymsdataPath(data.state, base) : homeHref} className='text-primary hover:underline'>
           Back to {data.state?.stateName ?? 'states'}
         </Link>
       </main>
@@ -93,7 +96,7 @@ export default async function GymsdataCityPage({ params }: Props) {
   const state = data.state
   const { cityName, count, stats, neighborhoods, nearbyCities } = data
   const dateStr = formatDataDate()
-  const statePath = stateGymsdataPath(state)
+  const statePath = stateGymsdataPath(state, base)
 
   return (
     <main className='min-h-screen'>
@@ -102,7 +105,7 @@ export default async function GymsdataCityPage({ params }: Props) {
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <ol className='flex flex-wrap items-center gap-1'>
-              <li><Link href='/gymsdata/' className='hover:text-primary'>Home</Link></li>
+              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
               <li aria-hidden>/</li>
               <li><Link href={statePath} className='hover:text-primary'>{state.stateName}</Link></li>
               <li aria-hidden>/</li>
@@ -179,9 +182,9 @@ export default async function GymsdataCityPage({ params }: Props) {
 
           {/* Download CTA */}
           <div className='mt-6 flex flex-wrap items-center gap-3'>
-            <DownloadSampleButton variant='outline' filter={{ state: stateParam, city: cityParam }} />
+            <DownloadSampleButton variant='outline' filter={{ state: stateParam, city: cityParam }} base={base} />
             <BuyDataButton
-              href={`/gymsdata/checkout?state=${encodeURIComponent(stateParam)}&city=${encodeURIComponent(cityParam)}`}
+              href={base ? `${base}/checkout?state=${encodeURIComponent(stateParam)}&city=${encodeURIComponent(cityParam)}` : `/checkout?state=${encodeURIComponent(stateParam)}&city=${encodeURIComponent(cityParam)}`}
               label='Buy data'
               priceFromServer={data.cityPage?.formattedPrice ? { formattedPrice: data.cityPage.formattedPrice, price: data.cityPage.price, rowCount: data.cityPage.totalGyms } : undefined}
               fallbackLabel={FULL_DATA_PRICE_LABEL}
@@ -198,7 +201,7 @@ export default async function GymsdataCityPage({ params }: Props) {
             {nearbyCities.map((c) => (
               <li key={c.label ?? c.city ?? ''}>
                 <Link
-                  href={cityGymsdataPath(state.stateName, c.city ?? '')}
+                  href={cityGymsdataPath(state.stateName, c.city ?? '', base)}
                   className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40'
                 >
                   <MapPin className='h-3.5 w-3.5 text-primary' />
@@ -213,7 +216,7 @@ export default async function GymsdataCityPage({ params }: Props) {
             </Link>
           </p>
           <p className='mt-2'>
-            <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
+            <Link href={homeHref} className='text-primary hover:underline font-medium'>
               Browse all gyms
             </Link>
           </p> */}

@@ -64,7 +64,7 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <DownloadSampleButton variant="outline" filter={{ type: typeItem.type }} />
+            <DownloadSampleButton variant="outline" filter={{ type: typeItem.type }} base={base} />
             <BuyDataButton
               href={base ? `${base}/checkout?type=${encodeURIComponent(typeItem.type)}` : `/checkout?type=${encodeURIComponent(typeItem.type)}`}
               label="Buy data"
@@ -113,7 +113,7 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
                               <span className="font-semibold text-foreground">{t.type}</span>
                             ) : (
                               <Link
-                                href={typeGymsdataPath(t.typeSlug)}
+                                href={typeGymsdataPath(t.typeSlug, base)}
                                 className="text-primary hover:underline underline-offset-2"
                               >
                                 {t.type}
@@ -179,7 +179,7 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
               {otherTypes.map((t) => (
                 <li key={t.typeSlug}>
                   <Link
-                    href={typeGymsdataPath(t.typeSlug)}
+                    href={typeGymsdataPath(t.typeSlug, base)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/30 transition-colors"
                   >
                     {t.type}

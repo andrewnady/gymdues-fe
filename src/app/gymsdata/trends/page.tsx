@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react'
 import { getIndustryTrends } from '@/lib/gymsdata-api'
+import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
 import { NewGymsTimelineChart } from './_components/new-gyms-timeline-chart'
 import { MostGrowingCitiesChart } from './_components/most-growing-cities-chart'
 import { FastestGrowingCategoriesChart } from './_components/fastest-growing-categories-chart'
@@ -18,13 +19,14 @@ export const metadata: Metadata = {
 }
 
 export default async function GrowthTrendsPage() {
-  const trends = await getIndustryTrends()
+  const [base, trends] = await Promise.all([getGymsdataBasePath(), getIndustryTrends()])
+  const homeHref = base === '' ? '/' : `${base}/`
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-6xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><Link href="/gymsdata/" className="hover:text-primary">Home</Link></li>
+            <li><Link href={homeHref} className="hover:text-primary">Home</Link></li>
             <li aria-hidden>/</li>
             <li className="text-foreground font-medium">Gym Industry Trends</li>
           </ol>
@@ -80,11 +82,11 @@ export default async function GrowthTrendsPage() {
         </div>
 
         <div className="max-w-6xl mx-auto mt-12 pt-8 border-t text-center space-y-2">
-          <Link href="/gymsdata/" className="text-primary font-medium hover:underline">
+          <Link href={homeHref} className="text-primary font-medium hover:underline">
             ← Back to Home
           </Link>
           {/* <span className="mx-2 text-muted-foreground">·</span>
-          <Link href="/gymsdata/competitive-intelligence" className="text-primary font-medium hover:underline">
+          <Link href={competitiveHref} className="text-primary font-medium hover:underline">
             Competitive Intelligence Tool
           </Link> */}
         </div>
