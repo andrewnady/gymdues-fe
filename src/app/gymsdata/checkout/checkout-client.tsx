@@ -14,9 +14,11 @@ interface CheckoutClientProps {
   scope: CheckoutScope
   priceFromServer: PriceFromServer | null
   scopeDetails: CheckoutScopeDetails
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function CheckoutClient({ scope, priceFromServer, scopeDetails }: CheckoutClientProps) {
+export function CheckoutClient({ scope, priceFromServer, scopeDetails, base }: CheckoutClientProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,24 +64,25 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
 
   const rowCount = priceFromServer?.rowCount
 
+  const homeHref = base === '' ? '/' : `${base || '/gymsdata'}/`
   // Breadcrumb: Home / [scope context] / Checkout
-  const breadcrumbSegments: { label: string; href?: string }[] = [{ label: 'Home', href: '/gymsdata/' }]
+  const breadcrumbSegments: { label: string; href?: string }[] = [{ label: 'Home', href: homeHref }]
   if (scope.type) {
     const typeSlug = toSlug(scope.type)
-    breadcrumbSegments.push({ label: scopeDetails.scopeLabel, href: typeSlug ? typeGymsdataPath(typeSlug) : undefined })
+    breadcrumbSegments.push({ label: scopeDetails.scopeLabel, href: typeSlug ? typeGymsdataPath(typeSlug, base) : undefined })
   } else if (scope.state && scope.city) {
     breadcrumbSegments.push({
       label: scopeDetails.scopeLabel.split(',')[1]?.trim() || scope.state,
-      href: stateGymsdataPath({ stateName: scope.state, state: scope.state, count: 0 }),
+      href: stateGymsdataPath({ stateName: scope.state, state: scope.state, count: 0 }, base),
     })
     breadcrumbSegments.push({
       label: scopeDetails.scopeLabel.split(',')[0]?.trim() || scope.city,
-      href: cityGymsdataPath(scope.state, scope.city),
+      href: cityGymsdataPath(scope.state, scope.city, base),
     })
   } else if (scope.state) {
     breadcrumbSegments.push({
       label: scopeDetails.scopeLabel,
-      href: stateGymsdataPath({ stateName: scopeDetails.scopeLabel, state: scope.state, count: 0 }),
+      href: stateGymsdataPath({ stateName: scopeDetails.scopeLabel, state: scope.state, count: 0 }, base),
     })
   }
   breadcrumbSegments.push({ label: 'Checkout' })
@@ -214,7 +217,7 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails }: Checkou
                   )}
                   <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                     <Link
-                      href="/gymsdata"
+                      href={homeHref}
                       className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm font-medium hover:bg-muted text-center transition-colors"
                     >
                       Back to Home

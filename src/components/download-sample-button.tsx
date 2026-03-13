@@ -15,6 +15,8 @@ interface DownloadSampleButtonProps {
   variant?: 'primary' | 'outline'
   /** Optional filters so sample is scoped to state, city, or type (e.g. from state/city/type pages) */
   filter?: SampleDownloadFilters
+  /** On gymsdata subdomain pass '' so link is /sample-data; pass '/gymsdata' when on main domain. */
+  base?: string
 }
 
 /** With JS: opens modal; on submit calls gymsdata/sample-download and triggers CSV download. Without JS: link goes to sample data page. */
@@ -23,7 +25,9 @@ export function DownloadSampleButton({
   children,
   variant = 'primary',
   filter,
+  base,
 }: DownloadSampleButtonProps) {
+  const sampleHref = base !== undefined ? (base === '' ? '/sample-data' : `${base}/sample-data`) : SAMPLE_DATA_HREF
   const [modalOpen, setModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successEmail, setSuccessEmail] = useState<string | null>(null)
@@ -65,7 +69,7 @@ export function DownloadSampleButton({
   return (
     <>
       <Link
-        href={SAMPLE_DATA_HREF}
+        href={sampleHref}
         className={`${baseClass} ${variantClass} ${className}`.trim()}
         aria-label="Download Free Sample (opens form)"
         onClick={(e) => {
