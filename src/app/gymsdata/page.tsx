@@ -265,7 +265,7 @@ export default async function GymsdataPage({ searchParams }: PageProps) {
             </div>
 
             <p className='text-sm text-muted-foreground mb-4'>
-              Have trouble, confusion, or just need help? <Link href='/contact' className='text-primary underline hover:no-underline'>Contact us</Link>, and we&apos;ll sort it out!
+              Have trouble, confusion, or just need help? <Link href={`${siteUrl.replace(/\/$/, '')}/contact`} className='text-primary underline hover:no-underline'>Contact us</Link>, and we&apos;ll sort it out!
             </p>
 
             {/* Price & CTAs – enhanced block */}
