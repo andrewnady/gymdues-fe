@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Home, Search, Book } from 'lucide-react'
@@ -26,22 +26,22 @@ export default function NotFound() {
             </p>
             <div className='flex flex-col sm:flex-row gap-4 justify-center pt-4'>
               <Button asChild size='lg' className='w-full sm:w-auto'>
-                <AppLink href='/' className='inline-flex items-center w-full sm:w-auto justify-center'>
+                <Link href='/'>
                   <Home className='mr-2 h-4 w-4' />
                   Go Home
-                </AppLink>
+                </Link>
               </Button>
               <Button asChild variant='outline' size='lg' className='w-full sm:w-auto'>
-                <AppLink href='/gyms' className='inline-flex items-center w-full sm:w-auto justify-center'>
+                <Link href='/gyms'>
                   <Search className='mr-2 h-4 w-4' />
                   Browse Gyms
-                </AppLink>
+                </Link>
               </Button>
               <Button asChild variant='outline' size='lg' className='w-full sm:w-auto'>
-                <AppLink href='/blog' className='inline-flex items-center w-full sm:w-auto justify-center'>
+                <Link href='/blog'>
                   <Book className='mr-2 h-4 w-4' />
                   Browse Blog
-                </AppLink>
+                </Link>
               </Button>
             </div>
           </CardContent>

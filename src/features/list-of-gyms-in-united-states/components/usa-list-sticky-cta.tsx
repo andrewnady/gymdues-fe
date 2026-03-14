@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { MapPin, Table2, Filter, Download, Star } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 
@@ -33,20 +33,20 @@ export function UsaListStickyCta({ totalGyms }: UsaListStickyCtaProps) {
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-lg">
       <div className="container mx-auto px-4 py-2.5">
         <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-          <AppLink
-            href="/gymsdata/"
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             Browse {browseLabel} Fitness, Gym, and Health Services
-          </AppLink>
+          </Link>
           <span className="hidden sm:inline text-muted-foreground/60" aria-hidden>|</span>
-          <AppLink
+          <Link
             href="#filter-by-location-heading"
             className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted"
           >
             <Filter className="h-4 w-4" aria-hidden />
             Filter Now
-          </AppLink>
+          </Link>
           <span className="hidden sm:inline text-muted-foreground/60" aria-hidden>|</span>
           <DownloadSampleButton
             variant="outline"
@@ -55,12 +55,12 @@ export function UsaListStickyCta({ totalGyms }: UsaListStickyCtaProps) {
             <Download className="h-4 w-4" aria-hidden />
             Download Free Sample
           </DownloadSampleButton>
-          <AppLink href="#us-map" className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted md:sr-only md:focus:not-sr-only">
+          <Link href="#us-map" className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted md:sr-only md:focus:not-sr-only">
             <MapPin className="h-3.5 w-3.5" /> Map
-          </AppLink>
-          <AppLink href="#states-table" className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted md:sr-only md:focus:not-sr-only">
+          </Link>
+          <Link href="#states-table" className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted md:sr-only md:focus:not-sr-only">
             <Table2 className="h-3.5 w-3.5" /> Table
-          </AppLink>
+          </Link>
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span>1,247 businesses downloaded this month</span>

@@ -1,4 +1,4 @@
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -15,11 +15,11 @@ export default function NotFound() {
             The gym you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <div className='flex gap-4 justify-center'>
-            <Button asChild>
-              <AppLink href='/gymsdata' className='inline-flex'>Browse All Gyms</AppLink>
+            <Button>
+              <Link href='/'>Browse All Gyms</Link>
             </Button>
-            <Button variant='outline' asChild>
-              <AppLink href='/' className='inline-flex'>Go Home</AppLink>
+            <Button variant='outline'>
+              <Link href='/'>Go Home</Link>
             </Button>
           </div>
         </CardContent>

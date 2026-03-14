@@ -15,10 +15,10 @@ const schema = buildWebPageSchema({
   baseUrl: siteUrl,
   name: 'Page Title | Gymdues',
   description: 'Page description.',
-  path: '/gymsdata/checkout',
+  path: '/checkout',
   breadcrumbs: [
     { name: 'Home', url: '/' },
-    { name: 'Checkout', url: '/gymsdata/checkout' },
+    { name: 'Checkout', url: '/checkout' },
   ],
 })
 return <JsonLdSchema data={schema} />
@@ -34,7 +34,7 @@ return <JsonLdSchema data={[schema1, schema2, schema3]} />
 | `buildBreadcrumbSchema(items, baseUrl)` | BreadcrumbList | Any page with breadcrumb nav |
 | `buildOrganizationSchema(baseUrl, options?)` | Organization | Footer, Dataset creator, WebSite publisher |
 | `buildWebSiteSchema(options)` | WebSite | Homepage or main entry (optional SearchAction) |
-| `buildDatasetSchema(options)` | Dataset | /gymsdata, data catalog pages |
+| `buildDatasetSchema(options)` | Dataset | /, data catalog pages |
 | `buildWebPageSchema(options)` | WebPage | Checkout, success, cancel, about, generic pages |
 | `buildFAQPageSchema(faqs, options)` | FAQPage | Pages with Q&A (e.g. gymsdata FAQ) |
 | `buildItemListSchema(items, options)` | ItemList | List/catalog pages (states, cities, best gyms) |
@@ -50,9 +50,9 @@ Use **`<JsonLdSchema data={...} />`** so each schema is rendered as a `<script t
 
 ## Where it’s used
 
-- **`/gymsdata`** – Dataset, Organization, BreadcrumbList
-- **`/gymsdata/checkout`** – WebPage + breadcrumb
-- **`/gymsdata/checkout/success`** – WebPage + breadcrumb
-- **`/gymsdata/checkout/cancel`** – WebPage + breadcrumb
+- **`/`** – Dataset, Organization, BreadcrumbList
+- **`/checkout`** – WebPage + breadcrumb
+- **`/checkout/success`** – WebPage + breadcrumb
+- **`/checkout/cancel`** – WebPage + breadcrumb
 
 To add WebSite (e.g. on homepage) or FAQPage (e.g. on gymsdata FAQ), call the matching builder and pass the result into `JsonLdSchema` on that page.

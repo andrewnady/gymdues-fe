@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { ShoppingCart } from 'lucide-react'
 import { BuyDatasetModal } from './buy-dataset-modal'
 
@@ -9,16 +10,19 @@ interface BuyDatasetButtonProps {
   children?: React.ReactNode
 }
 
-/** Button opens modal; user submits form to go to /gymsdata/checkout. */
+/** With JS: opens modal. Without JS: link goes to /checkout (form on page). */
 export function BuyDatasetButton({ className, children }: BuyDatasetButtonProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setModalOpen(true)}
+      <Link
+        href="/checkout"
         className={className}
+        onClick={(e) => {
+          e.preventDefault()
+          setModalOpen(true)
+        }}
         aria-label="Buy data (opens form)"
       >
         {children ?? (
@@ -27,7 +31,7 @@ export function BuyDatasetButton({ className, children }: BuyDatasetButtonProps)
             Buy data
           </>
         )}
-      </button>
+      </Link>
       <BuyDatasetModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   )
