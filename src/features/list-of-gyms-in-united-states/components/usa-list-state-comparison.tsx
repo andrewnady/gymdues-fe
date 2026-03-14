@@ -405,7 +405,7 @@ export function UsaListStateComparison({ sortedStates, base }: UsaListStateCompa
                     {(cols[0] || byCode.get(stateA)) && (
                       <AppLink
                         href={stateGymsdataPath(cols[0] ? { state: cols[0].state, stateName: cols[0].stateName, count: cols[0].totalGyms } : byCode.get(stateA)!, base)}
-                        className='inline-flex items-center gap-1.5 rounded-lg !bg-primary px-4 py-2 text-sm font-medium !text-primary-foreground hover:!bg-primary/90 transition-colors whitespace-nowrap'
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
                       >
                         <MapPin className='h-4 w-4 shrink-0' />
                         Browse {cols[0]?.stateName ?? byCode.get(stateA)?.stateName ?? stateA}
@@ -416,7 +416,7 @@ export function UsaListStateComparison({ sortedStates, base }: UsaListStateCompa
                     {(cols[1] || byCode.get(stateB)) && (
                       <AppLink
                         href={stateGymsdataPath(cols[1] ? { state: cols[1].state, stateName: cols[1].stateName, count: cols[1].totalGyms } : byCode.get(stateB)!, base)}
-                        className='inline-flex items-center gap-1.5 rounded-lg !bg-primary px-4 py-2 text-sm font-medium !text-primary-foreground hover:!bg-primary/90 transition-colors whitespace-nowrap'
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
                       >
                         <MapPin className='h-4 w-4 shrink-0' />
                         Browse {cols[1]?.stateName ?? byCode.get(stateB)?.stateName ?? stateB}
@@ -427,7 +427,7 @@ export function UsaListStateComparison({ sortedStates, base }: UsaListStateCompa
                     {(cols[2] || byCode.get(stateC)) && (
                       <AppLink
                         href={stateGymsdataPath(cols[2] ? { state: cols[2].state, stateName: cols[2].stateName, count: cols[2].totalGyms } : byCode.get(stateC)!, base)}
-                        className='inline-flex items-center gap-1.5 rounded-lg !bg-primary px-4 py-2 text-sm font-medium !text-primary-foreground hover:!bg-primary/90 transition-colors whitespace-nowrap'
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap'
                       >
                         <MapPin className='h-4 w-4 shrink-0' />
                         Browse {cols[2]?.stateName ?? byCode.get(stateC)?.stateName ?? stateC}

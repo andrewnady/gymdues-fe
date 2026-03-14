@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { getListPageData, getGymsdataForCity, getCityPage } from '@/lib/gymsdata-api'
 import {
   getStateBySlug,
@@ -12,12 +12,12 @@ import {
 } from '@/lib/gymsdata-utils'
 import { MapPin } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
-import { getGymsdataBasePath } from '../../_lib/get-gymsdata-base-path'
+import { getGymsdataBasePath, getGymsdataCanonicalUrl } from '../../_lib/get-gymsdata-base-path'
+import { buildBreadcrumbSchema, buildProductSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../../_constants'
 import { BuyDataButton } from '../../_components/buy-data-button'
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 type Props = { params: Promise<{ state: string; city: string }> }
 
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const count = cityPage.totalGyms ?? 0
     const title = `List of Gyms in ${cityName}, ${stateName} - ${count.toLocaleString('en-US')} Verified Contacts | Gymdues`
     const description = `${count.toLocaleString('en-US')} gyms in ${cityName}, ${stateName}. Verified contact database with emails and phone numbers.`
-    const canonical = new URL(`/gymsdata/${toUrlSegment(stateName)}/${toUrlSegment(cityName)}`, siteUrl).toString()
+    const canonical = await getGymsdataCanonicalUrl(`${toUrlSegment(stateName)}/${toUrlSegment(cityName)}`)
     return {
       title,
       description,
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const count = loc.count ?? 0
   const title = `List of Gyms in ${cityName}, ${state.stateName} - ${count.toLocaleString('en-US')} Verified Contacts | Gymdues`
   const description = `${count.toLocaleString('en-US')} gyms in ${cityName}, ${state.stateName}. Verified contact database with emails and phone numbers.`
-  const canonical = new URL(`/gymsdata/${toUrlSegment(state.stateName)}/${toUrlSegment(cityName)}`, siteUrl).toString()
+  const canonical = await getGymsdataCanonicalUrl(`${toUrlSegment(state.stateName)}/${toUrlSegment(cityName)}`)
   return {
     title,
     description,
@@ -87,9 +87,9 @@ export default async function GymsdataCityPage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>City not found</h1>
-        <AppLink href={data.state ? stateGymsdataPath(data.state, base) : homeHref} className='text-primary hover:underline'>
+        <Link href={data.state ? stateGymsdataPath(data.state, base) : homeHref} className='text-primary hover:underline'>
           Back to {data.state?.stateName ?? 'states'}
-        </AppLink>
+        </Link>
       </main>
     )
   }
@@ -97,17 +97,36 @@ export default async function GymsdataCityPage({ params }: Props) {
   const { cityName, count, stats, neighborhoods, nearbyCities } = data
   const dateStr = formatDataDate()
   const statePath = stateGymsdataPath(state, base)
+  const cityPath = cityGymsdataPath(state.stateName ?? '', cityName, base)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+  const schemaBreadcrumb = buildBreadcrumbSchema(
+    [
+      { name: 'Home', url: homeHref },
+      { name: state.stateName ?? '', url: statePath },
+      { name: cityName, url: cityPath },
+    ],
+    siteUrl.replace(/\/$/, '')
+  )
+  const cityPrice = typeof data.cityPage?.price === 'number' ? data.cityPage.price : parseFloat(String(data.cityPage?.price ?? 29)) || 29
+  const schemaProduct = buildProductSchema({
+    name: `Fitness, Gym, and Health Services Data - ${cityName}, ${state.stateName}`,
+    description: `${count.toLocaleString('en-US')}+ verified contacts in ${cityName}, ${state.stateName}. CSV/JSON. Updated weekly.`,
+    brandName: 'Gymdues',
+    price: cityPrice,
+    seller: { name: 'Gymdues', url: siteUrl },
+  })
 
   return (
     <main className='min-h-screen'>
+      <JsonLdSchema data={[schemaBreadcrumb, schemaProduct]} />
       {/* Above the fold */}
       <div className='border-b bg-muted/30'>
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <ol className='flex flex-wrap items-center gap-1'>
-              <li><AppLink href={homeHref} className='hover:text-primary'>Home</AppLink></li>
+              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
               <li aria-hidden>/</li>
-              <li><AppLink href={statePath} className='hover:text-primary'>{state.stateName}</AppLink></li>
+              <li><Link href={statePath} className='hover:text-primary'>{state.stateName}</Link></li>
               <li aria-hidden>/</li>
               <li className='text-foreground font-medium'>{cityName}</li>
             </ol>
@@ -200,25 +219,25 @@ export default async function GymsdataCityPage({ params }: Props) {
           <ul className='flex flex-wrap gap-2'>
             {nearbyCities.map((c) => (
               <li key={c.label ?? c.city ?? ''}>
-                <AppLink
+                <Link
                   href={cityGymsdataPath(state.stateName, c.city ?? '', base)}
                   className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40'
                 >
                   <MapPin className='h-3.5 w-3.5 text-primary' />
                   {c.city ?? c.label} ({c.count.toLocaleString('en-US')})
-                </AppLink>
+                </Link>
               </li>
             ))}
           </ul>
           {/* <p className='mt-4'>
-            <AppLink href={statePath} className='text-primary hover:underline font-medium'>
+            <Link href={statePath} className='text-primary hover:underline font-medium'>
               ← Back to all cities in {state.stateName}
-            </AppLink>
+            </Link>
           </p>
           <p className='mt-2'>
-            <AppLink href={homeHref} className='text-primary hover:underline font-medium'>
+            <Link href={homeHref} className='text-primary hover:underline font-medium'>
               Browse all gyms
-            </AppLink>
+            </Link>
           </p> */}
         </section>
       </div>

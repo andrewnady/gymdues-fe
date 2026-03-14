@@ -22,6 +22,12 @@ import { ReadMoreText } from '@/components/read-more-text'
 import { GymSlugAddressBlock } from '@/components/gym-slug-address-block'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { NearbyGymsSlider } from '@/components/nearby-gyms-slider'
+import {
+  buildBreadcrumbSchema,
+  buildFAQPageSchema,
+  buildOfferSchema,
+  buildProductSchema,
+} from '@/lib/schema-builder'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -168,27 +174,14 @@ export default async function GymDetailPage({ params }: PageProps) {
 
   // Offer Schemas (Schema.org) - One for each membership plan
   const offerSchemas = gym.pricing?.map((plan) => {
-    const price = typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'Offer',
+    const priceNum = typeof plan.price === 'number' ? plan.price : parseFloat(String(plan.price)) || 0
+    return buildOfferSchema({
       name: `${gym.name} - ${plan.tier_name}`,
       description: plan.description || `${plan.tier_name} membership plan`,
-      price: price,
-      priceCurrency: 'USD',
-      availability: 'https://schema.org/InStock',
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
-        price: price,
-        priceCurrency: 'USD',
-        unitText: plan.frequency.toLowerCase(),
-      },
-      seller: {
-        '@type': 'ExerciseGym',
-        name: gym.name,
-        url: gym.website || gymUrl,
-      },
-    }
+      price: priceNum,
+      unitText: plan.frequency.toLowerCase(),
+      seller: { name: gym.name, url: gym.website || gymUrl },
+    })
   }) || []
 
   // Review Schemas (Schema.org)
@@ -221,18 +214,16 @@ export default async function GymDetailPage({ params }: PageProps) {
   }) || []
 
   // FAQ Schema (Schema.org)
-  const faqSchema = gym.faqs && gym.faqs.length > 0 ? {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: gym.faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question.replace(/<[^>]*>/g, ''), // Strip HTML tags
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer.replace(/<[^>]*>/g, ''), // Strip HTML tags
-      },
-    })),
-  } : null
+  const faqSchema =
+    gym.faqs && gym.faqs.length > 0
+      ? buildFAQPageSchema(
+          gym.faqs.map((faq) => ({
+            question: faq.question.replace(/<[^>]*>/g, ''),
+            answer: faq.answer.replace(/<[^>]*>/g, ''),
+          })),
+          { baseUrl: siteUrl, path: `/gyms/${slug}` }
+        )
+      : null
 
   // LocalBusiness + HealthClub Schema (primary schema for gym pages)
   const exerciseGymSchema = {
@@ -284,39 +275,22 @@ export default async function GymDetailPage({ params }: PageProps) {
   }
 
   // Product Schemas - one per membership plan (only when pricing data exists)
-  const productSchemas = gym.pricing && gym.pricing.length > 0
-    ? gym.pricing.map((plan) => {
-        const price = typeof plan.price === 'number' ? plan.price.toFixed(2) : plan.price
-        return {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: `${gym.name} - ${plan.tier_name}`,
-          description: plan.description || `${plan.tier_name} membership at ${gym.name}`,
-          image: gymImage,
-          brand: {
-            '@type': 'Brand',
-            name: gym.name,
-          },
-          offers: {
-            '@type': 'Offer',
-            price: price,
-            priceCurrency: 'USD',
-            availability: 'https://schema.org/InStock',
-            seller: {
-              '@type': 'ExerciseGym',
-              name: gym.name,
-              url: gym.website || gymUrl,
-            },
-            priceSpecification: {
-              '@type': 'UnitPriceSpecification',
-              price: price,
-              priceCurrency: 'USD',
-              unitText: plan.frequency.toLowerCase(),
-            },
-          },
-        }
-      })
-    : []
+  const productSchemas =
+    gym.pricing && gym.pricing.length > 0
+      ? gym.pricing.map((plan) => {
+          const priceNum =
+            typeof plan.price === 'number' ? plan.price : parseFloat(String(plan.price)) || 0
+          return buildProductSchema({
+            name: `${gym.name} - ${plan.tier_name}`,
+            description: plan.description || `${plan.tier_name} membership at ${gym.name}`,
+            image: gymImage,
+            brandName: gym.name,
+            price: priceNum,
+            unitText: plan.frequency.toLowerCase(),
+            seller: { name: gym.name, url: gym.website || gymUrl },
+          })
+        })
+      : []
 
   // Carousel Schema for Nearby Gyms (only when nearby gyms exist)
   const nearbyGymsCarouselSchema = nearbyGyms && nearbyGyms.length > 0
@@ -335,30 +309,15 @@ export default async function GymDetailPage({ params }: PageProps) {
     : null
 
   // Breadcrumb Schema (JSON-LD)
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: siteUrl,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Gyms',
-        item: `${siteUrl}/gymsdata`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: gym.name,
-        item: gymUrl,
-      },
+  const baseUrl = siteUrl.replace(/\/$/, '')
+  const breadcrumbSchema = buildBreadcrumbSchema(
+    [
+      { name: 'Home', url: '/' },
+      { name: 'Gyms', url: '/gyms' },
+      { name: gym.name, url: `/gyms/${slug}` },
     ],
-  }
+    baseUrl
+  )
 
   return (
     <div className='min-h-screen relative'>
@@ -441,7 +400,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                     className='!text-background'
                     items={[
                       { label: 'Home', href: '/' },
-                      { label: 'Gyms', href: '/gymsdata' },
+                      { label: 'Gyms', href: '/' },
                       { label: gym.name, href: `/gyms/${slug}` },
                     ]}
                   />

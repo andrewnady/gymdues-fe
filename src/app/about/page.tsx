@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Target, Users, Award, Heart } from 'lucide-react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import Image from 'next/image'
 import { ReadMoreText } from '@/components/read-more-text'
 
@@ -234,9 +234,10 @@ export default function AboutPage() {
                       competitive environment.
                     </p>
                     <div className='pt-4'>
-                      <AppLink
+                      <Link
                         href='https://admirsalcinovic.com/'
-                        target='_blank'
+                        target='blank'
+                        rel='noopener noreferrer'
                         className='text-primary hover:text-primary/80 font-medium inline-flex items-center gap-2'
                       >
                         Learn more about Admir Salcinovic
@@ -253,7 +254,7 @@ export default function AboutPage() {
                             d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
                           />
                         </svg>
-                      </AppLink>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -286,9 +287,10 @@ export default function AboutPage() {
                       experience, and driving growth through data-driven decisions.
                     </p>
                     <div className='pt-4'>
-                      <AppLink
+                      <Link
                         href='https://www.linkedin.com/in/andrew-n-9b3030135/'
-                        target='_blank'
+                        target='blank'
+                        rel='noopener noreferrer'
                         className='text-primary hover:text-primary/80 font-medium inline-flex items-center gap-2'
                       >
                         Learn more about Andrew Nady
@@ -305,7 +307,7 @@ export default function AboutPage() {
                             d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
                           />
                         </svg>
-                      </AppLink>
+                      </Link>
                     </div>
                   </div>
                 </div>

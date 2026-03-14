@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react'
 import { getIndustryTrends } from '@/lib/gymsdata-api'
 import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
@@ -26,7 +26,7 @@ export default async function GrowthTrendsPage() {
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-6xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><AppLink href={homeHref} className="hover:text-primary">Home</AppLink></li>
+            <li><Link href={homeHref} className="hover:text-primary">Home</Link></li>
             <li aria-hidden>/</li>
             <li className="text-foreground font-medium">Gym Industry Trends</li>
           </ol>
@@ -82,9 +82,9 @@ export default async function GrowthTrendsPage() {
         </div>
 
         <div className="max-w-6xl mx-auto mt-12 pt-8 border-t text-center space-y-2">
-          <AppLink href={homeHref} className="inline-flex items-center gap-2 rounded-xl border-2 !border-gray-700 dark:!border-gray-500 bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted text-center transition-colors">
+          <Link href={homeHref} className="text-primary font-medium hover:underline">
             ← Back to Home
-          </AppLink>
+          </Link>
           {/* <span className="mx-2 text-muted-foreground">·</span>
           <Link href={competitiveHref} className="text-primary font-medium hover:underline">
             Competitive Intelligence Tool

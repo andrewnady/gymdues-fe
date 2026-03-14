@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { BarChart2 } from 'lucide-react'
 import { CompetitiveIntelligenceTool } from './_components/competitive-intelligence-tool'
 import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
@@ -22,7 +22,7 @@ export default async function CompetitiveIntelligencePage() {
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-4xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><AppLink href={homeHref} className="hover:text-primary">Home</AppLink></li>
+            <li><Link href={homeHref} className="hover:text-primary">Home</Link></li>
           </ol>
         </nav>
 
@@ -43,9 +43,9 @@ export default async function CompetitiveIntelligencePage() {
         </div>
 
         <div className="max-w-4xl mx-auto mt-12 pt-8 border-t text-center">
-          <AppLink href={homeHref} className="inline-flex items-center gap-2 rounded-xl border-2 !border-gray-700 dark:!border-gray-500 bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted text-center transition-colors">
+          <Link href={homeHref} className="text-primary font-medium hover:underline">
             Back to Home
-          </AppLink>
+          </Link>
         </div>
       </div>
     </main>

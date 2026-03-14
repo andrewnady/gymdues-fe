@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { gymCities } from '@/types/gym'
 import { MapPin } from 'lucide-react'
 
@@ -57,8 +57,8 @@ export function BestGymCityCard({ gym, selectMode, onSelect }: BestGymCityCardPr
   const href = isAbsoluteUrl ? `${bestGymsBaseUrl}/${urlSlug}` : `/${urlSlug}`
 
   return (
-    <AppLink href={href} className='block'>
+    <Link href={href} className='block'>
       {cardContent}
-    </AppLink>
+    </Link>
   )
 }

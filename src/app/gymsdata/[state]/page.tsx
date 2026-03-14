@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getListPage, getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
-import { getStateBySlug, getTypeBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
+import { getStateBySlug, getTypeBySlug, cityGymsdataPath, stateGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
 import { MapPin } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
@@ -10,9 +10,9 @@ import { BuyDataButton } from '../_components/buy-data-button'
 import { GymsdataMiniMap } from '../_components/gymsdata-mini-map'
 import { StateCitiesFilter } from '../_components/state-cities-filter'
 import { GymsdataTypePageContent } from '../_components/gymsdata-type-page-content'
-import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+import { getGymsdataBasePath, getGymsdataCanonicalUrl } from '../_lib/get-gymsdata-base-path'
+import { buildBreadcrumbSchema, buildProductSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 
 type Props = { params: Promise<{ state: string }> }
 
@@ -37,13 +37,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { typeItem } = resolved
     const title = `${typeItem.type} - ${typeItem.count.toLocaleString('en-US')} Verified Contacts | Gymdues`
     const description = `List of ${typeItem.type} in the United States. ${typeItem.count.toLocaleString('en-US')}+ verified contacts. Download sample or buy full dataset.`
-    const canonical = new URL(`/gymsdata/${encodeURIComponent(toUrlSegment(typeItem.typeSlug))}`, siteUrl).toString()
+    const canonical = await getGymsdataCanonicalUrl(toUrlSegment(typeItem.typeSlug))
     return { title, description, alternates: { canonical }, openGraph: { title, description, url: canonical } }
   }
   const { state } = resolved
   const title = `List of Gyms in ${state.stateName} - ${state.count.toLocaleString('en-US')} Verified Contacts | Gymdues`
   const description = `Browse gyms in ${state.stateName} by city. ${state.count.toLocaleString('en-US')}+ verified contacts. Download CSV or view by city.`
-  const canonical = new URL(`/gymsdata/${toUrlSegment(state.stateName)}`, siteUrl).toString()
+  const canonical = await getGymsdataCanonicalUrl(toUrlSegment(state.stateName))
   return { title, description, alternates: { canonical }, openGraph: { title, description, url: canonical } }
 }
 
@@ -76,9 +76,9 @@ export default async function GymsdataStatePage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>State not found</h1>
-        <AppLink href={homeHref} className='text-primary hover:underline'>
+        <Link href={homeHref} className='text-primary hover:underline'>
           View all states
-        </AppLink>
+        </Link>
       </main>
     )
   }
@@ -86,14 +86,32 @@ export default async function GymsdataStatePage({ params }: Props) {
   const displayState = data.displayState
   const { stateStats, cities, topThreeCities } = data
   const dateStr = formatDataDate()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+  const statePath = stateGymsdataPath(state, base)
+  const schemaBreadcrumb = buildBreadcrumbSchema(
+    [
+      { name: 'Home', url: homeHref },
+      { name: displayState.stateName ?? state.stateName ?? '', url: statePath },
+    ],
+    siteUrl.replace(/\/$/, '')
+  )
+  const statePrice = typeof data.statePage?.price === 'number' ? data.statePage.price : parseFloat(String(data.statePage?.price ?? 249)) || 249
+  const schemaProduct = buildProductSchema({
+    name: `Fitness, Gym, and Health Services Data - ${displayState.stateName ?? state.stateName}`,
+    description: `${displayState.count.toLocaleString('en-US')}+ verified contacts in ${displayState.stateName}. CSV/JSON. Updated weekly.`,
+    brandName: 'Gymdues',
+    price: statePrice,
+    seller: { name: 'Gymdues', url: siteUrl },
+  })
 
   return (
     <main className='min-h-screen'>
+      <JsonLdSchema data={[schemaBreadcrumb, schemaProduct]} />
       <div className='border-b bg-muted/30'>
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <ol className='flex flex-wrap items-center gap-1'>
-              <li><AppLink href={homeHref} className='hover:text-primary'>Home</AppLink></li>
+              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
               <li aria-hidden>/</li>
               <li className='text-foreground font-medium'>{displayState.stateName}</li>
             </ol>
@@ -189,9 +207,9 @@ export default async function GymsdataStatePage({ params }: Props) {
         ) : (
           <p className='text-muted-foreground'>
             City-level data for {state.stateName} is being updated. You can still{' '}
-            <AppLink href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+            <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
               browse all gyms in {state.stateName}
-            </AppLink>.
+            </Link>.
           </p>
         )}
 
@@ -208,21 +226,21 @@ export default async function GymsdataStatePage({ params }: Props) {
               <ul className='flex flex-wrap gap-2'>
                 {cities.slice(0, 10).map((loc) => (
                   <li key={loc.label ?? `${loc.city}-${loc.state}`}>
-                    <AppLink
+                    <Link
                       href={cityGymsdataPath(state.stateName, loc.city ?? '', base)}
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40 text-primary'
                     >
                       <MapPin className='h-3.5 w-3.5 shrink-0' aria-hidden />
                       {loc.city ?? loc.label} ({loc.count.toLocaleString('en-US')})
-                    </AppLink>
+                    </Link>
                   </li>
                 ))}
               </ul>
               {cities.length === 0 && (
                 <p className='text-sm text-muted-foreground'>
-                  <AppLink href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+                  <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
                     View gyms in {state.stateName}
-                  </AppLink>
+                  </Link>
                 </p>
               )}
             </div>
@@ -234,19 +252,19 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <AppLink href={homeHref} className='text-primary hover:underline font-medium'>
+                  <Link href={homeHref} className='text-primary hover:underline font-medium'>
                     List of Fitness, Gym, and Health Services in United States
-                  </AppLink>
+                  </Link>
                 </li>
                 <li>
-                  <AppLink href={statePath} className='text-primary hover:underline font-medium'>
+                  <Link href={statePath} className='text-primary hover:underline font-medium'>
                     {state.stateName} (this page)
-                  </AppLink>
+                  </Link>
                 </li>
                 <li>
-                  <AppLink href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
+                  <Link href={`${base === '' ? '/' : base || '/'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
                     View gyms in {state.stateName}
-                  </AppLink>
+                  </Link>
                 </li>
               </ul>
             </div> */}
@@ -258,19 +276,19 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <AppLink href={homeHref} className='text-primary hover:underline font-medium'>
+                  <Link href={homeHref} className='text-primary hover:underline font-medium'>
                     Browse all gyms
-                  </AppLink>
+                  </Link>
                 </li>
                 <li>
-                  <AppLink href='/best-gyms' className='text-primary hover:underline font-medium'>
+                  <Link href='/best-gyms' className='text-primary hover:underline font-medium'>
                     Best Gyms
-                  </AppLink>
+                  </Link>
                 </li>
                 <li>
-                  <AppLink href={`/best-gyms/${toSlug(state.stateName)}?type=state`} className='text-primary hover:underline font-medium'>
+                  <Link href={`/best-gyms/${toSlug(state.stateName)}?type=state`} className='text-primary hover:underline font-medium'>
                     Best gyms in {state.stateName}
-                  </AppLink>
+                  </Link>
                 </li>
               </ul>
             </div> */}

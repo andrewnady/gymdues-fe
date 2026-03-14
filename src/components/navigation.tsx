@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, ChevronDown, LayoutDashboard, LogOut } from 'lucide-react'
 import { getAuthToken, clearAuthToken, apiLogout } from '@/lib/gym-owner-auth'
@@ -96,7 +96,7 @@ export function Navigation() {
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${navBackground}`}>
       <div className='container mx-auto'>
         <div className='flex h-16 items-center justify-between px-4'>
-          <AppLink href={`${siteUrl}/`} className='flex items-center'>
+          <Link href={`${siteUrl}/`} className='flex items-center'>
             <Image
               src='/images/logo.svg'
               alt='GymDues'
@@ -105,12 +105,12 @@ export function Navigation() {
               className={`h-8 w-auto ${shouldShowWhiteText ? 'brightness-0 invert' : ''}`}
               priority
             />
-          </AppLink>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className='hidden md:flex items-center gap-6'>
             {navLinks.map((link) => (
-              <AppLink
+              <Link
                 key={link.href}
                 href={link.href}
                 className={`hover:text-primary transition-colors ${
@@ -118,7 +118,7 @@ export function Navigation() {
                 }`}
               >
                 {link.label}
-              </AppLink>
+              </Link>
             ))}
             {isAuthenticated ? (
               <div className='relative' data-dropdown>
@@ -135,14 +135,14 @@ export function Navigation() {
                 </button>
                 {isDropdownOpen && (
                   <div className='absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-lg z-50'>
-                    <AppLink
+                    <Link
                       href={`${siteUrl}/dashboard`}
                       onClick={() => setIsDropdownOpen(false)}
                       className='flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors'
                     >
                       <LayoutDashboard className='h-4 w-4' />
                       Dashboard
-                    </AppLink>
+                    </Link>
                     <button
                       onClick={() => { setIsDropdownOpen(false); handleLogout() }}
                       className='flex w-full items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors border-t'
@@ -154,7 +154,7 @@ export function Navigation() {
                 )}
               </div>
             ) : (
-              <AppLink
+              <Link
                 href={`${siteUrl}/dashboard/auth/login`}
                 className={`hidden text-sm font-medium border rounded-md px-3 py-1.5 transition-colors ${
                   shouldShowWhiteText
@@ -163,7 +163,7 @@ export function Navigation() {
                 }`}
               >
                 Gym Owner Login
-              </AppLink>
+              </Link>
             )}
           </div>
 
@@ -189,26 +189,26 @@ export function Navigation() {
         <div className='bg-white container mx-auto px-4 py-6'>
           <nav className='flex flex-col gap-4'>
             {navLinks.map((link) => (
-              <AppLink
+              <Link
                 key={link.href}
                 href={link.href}
                 className='text-foreground hover:text-primary transition-colors py-2 text-lg font-medium'
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.label}
-              </AppLink>
+              </Link>
             ))}
             <div className='border-t pt-4 flex flex-col gap-2'>
               {isAuthenticated ? (
                 <>
-                  <AppLink
+                  <Link
                     href={`${siteUrl}/dashboard`}
                     className='flex items-center gap-2 text-foreground hover:text-primary transition-colors py-2 text-lg font-medium'
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <LayoutDashboard className='h-5 w-5' />
                     Dashboard
-                  </AppLink>
+                  </Link>
                   <button
                     onClick={() => { setIsMobileMenuOpen(false); handleLogout() }}
                     className='flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors py-2 text-lg font-medium text-left'
@@ -218,13 +218,13 @@ export function Navigation() {
                   </button>
                 </>
               ) : (
-                <AppLink
+                <Link
                   href={`${siteUrl}/dashboard/auth/login`}
                   className='hidden text-foreground hover:text-primary transition-colors py-2 text-lg font-medium'
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Gym Owner Login
-                </AppLink>
+                </Link>
               )}
             </div>
           </nav>

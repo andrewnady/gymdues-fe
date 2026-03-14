@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Gym } from '@/types/gym'
 import { GymCard } from '@/components/gym-card'
@@ -40,13 +40,13 @@ export function TrendingGymsSection({ gyms }: TrendingGymsSectionProps) {
               still make a smart value decision.
             </ReadMoreText>
           </div>
-          <AppLink
-            href='/gymsdata'
+          <Link
+            href='/'
             className='flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-4 md:mt-0 text-nowrap'
           >
             View All Gyms
             <ArrowRight className='h-4 w-4' />
-          </AppLink>
+          </Link>
         </div>
 
         <Carousel

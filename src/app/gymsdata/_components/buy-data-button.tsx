@@ -12,8 +12,8 @@ export const BUY_BUTTON_CLASSES =
 interface BuyDataButtonProps {
   /** Checkout URL (with optional scope query params). */
   href: string
-  /** Button label, e.g. "Buy data". */
-  label: string
+  /** Button label; defaults to "Buy data". */
+  label?: string
   /** Price from server (list/state/city/type page). */
   priceFromServer?: PriceFromServer | null
   /** Fallback when price is missing. */
@@ -28,7 +28,7 @@ interface BuyDataButtonProps {
  */
 export function BuyDataButton({
   href,
-  label,
+  label = 'Buy data',
   priceFromServer,
   fallbackLabel = FULL_DATA_PRICE_LABEL,
   className = '',
@@ -37,8 +37,8 @@ export function BuyDataButton({
   return (
     <button
       type="button"
-      onClick={() => router.push(href)}
       className={`${BUY_BUTTON_CLASSES} ${className}`.trim()}
+      onClick={() => router.push(href)}
     >
       <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
       <span>{label}</span>

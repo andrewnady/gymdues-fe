@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Filter } from 'lucide-react'
 
@@ -13,14 +13,14 @@ export function GymsdataStatesSortLinks({ base }: GymsdataStatesSortLinksProps) 
   const searchParams = useSearchParams()
   const sort = searchParams?.get('sort') ?? 'count'
   const isCount = sort !== 'name'
-  const rootHref = base === '' ? '/' : `${base || '/gymsdata'}/`
+  const rootHref = base === '' ? '/' : `${base || '/'}/`
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
       <Filter className='h-4 w-4 text-muted-foreground shrink-0' aria-hidden />
       <span className='text-sm font-medium text-muted-foreground'>Sort states by:</span>
       <div className='flex rounded-lg border border-border/80 bg-muted/30 p-0.5' role='tablist' aria-label='Sort order'>
-        <AppLink
+        <Link
           href={`${rootHref}?sort=count`}
           role='tab'
           aria-selected={isCount}
@@ -29,8 +29,8 @@ export function GymsdataStatesSortLinks({ base }: GymsdataStatesSortLinksProps) 
           }`}
         >
           Most gyms in USA
-        </AppLink>
-        <AppLink
+        </Link>
+        <Link
           href={`${rootHref}?sort=name`}
           role='tab'
           aria-selected={!isCount}
@@ -39,7 +39,7 @@ export function GymsdataStatesSortLinks({ base }: GymsdataStatesSortLinksProps) 
           }`}
         >
           State A–Z
-        </AppLink>
+        </Link>
       </div>
     </div>
   )

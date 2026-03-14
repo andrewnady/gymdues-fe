@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { ArrowRightCircle } from 'lucide-react'
 
 
@@ -26,13 +26,15 @@ export function GymsdataHeroBanner() {
           </p>
 
           <div className="flex flex-wrap items-center gap-3.5 mb-5">
-            <AppLink
-              href="/contact"
-              className="inline-flex items-center gap-2 rounded-full !bg-primary px-6 py-3 text-sm font-semibold !text-primary-foreground shadow-md hover:!bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            <Link
+              href=""
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all"
             >
               Contact me
               <ArrowRightCircle className="h-4 w-4" aria-hidden />
-            </AppLink>
+            </Link>
 
           </div>
 

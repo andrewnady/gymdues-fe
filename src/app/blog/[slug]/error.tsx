@@ -1,6 +1,6 @@
 'use client'
 
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle } from 'lucide-react'
@@ -32,13 +32,13 @@ export default function BlogPostError({
         <CardContent className="text-center space-y-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild>
-              <AppLink href="/blog" className="inline-flex">Browse all posts</AppLink>
+              <Link href="/blog">Browse all posts</Link>
             </Button>
             <Button variant="outline" onClick={reset}>
               Try again
             </Button>
             <Button variant="ghost" asChild>
-              <AppLink href="/" className="inline-flex">Go home</AppLink>
+              <Link href="/">Go home</Link>
             </Button>
           </div>
         </CardContent>
