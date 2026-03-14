@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 // import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
 import { Gym } from '@/types/gym'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Separator } from '@/components/ui/separator'
 
 export function GymAutocompleteSearch() {
@@ -132,7 +132,7 @@ export function GymAutocompleteSearch() {
             <ul className="py-2">
               {results.map((gym, index) => (
                 <li key={gym.id}>
-                  <Link
+<AppLink 
                     href={`/gyms/${gym.slug}`}
                     onClick={handleGymClick}
                     className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors"
@@ -140,7 +140,7 @@ export function GymAutocompleteSearch() {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm truncate">{gym.name}</h4>
                     </div>
-                  </Link>
+                  </AppLink>
                   {index < results.length - 1 && <Separator />}
                 </li>
               ))}

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import type { GymsdataTypeItem } from '@/lib/gymsdata-api'
 import { typeGymsdataPath } from '@/lib/gymsdata-utils'
 import { ChevronRight, BarChart3, Target, MapPin, List } from 'lucide-react'
@@ -27,7 +27,7 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
         <div className="container mx-auto px-4 py-8">
           <nav className="text-sm text-muted-foreground mb-4" aria-label="Breadcrumb">
             <ol className="flex flex-wrap items-center gap-1">
-              <li><Link href={homeHref} className="hover:text-primary">Home</Link></li>
+              <li><AppLink href={homeHref} className="hover:text-primary">Home</AppLink></li>
               <li aria-hidden>/</li>
               <li className="text-foreground font-medium">{typeItem.type}</li>
             </ol>
@@ -71,13 +71,13 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
               priceFromServer={typeItem.formattedPrice ? { formattedPrice: typeItem.formattedPrice, price: typeItem.price, rowCount: typeItem.count } : undefined}
               fallbackLabel={FULL_DATA_PRICE_LABEL}
             />
-            <Link
+            <AppLink
               href={typesPath}
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-5 py-2.5 text-sm font-medium hover:bg-muted"
             >
               View all types
               <ChevronRight className="h-4 w-4" />
-            </Link>
+            </AppLink>
           </div>
         </div>
       </div>
@@ -112,12 +112,12 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
                             {isCurrent ? (
                               <span className="font-semibold text-foreground">{t.type}</span>
                             ) : (
-                              <Link
+                              <AppLink
                                 href={typeGymsdataPath(t.typeSlug, base)}
                                 className="text-primary hover:underline underline-offset-2"
                               >
                                 {t.type}
-                              </Link>
+                              </AppLink>
                             )}
                           </td>
                           <td className="pr-4 py-2.5 w-24 text-right tabular-nums font-medium">
@@ -178,24 +178,24 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
             <ul className="flex flex-wrap gap-2">
               {otherTypes.map((t) => (
                 <li key={t.typeSlug}>
-                  <Link
+                  <AppLink
                     href={typeGymsdataPath(t.typeSlug, base)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/30 transition-colors"
                   >
                     {t.type}
                     <span className="text-muted-foreground tabular-nums">({t.count.toLocaleString('en-US')})</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
-                  </Link>
+                  </AppLink>
                 </li>
               ))}
               <li>
-                <Link
+                <AppLink
                   href={typesPath}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-2.5 text-sm font-medium hover:bg-muted"
                 >
                   View all {types.length} types
                   <ChevronRight className="h-4 w-4" aria-hidden />
-                </Link>
+                </AppLink>
               </li>
             </ul>
           </section>
@@ -211,20 +211,20 @@ export function GymsdataTypePageContent({ typeItem, types, base }: GymsdataTypeP
             gymsdata page.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Link
+            <AppLink
               href={homeHref}
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted"
             >
               All states
               <ChevronRight className="h-4 w-4" />
-            </Link>
-            <Link
+            </AppLink>
+            <AppLink
               href={typesPath}
               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted"
             >
               All types
               <ChevronRight className="h-4 w-4" />
-            </Link>
+            </AppLink>
           </div>
         </section>
       </div>

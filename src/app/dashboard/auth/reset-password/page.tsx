@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,7 @@ function ResetPasswordContent() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/dashboard/auth/forgot-password">Request New Link</Link>
+              <AppLink href="/dashboard/auth/forgot-password" className="w-full">Request New Link</AppLink>
             </Button>
           </CardContent>
         </Card>
@@ -151,12 +151,12 @@ function ResetPasswordContent() {
               </Button>
 
               <div className="text-center">
-                <Link
+                <AppLink
                   href="/dashboard/auth/login"
                   className="text-sm text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Back to login
-                </Link>
+                </AppLink>
               </div>
             </form>
           </CardContent>

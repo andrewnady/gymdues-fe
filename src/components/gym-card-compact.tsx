@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import {
   Card,
   CardContent,
@@ -62,9 +62,9 @@ export function GymCardCompact({ gym, selectMode, onSelect }: GymCardCompactProp
       <CardContent className="flex-1 py-0" />
       <CardFooter className="pt-2">
         <Button className="w-full" size="sm" asChild>
-          <Link href={`/gyms/${gym.slug}`} onClick={(e) => e.stopPropagation()}>
+          <AppLink href={`/gyms/${gym.slug}`} onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}>
             {gym.name} Details
-          </Link>
+          </AppLink>
         </Button>
       </CardFooter>
     </Card>
@@ -88,5 +88,5 @@ export function GymCardCompact({ gym, selectMode, onSelect }: GymCardCompactProp
     )
   }
 
-  return <Link href={`/gyms/${gym.slug}`} className="block">{cardContent}</Link>
+  return <AppLink href={`/gyms/${gym.slug}`} className="block">{cardContent}</AppLink>
 }

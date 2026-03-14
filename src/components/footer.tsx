@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import Image from 'next/image'
+import { AppLink } from '@/components/app-link'
 import { NewsletterSubscription } from '@/components/newsletter-subscription'
 
 export function Footer() {
@@ -8,7 +8,7 @@ export function Footer() {
       <div className='container mx-auto px-4 py-8'>
         <div className='grid grid-cols-1 md:grid-cols-6 gap-8'>
           <div className='md:col-span-2'>
-            <Link href='/' className='flex items-center mb-4'>
+            <AppLink href='/' className='flex items-center mb-4'>
               <Image
                 src='/images/logo.svg'
                 alt='GymDues'
@@ -16,7 +16,7 @@ export function Footer() {
                 height={36}
                 className='h-8 w-auto'
               />
-            </Link>
+            </AppLink>
             <p className='text-sm text-muted-foreground'>
               Find the best gym near you compare memberships, prices, and reviews in minutes.
             </p>
@@ -25,19 +25,19 @@ export function Footer() {
             <h3 className='font-semibold mb-4'>Explore</h3>
             <ul className='space-y-2 text-sm'>
               <li>
-                <Link href='/gyms' className='text-muted-foreground hover:text-primary'>
+                <AppLink href='/gyms' className='text-muted-foreground hover:text-primary'>
                   Browse Gyms
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href='/about' className='text-muted-foreground hover:text-primary'>
+                <AppLink href='/about' className='text-muted-foreground hover:text-primary'>
                   About
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href='/blog' className='text-muted-foreground hover:text-primary'>
+                <AppLink href='/blog' className='text-muted-foreground hover:text-primary'>
                   Blog
-                </Link>
+                </AppLink>
               </li>
             </ul>
           </div>
@@ -45,14 +45,14 @@ export function Footer() {
             <h3 className='font-semibold mb-4'>Resources</h3>
             <ul className='space-y-2 text-sm'>
               <li>
-                <Link href='/privacy-policy' className='text-muted-foreground hover:text-primary'>
+                <AppLink href='/privacy-policy' className='text-muted-foreground hover:text-primary'>
                   Privacy Policy
-                </Link>
+                </AppLink>
               </li>
               <li>
-                <Link href='/terms-of-service' className='text-muted-foreground hover:text-primary'>
+                <AppLink href='/terms-of-service' className='text-muted-foreground hover:text-primary'>
                   Terms of Service
-                </Link>
+                </AppLink>
               </li>
             </ul>
           </div>

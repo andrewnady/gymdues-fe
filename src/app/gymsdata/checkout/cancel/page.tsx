@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ArrowLeft, ShoppingCart } from 'lucide-react'
 import { buildWebPageSchema } from '@/lib/schema-builder'
 import { JsonLdSchema } from '@/components/json-ld-schema'
@@ -45,20 +45,20 @@ export default async function CheckoutCancelPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
+            <AppLink
               href={checkoutHref}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <ShoppingCart className="h-4 w-4" aria-hidden />
               Try checkout again
-            </Link>
-            <Link
+            </AppLink>
+            <AppLink
               href={homeHref}
-              className="inline-flex items-center gap-2 rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-700 dark:border-gray-500 bg-background px-6 py-3 text-sm font-medium hover:bg-muted transition-colors"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />
               Back to Home
-            </Link>
+            </AppLink>
           </div>
         </div>
       </div>

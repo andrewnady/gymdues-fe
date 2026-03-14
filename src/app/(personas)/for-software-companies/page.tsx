@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AppLink } from '@/components/app-link'
 import { PersonaPageLayout } from '../_components/persona-page-layout'
 
 const title = 'Sell Gym Management Software to Decision Makers | Gymdues'
@@ -45,7 +46,7 @@ export default function ForSoftwareCompaniesPage() {
               <li>Lead enrichment and scoring workflows</li>
             </ul>
             <p className="text-sm">
-              <a href="/gymsdata" className="text-primary hover:underline">Browse the full data</a>
+              <AppLink href="/gymsdata" className="text-primary hover:underline">Browse the full data</AppLink>
               {' '}to filter by state and city, then download a sample to test your pipeline.
             </p>
           </div>

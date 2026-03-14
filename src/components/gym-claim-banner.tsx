@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ShieldCheck } from 'lucide-react'
 import { ClaimBusinessButton } from './claim-business-button'
 import { revalidateGymPage } from '@/app/actions/revalidate-gym'
@@ -55,12 +55,12 @@ export function GymClaimBanner({ gymId, gymName, gymSlug, isClaimed, updatedAt, 
           </span>
         </div>
         {isAuthenticated && (
-          <Link
+          <AppLink
             href='/dashboard'
             className='flex-shrink-0 text-xs font-semibold text-green-700 border border-green-400 rounded-md px-3 py-1.5 hover:bg-green-100 transition-colors whitespace-nowrap dark:text-green-300 dark:border-green-600 dark:hover:bg-green-900/30'
           >
             Manage Your Listing
-          </Link>
+          </AppLink>
         )}
       </div>
     )

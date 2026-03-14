@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import type { LocationWithCount } from '@/types/gym'
 import type { StateWithCount } from '@/types/gym'
@@ -52,12 +52,12 @@ export function TopCitiesTable({ cities, states, base }: TopCitiesTableProps) {
                 <tr key={i} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40 transition-colors'>
                   <td className='px-3 py-3 text-center text-muted-foreground font-medium tabular-nums'>{i + 1}</td>
                   <td className='px-3 py-3 font-medium'>
-                    <Link
+<AppLink 
                       href={states ? (cityPagePathForLocation(loc, states, base) ?? `${base === '' ? '/' : base || '/gymsdata'}#location=${encodeURIComponent(loc.label)}`) : `${base === '' ? '/' : base || '/gymsdata'}#location=${encodeURIComponent(loc.label)}`}
                       className='text-primary hover:underline underline-offset-2'
                     >
                       {loc.label}
-                    </Link>
+                    </AppLink>
                   </td>
                   <td className='px-3 py-3 text-right font-semibold tabular-nums text-foreground'>{loc.count.toLocaleString('en-US')}</td>
                 </tr>

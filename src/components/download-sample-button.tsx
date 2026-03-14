@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Download } from 'lucide-react'
 import { DownloadSampleModal, type DownloadSampleFormData } from './download-sample-modal'
 import { submitSampleDownload, type SampleDownloadFilters } from '@/lib/gymsdata-api'
@@ -64,11 +64,11 @@ export function DownloadSampleButton({
   const variantClass =
     variant === 'primary'
       ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
-      : 'border-2 border-input bg-background hover:bg-muted hover:border-primary/40'
+      : 'rounded-lg !border-2 !border-gray-300 dark:!border-gray-600 bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:!border-gray-400 dark:hover:!border-gray-500 focus-visible:ring-1 focus-visible:ring-primary/20'
 
   return (
     <>
-      <Link
+      <AppLink
         href={sampleHref}
         className={`${baseClass} ${variantClass} ${className}`.trim()}
         aria-label="Download Free Sample (opens form)"
@@ -83,7 +83,7 @@ export function DownloadSampleButton({
             Download Free Sample
           </>
         )}
-      </Link>
+      </AppLink>
       <DownloadSampleModal
         open={modalOpen}
         onClose={handleClose}
