@@ -300,7 +300,7 @@ export default async function Home() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
-                href='/gymsdata/checkout'
+                href='/checkout'
                 className='inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md transition-all'
               >
                 Buy data
@@ -309,7 +309,7 @@ export default async function Home() {
                 </svg>
               </Link>
               <Link
-                href='/gymsdata#use-cases-heading'
+                href='#use-cases-heading'
                 className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-transparent px-6 py-3 text-sm font-semibold text-primary hover:bg-primary/10 transition-all'
               >
                 Data & use cases

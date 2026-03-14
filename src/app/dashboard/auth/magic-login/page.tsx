@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { apiMagicLogin, saveAuthToken } from '@/lib/gym-owner-auth'
@@ -83,10 +83,10 @@ function MagicLoginContent() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button asChild className="w-full">
-              <AppLink href="/dashboard/auth/login" className="w-full">Go to Login</AppLink>
+              <Link href="/dashboard/auth/login">Go to Login</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <AppLink href="/dashboard/auth/forgot-password" className="w-full">Request a New Link</AppLink>
+              <Link href="/dashboard/auth/forgot-password">Request a New Link</Link>
             </Button>
           </CardContent>
         </Card>

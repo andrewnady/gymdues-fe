@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Table2, ExternalLink, ChevronRight, ChevronDown, ChevronUp, Info } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
@@ -104,12 +104,12 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                   </td>
                   <td className='px-4 py-3 font-medium'>
                     <span className='inline-flex items-center gap-1.5'>
-<AppLink 
+                      <Link
                         href={stateGymsdataPath(state)}
                         className='text-foreground hover:underline underline-offset-2 text-primary hover:text-primary/90'
                       >
                         {state.stateName}
-                      </AppLink>
+                      </Link>
                       <span
                         className='inline-flex shrink-0 text-muted-foreground hover:text-foreground'
                         title={`${state.stateName} (${state.state}): ${state.count.toLocaleString('en-US')} Fitness, Gym, and Health Services — view state directory`}
@@ -138,14 +138,14 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                     </div>
                   </td>
                   <td className='px-4 py-3 text-right'>
-<AppLink 
+                    <Link
                       href={stateGymsdataPath(state)}
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'
                     >
                       <ExternalLink className='h-3.5 w-3.5 shrink-0' aria-hidden />
                       <span className='hidden sm:inline'>View Fitness, Gym, and Health Services</span>
                       <ChevronRight className='h-3.5 w-3.5 sm:hidden' aria-hidden />
-                    </AppLink>
+                    </Link>
                   </td>
                 </tr>
               )
@@ -195,7 +195,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
             className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'
           >
             Show all data →
-          </AppLink> */}
+          </Link> */}
         </div>
       </div>
     </section>

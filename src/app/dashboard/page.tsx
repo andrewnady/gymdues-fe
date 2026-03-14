@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -100,14 +100,14 @@ export default function DashboardPage() {
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button asChild size="sm">
-                  <AppLink href="/dashboard/profile" className="inline-flex">
+                  <Link href="/dashboard/profile">
                     Manage Profile
-                  </AppLink>
+                  </Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <AppLink href={`/gyms/${gym.slug ?? encodeURIComponent(gym.name.toLowerCase().replace(/\s+/g, '-'))}`} target="_blank" className="inline-flex">
+                  <Link href={`/gyms/${gym.slug ?? encodeURIComponent(gym.name.toLowerCase().replace(/\s+/g, '-'))}`} target="_blank">
                     View Public Listing
-                  </AppLink>
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <AppLink href="/gyms">Find &amp; Claim Your Gym</AppLink>
+                <Link href="/gyms">Find &amp; Claim Your Gym</Link>
               </Button>
             </CardContent>
           </Card>
@@ -147,12 +147,12 @@ export default function DashboardPage() {
               </div>
 
               <div className="mt-4 pt-4 border-t">
-                <AppLink
+                <Link
                   href="/dashboard/auth/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
                   Change password
-                </AppLink>
+                </Link>
               </div>
             </CardContent>
           </Card>

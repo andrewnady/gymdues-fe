@@ -2,7 +2,8 @@
  * Schema Markup Builder – Schema.org JSON-LD helpers for consistent structured data.
  * Use with the <JsonLdSchema> component or inject script tags manually.
  *
- * Supported types: BreadcrumbList, Organization, WebSite, Dataset, WebPage, FAQPage, ItemList.
+ * Supported types: BreadcrumbList, Organization, WebSite, Dataset, WebPage, FAQPage,
+ * ItemList, Product, Offer, Article.
  */
 
 const CONTEXT = 'https://schema.org'
@@ -20,7 +21,10 @@ export interface BreadcrumbItem {
   url: string
 }
 
-/** Build BreadcrumbList schema. */
+/**
+ * Build BreadcrumbList schema (Schema.org).
+ * Use for page hierarchy: Home → Category → Page.
+ */
 export function buildBreadcrumbSchema(
   items: BreadcrumbItem[],
   baseUrl: string
@@ -159,7 +163,10 @@ export interface FAQSchemaItem {
   answer: string
 }
 
-/** Build FAQPage schema. */
+/**
+ * Build FAQPage schema (Schema.org).
+ * Use for pages with Q&A content; supports optional name and url.
+ */
 export function buildFAQPageSchema(
   faqs: FAQSchemaItem[],
   options: { baseUrl: string; name?: string; path?: string }
@@ -178,6 +185,101 @@ export function buildFAQPageSchema(
   }
   if (options.name) schema.name = options.name
   if (options.path) schema.url = resolveUrl(options.baseUrl, options.path)
+  return schema
+}
+
+export interface OfferSchemaOptions {
+  name: string
+  description?: string
+  /** Numeric price (Schema.org expects number). */
+  price: number
+  priceCurrency?: string
+  availability?: string
+  unitText?: string
+  seller?: { name: string; url: string }
+}
+
+/**
+ * Build Offer schema (Schema.org).
+ * Use for a single purchasable offer; price must be numeric.
+ */
+export function buildOfferSchema(options: OfferSchemaOptions): object {
+  const price = Number(options.price)
+  const schema: Record<string, unknown> = {
+    '@context': CONTEXT,
+    '@type': 'Offer',
+    name: options.name,
+    price,
+    priceCurrency: options.priceCurrency ?? 'USD',
+    availability: options.availability ?? 'https://schema.org/InStock',
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price,
+      priceCurrency: options.priceCurrency ?? 'USD',
+      ...(options.unitText && { unitText: options.unitText }),
+    },
+  }
+  if (options.description) schema.description = options.description
+  if (options.seller) {
+    schema.seller = {
+      '@type': 'ExerciseGym',
+      name: options.seller.name,
+      url: options.seller.url,
+    }
+  }
+  return schema
+}
+
+export interface ProductSchemaOptions {
+  name: string
+  description?: string
+  image?: string
+  brandName: string
+  /** Numeric price (Schema.org expects number). */
+  price: number
+  priceCurrency?: string
+  availability?: string
+  unitText?: string
+  seller?: { name: string; url: string }
+}
+
+/**
+ * Build Product schema (Schema.org) with a single Offer.
+ * Use for membership plans, SKUs, or any product with one primary offer.
+ */
+export function buildProductSchema(options: ProductSchemaOptions): object {
+  const price = Number(options.price)
+  const offer: Record<string, unknown> = {
+    '@type': 'Offer',
+    price,
+    priceCurrency: options.priceCurrency ?? 'USD',
+    availability: options.availability ?? 'https://schema.org/InStock',
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price,
+      priceCurrency: options.priceCurrency ?? 'USD',
+      ...(options.unitText && { unitText: options.unitText }),
+    },
+  }
+  if (options.seller) {
+    offer.seller = {
+      '@type': 'ExerciseGym',
+      name: options.seller.name,
+      url: options.seller.url,
+    }
+  }
+  const schema: Record<string, unknown> = {
+    '@context': CONTEXT,
+    '@type': 'Product',
+    name: options.name,
+    brand: {
+      '@type': 'Brand',
+      name: options.brandName,
+    },
+    offers: offer,
+  }
+  if (options.description) schema.description = options.description
+  if (options.image) schema.image = options.image
   return schema
 }
 

@@ -38,7 +38,7 @@ export default function ForFranchiseDevelopmentPage() {
         children: (
           <div className='space-y-4'>
             <p className='text-sm text-muted-foreground'>
-              Our <AppLink href='/gymsdata' className='text-primary hover:underline'>State-by-State Comparison</AppLink> and state/city breakdowns give you gym counts and density per capita. Use them to:
+              Our <AppLink href='/' className='text-primary hover:underline'>State-by-State Comparison</AppLink> and state/city breakdowns give you gym counts and density per capita. Use them to:
             </p>
             <ul className='list-disc list-inside space-y-2 text-sm text-muted-foreground'>
               <li>Rank markets by saturation (low density = opportunity or low demand)</li>

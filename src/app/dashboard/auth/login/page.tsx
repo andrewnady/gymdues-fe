@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -73,12 +73,12 @@ export default function GymOwnerLoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <AppLink
+                  <Link
                     href="/dashboard/auth/forgot-password"
                     className="text-xs text-primary hover:underline"
                   >
                     Forgot password?
-                  </AppLink>
+                  </Link>
                 </div>
                 <Input
                   id="password"
@@ -107,9 +107,9 @@ export default function GymOwnerLoginPage() {
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           Don&apos;t have access?{' '}
-          <AppLink href="/gyms" className="text-primary hover:underline">
+          <Link href="/gyms" className="text-primary hover:underline">
             Claim your gym
-          </AppLink>
+          </Link>
         </p>
       </div>
     </div>

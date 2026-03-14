@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { Loader2, AlertCircle, Shield, FileSpreadsheet, Zap, Mail } from 'lucide-react'
 import { typeGymsdataPath, stateGymsdataPath, cityGymsdataPath, toSlug } from '@/lib/gymsdata-utils'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
@@ -96,7 +96,7 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails, base }: C
               i > 0 ? <li key={`sep-${i}`} aria-hidden>/</li> : null,
               <li key={i}>
                 {seg.href ? (
-                  <AppLink href={seg.href} className="hover:text-primary">{seg.label}</AppLink>
+                  <Link href={seg.href} className="hover:text-primary">{seg.label}</Link>
                 ) : (
                   <span className={i === breadcrumbSegments.length - 1 ? 'text-foreground font-medium' : undefined}>
                     {seg.label}
@@ -216,12 +216,12 @@ export function CheckoutClient({ scope, priceFromServer, scopeDetails, base }: C
                     </div>
                   )}
                   <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
-                    <AppLink
+                    <Link
                       href={homeHref}
-                      className="flex-1 rounded-xl !border-2 !border-gray-700 dark:!border-gray-500 !bg-background px-4 py-3 text-sm font-medium hover:!bg-muted text-center transition-colors"
+                      className="flex-1 rounded-xl border border-input bg-background px-4 py-3 text-sm font-medium hover:bg-muted text-center transition-colors"
                     >
                       Back to Home
-                    </AppLink>
+                    </Link>
                     <button
                       type="submit"
                       disabled={loading}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import type { StateComparisonRow } from '../_data/state-comparison-stats'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
@@ -96,9 +96,9 @@ export function StateByStateComparisonTable({ rows, base }: StateByStateComparis
           {sortedRows.map((row) => (
             <tr key={row.state} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40'>
               <td className='px-4 py-3 font-medium'>
-                <AppLink href={stateGymsdataPath({ state: row.state, stateName: row.stateName, count: row.count }, base)} className='text-primary hover:underline'>
+                <Link href={stateGymsdataPath({ state: row.state, stateName: row.stateName, count: row.count }, base)} className='text-primary hover:underline'>
                   {row.stateName}
-                </AppLink>
+                </Link>
                 <span className='ml-1.5 text-muted-foreground font-mono text-xs'>({row.state})</span>
               </td>
               <td className='px-4 py-3 text-right tabular-nums'>{row.count.toLocaleString('en-US')}</td>

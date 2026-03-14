@@ -1,5 +1,7 @@
 import { headers } from 'next/headers'
 
+const DEFAULT_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+
 /**
  * When the site is served on the gymsdata subdomain (e.g. gymsdata.gymdues.com),
  * returns '' so links can be built without /gymsdata/ (e.g. /california/, /trends/).
@@ -10,6 +12,33 @@ export async function getGymsdataBasePath(): Promise<string> {
   const headersList = await headers()
   const host = headersList.get('host') ?? ''
   return host.startsWith('gymsdata.') ? '' : '/gymsdata'
+}
+
+/**
+ * Origin (protocol + host) to use for canonical and Open Graph URLs.
+ * On subdomain (gymsdata.*) returns that origin (e.g. https://gymsdata.gymdues.com).
+ * On main domain returns DEFAULT_SITE_URL (e.g. https://gymdues.com).
+ */
+export async function getGymsdataCanonicalOrigin(): Promise<string> {
+  const headersList = await headers()
+  const host = headersList.get('host') ?? ''
+  const proto = headersList.get('x-forwarded-proto') ?? 'https'
+  const scheme = proto.replace(/\/$/, '') || 'https'
+  if (host.startsWith('gymsdata.')) {
+    return `${scheme}://${host}`.replace(/\/$/, '')
+  }
+  return DEFAULT_SITE_URL.replace(/\/$/, '')
+}
+
+/**
+ * Full canonical URL for a gymsdata page. Use in generateMetadata alternates and openGraph.url.
+ * @param pathSegments - optional path after base, e.g. '' for root, 'california' for state, 'california/san-diego' for city
+ */
+export async function getGymsdataCanonicalUrl(pathSegments = ''): Promise<string> {
+  const [basePath, origin] = await Promise.all([getGymsdataBasePath(), getGymsdataCanonicalOrigin()])
+  const base = basePath ? `${basePath}/` : '/'
+  const path = pathSegments ? `${pathSegments}/` : ''
+  return `${origin}${base}${path}`
 }
 
 /**

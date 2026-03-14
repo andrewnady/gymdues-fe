@@ -1,4 +1,4 @@
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { ChevronRight, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,14 +31,14 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
               itemType="https://schema.org/ListItem"
             >
               {index === 0 ? (
-                <AppLink
+                <Link
                   href={item.href}
                   className={cn("flex items-center hover:text-foreground transition-colors", className)}
                   itemProp="item"
                 >
                   <Home className="h-4 w-4" />
                   <span className="sr-only" itemProp="name">{item.label}</span>
-                </AppLink>
+                </Link>
               ) : (
                 <>
                   <ChevronRight className={cn("h-4 w-4 text-muted-foreground/50", className)} />
@@ -47,13 +47,13 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                       {item.label}
                     </span>
                   ) : (
-                    <AppLink
+                    <Link
                       href={item.href}
                       className={cn("hover:text-foreground transition-colors", className)}
                       itemProp="item"
                     >
                       <span itemProp="name">{item.label}</span>
-                    </AppLink>
+                    </Link>
                   )}
                 </>
               )}
