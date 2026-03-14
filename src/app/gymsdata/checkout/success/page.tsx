@@ -92,7 +92,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps) {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
             <Link
-              href="/contact"
+              href={`${siteUrl.replace(/\/$/, '')}/contact`}
               className="inline-flex items-center gap-2 rounded-xl border border-input bg-background px-6 py-3 text-sm font-medium hover:bg-muted transition-colors"
             >
               Contact support
