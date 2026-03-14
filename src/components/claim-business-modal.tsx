@@ -119,9 +119,58 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
         setSubmitError(data.message ?? 'Failed to initiate claim. Please try again.')
         return
       }
-      setClaimId(data.claim_id)
-      setAvailableMethods(data.available_methods ?? [])
+      const claimIdValue: number = data.claim_id
+      const methods: string[] = data.available_methods ?? []
+      setClaimId(claimIdValue)
+      setAvailableMethods(methods)
       setBizEmail(email)
+
+      const emailMatched = methods.includes('email_matched')
+      const phoneMatched = methods.includes('phone_matched')
+
+      if (emailMatched || phoneMatched) {
+        // Auto-send OTPs — email/phone found directly in gym contacts
+        const sendPromises: Promise<void>[] = []
+
+        if (emailMatched) {
+          sendPromises.push(
+            fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimIdValue}/send-email-code`, {
+              method: 'POST',
+              headers: { Accept: 'application/json' },
+            }).then(async (r) => {
+              const d = await r.json()
+              if (r.ok) {
+                setBizEmailCodeSent(true)
+                setVerificationMethod('email')
+              } else {
+                setVerificationError(d.message ?? 'Failed to send email verification code.')
+              }
+            })
+          )
+        }
+
+        if (phoneMatched) {
+          setSelectedPhone(phone)
+          sendPromises.push(
+            fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimIdValue}/send-phone-code`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ phone_number: phone }),
+            }).then(async (r) => {
+              const d = await r.json()
+              if (r.ok) {
+                setPhoneCodeSent(true)
+                if (!emailMatched) setVerificationMethod('phone')
+              } else {
+                setVerificationError(d.message ?? 'Failed to send SMS verification code.')
+              }
+            })
+          )
+        }
+
+        await Promise.all(sendPromises)
+      }
+
       setStep(2)
     } catch {
       setSubmitError('Network error. Please check your connection and try again.')
@@ -575,9 +624,11 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
                     <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2.5 dark:border-green-800 dark:bg-green-900/20">
                       <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
                       <p className="text-xs text-green-800 dark:text-green-300">
-                        {bizEmailCodeSent
-                          ? <>A 6-digit code was sent to <strong>{bizEmail}</strong>. Enter it below to verify.</>
-                          : <>A 6-digit code was sent to <strong>{maskPhone(selectedPhone)}</strong>. Enter it below to verify.</>
+                        {bizEmailCodeSent && phoneCodeSent
+                          ? <>6-digit codes were sent to <strong>{bizEmail}</strong> and <strong>{maskPhone(selectedPhone)}</strong>. Enter either code below to verify.</>
+                          : bizEmailCodeSent
+                            ? <>A 6-digit code was sent to <strong>{bizEmail}</strong>. Enter it below to verify.</>
+                            : <>A 6-digit code was sent to <strong>{maskPhone(selectedPhone)}</strong>. Enter it below to verify.</>
                         }
                       </p>
                     </div>
@@ -632,13 +683,10 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
                       <button
                         type="button"
                         onClick={() => {
-                          if (bizEmailCodeSent) {
-                            setBizEmailCodeSent(false)
-                            setBizEmailCode('')
-                          } else {
-                            setPhoneCodeSent(false)
-                            setPhoneCode('')
-                          }
+                          setBizEmailCodeSent(false)
+                          setBizEmailCode('')
+                          setPhoneCodeSent(false)
+                          setPhoneCode('')
                           setVerificationError(null)
                         }}
                         className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted"

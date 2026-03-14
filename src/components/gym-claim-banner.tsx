@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AppLink } from '@/components/app-link'
+import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
 import { ClaimBusinessButton } from './claim-business-button'
+import { DisputeModal } from './dispute-modal'
 import { revalidateGymPage } from '@/app/actions/revalidate-gym'
-import { getAuthToken } from '@/lib/gym-owner-auth'
+import { getAuthToken, apiGetMe } from '@/lib/gym-owner-auth'
 
 interface GymClaimBannerProps {
   gymId: number
@@ -32,37 +33,60 @@ function formatUpdatedDate(dateStr?: string): string {
 
 export function GymClaimBanner({ gymId, gymName, gymSlug, isClaimed, updatedAt, gymWebsite, gymPhones }: GymClaimBannerProps) {
   const [claimed, setClaimed] = useState(isClaimed)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
+  const [disputeOpen, setDisputeOpen] = useState(false)
 
   useEffect(() => {
-    setIsAuthenticated(!!getAuthToken())
-  }, [])
+    const token = getAuthToken()
+    if (!token) return
+    apiGetMe(token).then((me) => {
+      if (me.success && me.gym?.id === gymId) {
+        setIsOwner(true)
+      }
+    })
+  }, [gymId])
 
   if (claimed) {
     const formattedDate = formatUpdatedDate(updatedAt)
     return (
-      <div className='flex flex-col gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-green-800 dark:bg-green-950/40'>
-        <div className='flex items-center gap-3'>
-          <ShieldCheck className='h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400' />
-          <span className='text-green-800 dark:text-green-300'>
-            <span className='font-semibold'>Verified Business</span> — This listing is managed by{' '}
-            <span className='font-semibold'>{gymName}</span>
-            {formattedDate && (
-              <span className='text-green-700/70 dark:text-green-400/70'>
-                {' '}· Last updated: {formattedDate}
-              </span>
-            )}
-          </span>
+      <>
+        <div className='flex flex-col gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-green-800 dark:bg-green-950/40'>
+          <div className='flex items-center gap-3'>
+            <ShieldCheck className='h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400' />
+            <span className='text-green-800 dark:text-green-300'>
+              <span className='font-semibold'>Verified Business</span> — This listing is managed by{' '}
+              <span className='font-semibold'>{gymName}</span>
+              {formattedDate && (
+                <span className='text-green-700/70 dark:text-green-400/70'>
+                  {' '}· Last updated: {formattedDate}
+                </span>
+              )}
+            </span>
+          </div>
+          {isOwner ? (
+            <Link
+              href='/dashboard'
+              className='flex-shrink-0 text-xs font-semibold text-green-700 border border-green-400 rounded-md px-3 py-1.5 hover:bg-green-100 transition-colors whitespace-nowrap dark:text-green-300 dark:border-green-600 dark:hover:bg-green-900/30'
+            >
+              Manage Your Listing
+            </Link>
+          ) : (
+            <button
+              type='button'
+              onClick={() => setDisputeOpen(true)}
+              className='flex-shrink-0 text-xs font-semibold text-red-700 border border-red-400 rounded-md px-3 py-1.5 hover:bg-red-50 transition-colors whitespace-nowrap dark:text-red-300 dark:border-red-600 dark:hover:bg-red-900/30'
+            >
+              Submit a Dispute
+            </button>
+          )}
         </div>
-        {isAuthenticated && (
-          <AppLink
-            href='/dashboard'
-            className='flex-shrink-0 text-xs font-semibold text-green-700 border border-green-400 rounded-md px-3 py-1.5 hover:bg-green-100 transition-colors whitespace-nowrap dark:text-green-300 dark:border-green-600 dark:hover:bg-green-900/30'
-          >
-            Manage Your Listing
-          </AppLink>
-        )}
-      </div>
+        <DisputeModal
+          open={disputeOpen}
+          onClose={() => setDisputeOpen(false)}
+          gymId={gymId}
+          gymName={gymName}
+        />
+      </>
     )
   }
 
