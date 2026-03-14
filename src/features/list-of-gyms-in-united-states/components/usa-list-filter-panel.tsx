@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import {
   Filter,
   MapPin,
@@ -489,7 +489,7 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
                 <ul className='space-y-1.5'>
                   {sampleGyms.map((g) => (
                     <li key={g.slug || g.name}>
-                      <Link
+<AppLink 
                         href={g.slug ? `/gyms/${g.slug}` : '/gymsdata/'}
                         className='text-sm text-primary hover:underline underline-offset-2'
                       >
@@ -497,7 +497,7 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
                         {g.city && g.state && (
                           <span className='text-muted-foreground font-normal'> — {g.city}, {g.state}</span>
                         )}
-                      </Link>
+                      </AppLink>
                     </li>
                   ))}
                 </ul>
@@ -529,20 +529,20 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
                 </div>
               </div>
               <div className='flex flex-col sm:flex-row gap-2 shrink-0'>
-                <Link
+<AppLink 
                   href={browseHref}
                   className='inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors'
                 >
                   Browse gyms{cityInput.trim() ? ` in ${cityInput.trim()}` : stateData ? ` in ${stateData.stateName}` : ''}
                   <ChevronDown className='h-4 w-4 rotate-[270deg]' aria-hidden />
-                </Link>
-                <Link
+                </AppLink>
+<AppLink 
                   href='/gymsdata/'
                   className='inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors'
                 >
                   <MapPin className='h-4 w-4' />
                   Browse all gyms
-                </Link>
+                </AppLink>
               </div>
             </div>
           ) : (
@@ -550,13 +550,13 @@ export function UsaListFilterPanel({ sortedStates, totalGyms }: UsaListFilterPan
               <p className='text-sm text-muted-foreground'>
                 Select a state or city to see the gym count, sample records, and estimated pricing. Then browse the filtered list on the gyms page.
               </p>
-              <Link
+<AppLink 
                 href='/gymsdata/'
                 className='inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors shrink-0'
               >
                 <MapPin className='h-4 w-4' />
                 Browse all gyms
-              </Link>
+              </AppLink>
             </div>
           )}
         </div>

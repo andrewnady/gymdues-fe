@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Carousel,
@@ -150,7 +150,7 @@ export function ReviewsCarousel({ reviews }: ReviewsCarouselProps) {
                         suppressHydrationWarning
                       />
                       <Button asChild>
-                        <Link href={`/gyms/${review.gymSlug}`}>{review.gymName} Details</Link>
+                        <AppLink href={`/gyms/${review.gymSlug}`} className="inline-flex">{review.gymName} Details</AppLink>
                       </Button>
                     </CardContent>
                   </Card>

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ChevronRight, Tag } from 'lucide-react'
 import { typeGymsdataPath } from '@/lib/gymsdata-utils'
 import type { GymsdataTypeItem } from '@/lib/gymsdata-api'
@@ -53,13 +53,13 @@ export function BusinessTypesTable({ types, typesCovered, totalGyms, base }: Bus
                     {i + 1}
                   </td>
                   <td className="pl-3 pr-4 py-3 font-medium">
-                    <Link
+                    <AppLink
                       href={typeGymsdataPath(t.typeSlug, base)}
                       className="text-primary hover:underline underline-offset-2 inline-flex items-center gap-1.5"
                     >
                       {t.type}
                       <ChevronRight className="h-4 w-4 opacity-0 -ml-1 group-hover:opacity-70 transition-opacity shrink-0" aria-hidden />
-                    </Link>
+                    </AppLink>
                   </td>
                   <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">
                     {t.count.toLocaleString('en-US')}

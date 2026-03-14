@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { MapPin, ArrowRight, Globe2 } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
@@ -65,9 +65,9 @@ function StateCard({ state, base }: { state: StateWithCount; base?: string }) {
   )
 
   return (
-    <Link href={stateGymsdataPath(state, base)} className='block cursor-pointer'>
+    <AppLink href={stateGymsdataPath(state, base)} className='block cursor-pointer'>
       {cardContent}
-    </Link>
+    </AppLink>
   )
 }
 
@@ -97,13 +97,13 @@ export function ListingByStateSection({ states, base }: ListingByStateSectionPro
               match your budget and goals.
             </ReadMoreText>
           </div>
-          <Link
+          <AppLink
             href={`${bestGymsUrl}`}
-            className='inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md transition-all shrink-0'
+            className='inline-flex items-center gap-2 rounded-xl !bg-primary px-5 py-2.5 text-sm font-semibold !text-primary-foreground shadow-sm hover:!bg-primary/90 hover:shadow-md transition-all shrink-0'
           >
             Explore all gyms
             <ArrowRight className='h-4 w-4' />
-          </Link>
+          </AppLink>
         </div>
 
         <div className='relative group/carousel'>
@@ -131,12 +131,12 @@ export function ListingByStateSection({ states, base }: ListingByStateSectionPro
         </div>
 
        {/*  <p className='mt-6 text-center text-sm flex flex-wrap justify-center gap-4'>
-          <Link href='#states-table' className='underline underline-offset-2 hover:text-primary font-medium'>
+          <AppLink href='#states-table' className='underline underline-offset-2 hover:text-primary font-medium'>
             View full table with gym counts by state
-          </Link>
-          <Link href='#states-table' className='text-muted-foreground hover:text-primary hover:underline'>
+          </AppLink>
+          <AppLink href='#states-table' className='text-muted-foreground hover:text-primary hover:underline'>
             Show all data →
-          </Link>
+          </AppLink>
         </p> */}
       </div>
     </section>

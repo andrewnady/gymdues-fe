@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ChevronDown, ChevronUp, Table2 } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
@@ -22,7 +22,7 @@ export function DistributionByLocationChips({ states }: DistributionByLocationCh
     <>
       <div className='flex flex-wrap gap-2'>
         {visible.map((s, i) => (
-          <Link
+          <AppLink
             key={s.state}
             href={stateGymsdataPath(s)}
             className='inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors'
@@ -35,7 +35,7 @@ export function DistributionByLocationChips({ states }: DistributionByLocationCh
             <span className='tabular-nums text-muted-foreground'>
               {s.count.toLocaleString('en-US')}
             </span>
-          </Link>
+          </AppLink>
         ))}
       </div>
       {hasMore && (
@@ -60,19 +60,19 @@ export function DistributionByLocationChips({ states }: DistributionByLocationCh
         </div>
       )}
       <div className='mt-5 pt-4 border-t border-border/60 flex flex-wrap items-center gap-4'>
-        <a
+        <AppLink
           href='#states-table'
           className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'
         >
           <Table2 className='h-4 w-4 shrink-0' />
           View full table with rank and actions
-        </a>
-        <a
+        </AppLink>
+        <AppLink
           href='#states-table'
           className='inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary hover:underline underline-offset-2'
         >
           Show all data →
-        </a>
+        </AppLink>
       </div>
     </>
   )

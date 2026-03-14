@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -1132,7 +1132,7 @@ export default function ProfilePage() {
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard">← Back to Dashboard</Link>
+            <AppLink href="/dashboard" className="inline-flex">← Back to Dashboard</AppLink>
           </Button>
         </div>
       </div>

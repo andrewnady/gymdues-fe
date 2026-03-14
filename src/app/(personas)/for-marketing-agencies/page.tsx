@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AppLink } from '@/components/app-link'
 import { PersonaPageLayout } from '../_components/persona-page-layout'
 
 const title = 'Target 60K+ Gyms for Your Fitness Industry Clients | Gymdues'
@@ -49,9 +50,9 @@ export default function ForMarketingAgenciesPage() {
               <p className="text-sm text-muted-foreground">
                 Volume discounts for full-database or state-level buys. Contact us for custom quotes and dedicated support for agency campaigns.
               </p>
-              <a href="/contact" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">
+              <AppLink href="/contact" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">
                 Request bulk pricing →
-              </a>
+              </AppLink>
             </div>
           </div>
         ),

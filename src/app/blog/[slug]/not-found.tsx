@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -15,11 +15,11 @@ export default function NotFound() {
             The blog post you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <div className='flex gap-4 justify-center'>
-            <Button>
-              <Link href='/blog'>Browse All Posts</Link>
+            <Button asChild>
+              <AppLink href='/blog' className='inline-flex'>Browse All Posts</AppLink>
             </Button>
-            <Button variant='outline'>
-              <Link href='/'>Go Home</Link>
+            <Button variant='outline' asChild>
+              <AppLink href='/' className='inline-flex'>Go Home</AppLink>
             </Button>
           </div>
         </CardContent>

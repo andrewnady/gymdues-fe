@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Calendar } from 'lucide-react'
 
 export function Tier3Consultation() {
@@ -13,13 +13,13 @@ export function Tier3Consultation() {
         <li><strong className="text-foreground">1,000 custom-filtered records</strong> (state, city, category, or other filters)</li>
         <li><strong className="text-foreground">Full social media profiles</strong> included (Instagram, Facebook, etc.)</li>
       </ul>
-      <Link
+      <AppLink
         href="/contact?tier=consultation"
         className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
       >
         <Calendar className="h-4 w-4" aria-hidden />
         Book a consultation
-      </Link>
+      </AppLink>
       <p className="text-xs text-muted-foreground">
         We’ll send the 1,000-record sample after your call.
       </p>

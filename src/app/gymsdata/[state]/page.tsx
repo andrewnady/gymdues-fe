@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { notFound } from 'next/navigation'
 import { getListPage, getListPageData, getGymsdataForState } from '@/lib/gymsdata-api'
 import { getStateBySlug, getTypeBySlug, cityGymsdataPath, formatDataDate, toUrlSegment } from '@/lib/gymsdata-utils'
@@ -76,9 +76,9 @@ export default async function GymsdataStatePage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>State not found</h1>
-        <Link href={homeHref} className='text-primary hover:underline'>
+        <AppLink href={homeHref} className='text-primary hover:underline'>
           View all states
-        </Link>
+        </AppLink>
       </main>
     )
   }
@@ -93,7 +93,7 @@ export default async function GymsdataStatePage({ params }: Props) {
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <ol className='flex flex-wrap items-center gap-1'>
-              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
+              <li><AppLink href={homeHref} className='hover:text-primary'>Home</AppLink></li>
               <li aria-hidden>/</li>
               <li className='text-foreground font-medium'>{displayState.stateName}</li>
             </ol>
@@ -189,9 +189,9 @@ export default async function GymsdataStatePage({ params }: Props) {
         ) : (
           <p className='text-muted-foreground'>
             City-level data for {state.stateName} is being updated. You can still{' '}
-            <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+            <AppLink href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
               browse all gyms in {state.stateName}
-            </Link>.
+            </AppLink>.
           </p>
         )}
 
@@ -208,21 +208,21 @@ export default async function GymsdataStatePage({ params }: Props) {
               <ul className='flex flex-wrap gap-2'>
                 {cities.slice(0, 10).map((loc) => (
                   <li key={loc.label ?? `${loc.city}-${loc.state}`}>
-                    <Link
+                    <AppLink
                       href={cityGymsdataPath(state.stateName, loc.city ?? '', base)}
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40 text-primary'
                     >
                       <MapPin className='h-3.5 w-3.5 shrink-0' aria-hidden />
                       {loc.city ?? loc.label} ({loc.count.toLocaleString('en-US')})
-                    </Link>
+                    </AppLink>
                   </li>
                 ))}
               </ul>
               {cities.length === 0 && (
                 <p className='text-sm text-muted-foreground'>
-                  <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
+                  <AppLink href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline'>
                     View gyms in {state.stateName}
-                  </Link>
+                  </AppLink>
                 </p>
               )}
             </div>
@@ -234,19 +234,19 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <Link href={homeHref} className='text-primary hover:underline font-medium'>
+                  <AppLink href={homeHref} className='text-primary hover:underline font-medium'>
                     List of Fitness, Gym, and Health Services in United States
-                  </Link>
+                  </AppLink>
                 </li>
                 <li>
-                  <Link href={statePath} className='text-primary hover:underline font-medium'>
+                  <AppLink href={statePath} className='text-primary hover:underline font-medium'>
                     {state.stateName} (this page)
-                  </Link>
+                  </AppLink>
                 </li>
                 <li>
-                  <Link href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
+                  <AppLink href={`${base === '' ? '/' : base || '/gymsdata'}#state=${encodeURIComponent(state.state)}`} className='text-primary hover:underline font-medium'>
                     View gyms in {state.stateName}
-                  </Link>
+                  </AppLink>
                 </li>
               </ul>
             </div> */}
@@ -258,19 +258,19 @@ export default async function GymsdataStatePage({ params }: Props) {
               </h3>
               <ul className='flex flex-wrap gap-2 text-sm'>
                 <li>
-                  <Link href={homeHref} className='text-primary hover:underline font-medium'>
+                  <AppLink href={homeHref} className='text-primary hover:underline font-medium'>
                     Browse all gyms
-                  </Link>
+                  </AppLink>
                 </li>
                 <li>
-                  <Link href='/best-gyms' className='text-primary hover:underline font-medium'>
+                  <AppLink href='/best-gyms' className='text-primary hover:underline font-medium'>
                     Best Gyms
-                  </Link>
+                  </AppLink>
                 </li>
                 <li>
-                  <Link href={`/best-gyms/${toSlug(state.stateName)}?type=state`} className='text-primary hover:underline font-medium'>
+                  <AppLink href={`/best-gyms/${toSlug(state.stateName)}?type=state`} className='text-primary hover:underline font-medium'>
                     Best gyms in {state.stateName}
-                  </Link>
+                  </AppLink>
                 </li>
               </ul>
             </div> */}

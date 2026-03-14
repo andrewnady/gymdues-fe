@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ArrowRight } from 'lucide-react'
 import { BlogPost } from '@/types/blog'
 import { BlogCard } from '@/components/blog-card'
@@ -30,13 +30,13 @@ export function BlogSection({ posts }: BlogSectionProps) {
               you&apos;ll get practical, up-to-date insights in minutes.
             </ReadMoreText>
           </div>
-          <Link
+<AppLink 
             href='/blog'
             className='flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mt-4 md:mt-0 text-nowrap'
           >
             View All Posts
             <ArrowRight className='h-4 w-4' />
-          </Link>
+          </AppLink>
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
