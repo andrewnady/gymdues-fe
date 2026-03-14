@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { getListPageData } from '@/lib/gyms-api'
 import { Gift } from 'lucide-react'
 import { Tier1EmailGatedForm } from './_components/tier1-email-gated-form'
@@ -25,7 +25,7 @@ export default async function SampleDataPage() {
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-4xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><Link href="/" className="hover:text-primary">Home</Link></li>
+            <li><AppLink href="/" className="hover:text-primary">Home</AppLink></li>
             <li aria-hidden>/</li>
             <li className="text-foreground font-medium">Free sample data</li>
           </ol>
@@ -75,9 +75,9 @@ export default async function SampleDataPage() {
         </div>
 
         <div className="max-w-4xl mx-auto mt-12 pt-8 border-t text-center">
-          <Link href="/gymsdata" className="text-primary font-medium hover:underline">
+          <AppLink href="/gymsdata" className="text-primary font-medium hover:underline">
             Browse List of Fitness, Gym, and Health Services in United States
-          </Link>
+          </AppLink>
         </div>
       </div>
     </main>

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
 import { BuyDataPrice, type PriceFromServer } from './buy-data-price'
 import { FULL_DATA_PRICE_LABEL } from '../_constants'
@@ -12,7 +12,7 @@ export const BUY_BUTTON_CLASSES =
 interface BuyDataButtonProps {
   /** Checkout URL (with optional scope query params). */
   href: string
-  /** Button label, e.g. "Buy data", "Purchase The Data", "Buy dataset". */
+  /** Button label, e.g. "Buy data". */
   label: string
   /** Price from server (list/state/city/type page). */
   priceFromServer?: PriceFromServer | null
@@ -33,9 +33,11 @@ export function BuyDataButton({
   fallbackLabel = FULL_DATA_PRICE_LABEL,
   className = '',
 }: BuyDataButtonProps) {
+  const router = useRouter()
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
+      onClick={() => router.push(href)}
       className={`${BUY_BUTTON_CLASSES} ${className}`.trim()}
     >
       <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
@@ -48,6 +50,6 @@ export function BuyDataButton({
           hideRowCount
         />)
       </span>
-    </Link>
+    </button>
   )
 }

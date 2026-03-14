@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { MapPin, Table2, Info, ChevronDown, ChevronUp } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
 import { UsaGymsStateMap } from './usa-gyms-state-map'
@@ -136,9 +136,9 @@ export function UsaMapOrTableSection({ sortedStates, base }: UsaMapOrTableSectio
                       <td className='px-3 py-3 text-center text-muted-foreground font-medium tabular-nums'>{idx + 1}</td>
                       <td className='px-3 py-3 font-medium'>
                         <span className='inline-flex items-center gap-1.5'>
-                          <Link href={stateGymsdataPath(state, base)} className='text-primary hover:underline'>
+                          <AppLink href={stateGymsdataPath(state, base)} className='text-primary hover:underline'>
                             {state.stateName}
-                          </Link>
+                          </AppLink>
                           <span
                             className='inline-flex shrink-0 text-muted-foreground hover:text-foreground'
                             title={`${state.stateName} (${state.state}): ${state.layerCount.toLocaleString('en-US')} ${layerLabel} (${pct}% of US total)`}
@@ -167,14 +167,14 @@ export function UsaMapOrTableSection({ sortedStates, base }: UsaMapOrTableSectio
                         </div>
                       </td>
                       {/* <td className='px-3 py-3 text-center align-middle'>
-                        <Link
+                        <AppLink
                           href={stateGymsdataPath(state, base)}
                           title={`View Fitness, Gym, and Health Services in ${state.stateName}`}
                           className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors whitespace-nowrap min-w-[8rem] sm:min-w-[10rem]'
                         >
                           <span className='sm:hidden'>View</span>
                           <span className='hidden sm:inline'>View Fitness, Gym, and Health Services</span>
-                        </Link>
+                        </AppLink>
                       </td> */}
                     </tr>
                   )

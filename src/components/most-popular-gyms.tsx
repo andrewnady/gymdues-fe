@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Gym } from '@/types/gym'
 import { ReadMoreText } from '@/components/read-more-text'
 
@@ -49,7 +49,7 @@ export function MostPopularGyms({ gyms }: MostPopularGymsProps) {
                 ? Math.min(...gym.pricing.map((plan) => plan.price || 0))
                 : null
             return (
-              <Link
+<AppLink 
                 key={gym.id}
                 href={`/gyms/${gym.slug}`}
                 className='bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 h-12 px-6 rounded-full flex items-center gap-2 transition-colors'
@@ -60,7 +60,7 @@ export function MostPopularGyms({ gyms }: MostPopularGymsProps) {
                     ${lowestPrice.toFixed(0)}/mo
                   </span>
                 )}
-              </Link>
+              </AppLink>
             )
           })
         ) : (

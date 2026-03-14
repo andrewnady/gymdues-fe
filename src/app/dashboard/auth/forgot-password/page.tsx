@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline" className="w-full">
-                <Link href="/dashboard/auth/login">Back to Login</Link>
+                <AppLink href="/dashboard/auth/login" className="w-full">Back to Login</AppLink>
               </Button>
             </CardContent>
           </Card>
@@ -96,12 +96,12 @@ export default function ForgotPasswordPage() {
               </Button>
 
               <div className="text-center">
-                <Link
+                <AppLink
                   href="/dashboard/auth/login"
                   className="text-sm text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Back to login
-                </Link>
+                </AppLink>
               </div>
             </form>
           </CardContent>

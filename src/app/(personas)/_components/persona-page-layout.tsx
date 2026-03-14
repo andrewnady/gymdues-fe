@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { ArrowRightCircle, Download } from 'lucide-react'
 import { DownloadSampleButton } from '@/components/download-sample-button'
 
@@ -46,9 +46,9 @@ export function PersonaPageLayout({
       <div className='container mx-auto px-4 py-12 lg:py-16'>
         <nav className='max-w-4xl mx-auto mb-6 text-sm text-muted-foreground' aria-label='Breadcrumb'>
           <ol className='flex flex-wrap items-center gap-1'>
-            <li><Link href='/' className='hover:text-primary'>Home</Link></li>
+            <li><AppLink href='/' className='hover:text-primary'>Home</AppLink></li>
             <li aria-hidden>/</li>
-            <li><Link href='/gymsdata' className='hover:text-primary'>List of Fitness, Gym, and Health Services in United States</Link></li>
+            <li><AppLink href='/gymsdata' className='hover:text-primary'>List of Fitness, Gym, and Health Services in United States</AppLink></li>
             <li aria-hidden>/</li>
             <li className='text-foreground font-medium'>{breadcrumbLabel}</li>
           </ol>
@@ -70,13 +70,13 @@ export function PersonaPageLayout({
               <Download className='h-4 w-4' aria-hidden />
               {ctaPrimaryText}
             </DownloadSampleButton>
-            <Link
+            <AppLink
               href='/gymsdata'
               className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-6 py-3.5 text-sm font-semibold text-primary hover:bg-primary/20 transition-all'
             >
               {ctaSecondaryLabel}
               <ArrowRightCircle className='h-4 w-4' />
-            </Link>
+            </AppLink>
           </div>
         </header>
 
@@ -117,13 +117,13 @@ export function PersonaPageLayout({
               <Download className='h-4 w-4' aria-hidden />
               Download Free Sample
             </DownloadSampleButton>
-            <Link
+            <AppLink
               href='/gymsdata'
               className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-6 py-3.5 text-sm font-semibold hover:bg-muted'
             >
               View full database
               <ArrowRightCircle className='h-4 w-4' />
-            </Link>
+            </AppLink>
           </div>
         </section>
       </div>

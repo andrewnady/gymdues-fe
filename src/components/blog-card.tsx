@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { BlogPost } from '@/types/blog'
 import {
   Card,
@@ -17,7 +17,7 @@ interface BlogCardProps {
 
 export function BlogCard({ post }: BlogCardProps) {
   return (
-    <Link href={`/blog/${post.slug}`} className='block'>
+    <AppLink href={`/blog/${post.slug}`} className='block'>
       <Card className='overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col cursor-pointer'>
         <div className='relative h-48 w-full bg-muted'>
           <Image
@@ -84,6 +84,6 @@ export function BlogCard({ post }: BlogCardProps) {
           </div>
         </CardFooter>
       </Card>
-    </Link>
+    </AppLink>
   )
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { getListPageData, getGymsdataForCity, getCityPage } from '@/lib/gymsdata-api'
 import {
   getStateBySlug,
@@ -87,9 +87,9 @@ export default async function GymsdataCityPage({ params }: Props) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>City not found</h1>
-        <Link href={data.state ? stateGymsdataPath(data.state, base) : homeHref} className='text-primary hover:underline'>
+        <AppLink href={data.state ? stateGymsdataPath(data.state, base) : homeHref} className='text-primary hover:underline'>
           Back to {data.state?.stateName ?? 'states'}
-        </Link>
+        </AppLink>
       </main>
     )
   }
@@ -105,9 +105,9 @@ export default async function GymsdataCityPage({ params }: Props) {
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
             <ol className='flex flex-wrap items-center gap-1'>
-              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
+              <li><AppLink href={homeHref} className='hover:text-primary'>Home</AppLink></li>
               <li aria-hidden>/</li>
-              <li><Link href={statePath} className='hover:text-primary'>{state.stateName}</Link></li>
+              <li><AppLink href={statePath} className='hover:text-primary'>{state.stateName}</AppLink></li>
               <li aria-hidden>/</li>
               <li className='text-foreground font-medium'>{cityName}</li>
             </ol>
@@ -194,31 +194,31 @@ export default async function GymsdataCityPage({ params }: Props) {
       </div>
 
       {/* Internal linking: nearby cities, state page */}
-      <div className='container mx-auto px-4 py-10 max-w-3xl'>
+      <div className='container mx-auto px-4 py-10'>
         <section className='mt-10 pt-8 border-t' aria-label='Related pages'>
           <h3 className='font-semibold text-lg mb-3'>Nearby cities</h3>
           <ul className='flex flex-wrap gap-2'>
             {nearbyCities.map((c) => (
               <li key={c.label ?? c.city ?? ''}>
-                <Link
+                <AppLink
                   href={cityGymsdataPath(state.stateName, c.city ?? '', base)}
                   className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40'
                 >
                   <MapPin className='h-3.5 w-3.5 text-primary' />
                   {c.city ?? c.label} ({c.count.toLocaleString('en-US')})
-                </Link>
+                </AppLink>
               </li>
             ))}
           </ul>
           {/* <p className='mt-4'>
-            <Link href={statePath} className='text-primary hover:underline font-medium'>
+            <AppLink href={statePath} className='text-primary hover:underline font-medium'>
               ← Back to all cities in {state.stateName}
-            </Link>
+            </AppLink>
           </p>
           <p className='mt-2'>
-            <Link href={homeHref} className='text-primary hover:underline font-medium'>
+            <AppLink href={homeHref} className='text-primary hover:underline font-medium'>
               Browse all gyms
-            </Link>
+            </AppLink>
           </p> */}
         </section>
       </div>

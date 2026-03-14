@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Button } from '@/components/ui/button'
 import { BestGymCityCard } from './city-card'
 import { filterTopGyms, GymsPaginationMeta } from '@/lib/gyms-api'
@@ -88,13 +88,13 @@ export function BestGymCityResult({
         <p className='font-semibold mb-3'>Can&apos;t decide? start here:</p>
         <div className='flex flex-wrap gap-2'>
           {TOP_CITIES.map((city) => (
-            <Link
+            <AppLink
               key={city.href}
               href={city.href}
               className='inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary hover:bg-primary/10 transition-colors'
             >
               {city.label}
-            </Link>
+            </AppLink>
           ))}
         </div>
       </div>

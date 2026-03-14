@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { Gym } from '@/types/gym'
 
 /** Main domain base URL so /gyms/* links work from subdomains (e.g. bestgyms). */
@@ -108,9 +108,9 @@ export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardPr
       </CardContent>
       <CardFooter>
         {selectMode ? (
-          <Link href={`${MAIN_SITE_URL}/gyms/${gym.slug}`} className='block' onClick={(e) => e.stopPropagation()}>
+          <AppLink href={`${MAIN_SITE_URL}/gyms/${gym.slug}`} className='block' onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}>
             <Button className='w-full'>{gym.name} Details</Button>
-          </Link>
+          </AppLink>
         ) : (
           <Button className='w-full'>{gym.name} Details</Button>
         )}
@@ -126,5 +126,5 @@ export function GymCard({ gym, selectMode, onSelect,hideDescription }: GymCardPr
     )
   }
 
-  return <Link href={`${MAIN_SITE_URL}/gyms/${gym.slug}`} className='block'>{cardContent}</Link>
+  return <AppLink href={`${MAIN_SITE_URL}/gyms/${gym.slug}`} className='block'>{cardContent}</AppLink>
 }
