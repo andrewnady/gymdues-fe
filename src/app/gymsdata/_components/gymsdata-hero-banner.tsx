@@ -27,7 +27,7 @@ export function GymsdataHeroBanner() {
 
           <div className="flex flex-wrap items-center gap-3.5 mb-5">
             <Link
-              href=""
+              href="https://calendly.com/andrewnady/ping-me"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all"
