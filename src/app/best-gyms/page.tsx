@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const canonicalUrl = pathname === '/' ? `${base}/` : `${base}${pathname}`
 
   return {
-    title: 'Best Gyms in the World | Gymdues',
+    title: 'Best Gyms Near You — Compare Ratings and Reviews | Gymdues',
     description:
       'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
     alternates: {
@@ -39,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     openGraph: {
-      title: 'Best Gyms in the World | Gymdues',
+      title: 'Best Gyms Near You — Compare Ratings and Reviews | Gymdues',
       description:
         'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
       siteName: 'GymDues',
@@ -49,14 +49,14 @@ export async function generateMetadata(): Promise<Metadata> {
           url: `${siteUrl}/images/bg-header.jpg`,
           width: 1200,
           height: 630,
-          alt: 'Best Gyms in the World | Gymdues',
+          alt: 'Best Gyms Near You — Compare Ratings and Reviews | Gymdues',
         },
       ],
       locale: 'en_US',
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Best Gyms in the World | Gymdues',
+      title: 'Best Gyms Near You — Compare Ratings and Reviews | Gymdues',
       description:
         'Browse gyms by brand or location and see membership price ranges, plan types, and key features before you join.',
       images: [`${siteUrl}/images/bg-header.jpg`],
@@ -79,7 +79,7 @@ export default async function BestGyms() {
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'Best Gyms in the World',
+    name: 'Best Gyms Near You — Compare Ratings and Reviews',
     description: 'Top-rated gyms worldwide ranked by ratings and reviews',
     numberOfItems: gyms.length,
     itemListElement: gyms.map((gym, index) => ({
@@ -119,12 +119,18 @@ export default async function BestGyms() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageSchema) }}
       />
       <div className='min-h-screen'>
-        <section className='bg-primary/5 py-20'>
-          <div className='container mx-auto px-4 py-4 text-center max-w-screen-lg'>
-            <h1 className='text-4xl font-bold mb-4'>Best Gyms in the World</h1>
-            <ReadMoreText>
-              Discover top-rated gyms by city and state. We highlight the best gyms based on ratings
-              and reviews, so you can compare options and find the right place to train.
+        <section className='relative min-h-[420px] py-20 overflow-hidden bg-primary/5'>
+          <img
+            src="/images/bg-gym-interior.png"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover blur-sm"
+          />
+          <div className="absolute inset-0 bg-black/55" />
+          <div className="relative z-10 container mx-auto px-4 py-4 text-center max-w-screen-lg">
+            <h1 className="text-4xl font-bold mb-4 text-white">Best Gyms Near You — Compare Ratings and Reviews</h1>
+            <ReadMoreText className="text-lg text-white/90">
+            Compare 60,000+ gyms across all 50 states. Ratings, reviews, and membership prices to find the right gym near you.
             </ReadMoreText>
           </div>
         </section>
