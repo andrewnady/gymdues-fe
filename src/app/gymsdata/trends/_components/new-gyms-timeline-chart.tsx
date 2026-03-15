@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
   AreaChart,
   Area,
@@ -11,15 +12,30 @@ import {
 } from 'recharts'
 import { NEW_GYMS_BY_MONTH } from '../_data/growth-trends-data'
 
-const data = NEW_GYMS_BY_MONTH.map((d) => ({
-  name: d.month + ' ' + d.year,
-  count: d.count,
-}))
+type NewGymsByMonthItem = { month: string; monthKey: string; count: number }
 
-export function NewGymsTimelineChart() {
+interface NewGymsTimelineChartProps {
+  data?: NewGymsByMonthItem[] | null
+}
+
+const CHART_HEIGHT = 280
+
+export function NewGymsTimelineChart({ data: apiData }: NewGymsTimelineChartProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  const data = (apiData?.length
+    ? apiData.map((d) => ({ name: d.month, count: d.count }))
+    : NEW_GYMS_BY_MONTH.map((d) => ({ name: d.month + ' ' + d.year, count: d.count }))
+  ) as Array<{ name: string; count: number }>
+
+  if (!mounted) {
+    return <div className="h-[280px] w-full min-w-0" aria-hidden />
+  }
+
   return (
-    <div className="h-[280px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-[280px] min-h-[280px] w-full min-w-0" style={{ width: '100%' }}>
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="newGymsGradient" x1="0" y1="0" x2="0" y2="1">

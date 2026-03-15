@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { MapPin, Table2, Info, ChevronDown, ChevronUp } from 'lucide-react'
 import type { StateWithCount } from '@/types/gym'
-import { UsaGymsStateMap, LAYERS } from './usa-gyms-state-map'
+import { UsaGymsStateMap } from './usa-gyms-state-map'
 import type { MapLayer } from '@/usa-list/lib/map-layers'
 import { stateGymsdataPath } from '@/lib/gymsdata-utils'
 import { getStatesForLayer, getLayerLabel } from '@/usa-list/lib/map-layers'
@@ -16,11 +16,13 @@ type View = 'map' | 'table'
 interface UsaMapOrTableSectionProps {
   sortedStates: StateWithCount[]
   totalGyms: number
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
 }
 
-export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps) {
+export function UsaMapOrTableSection({ sortedStates, base }: UsaMapOrTableSectionProps) {
   const [view, setView] = useState<View>('map')
-  const [layer, setLayer] = useState<MapLayer>('all')
+  const layer: MapLayer = 'all'
   const [showAllStates, setShowAllStates] = useState(false)
 
   const statesForLayer = useMemo(
@@ -38,31 +40,6 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
 
   return (
     <div className='space-y-6'>
-      {/* Toggle layers: All Gyms | Budget | 24-Hour | High-Rated (shared by map and table) */}
-      <div
-        className='flex flex-wrap items-center justify-center gap-2'
-        role='tablist'
-        aria-label='Map and table layers'
-      >
-        {LAYERS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type='button'
-            role='tab'
-            aria-selected={layer === id}
-            onClick={() => setLayer(id)}
-            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-              layer === id
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <Icon className='h-4 w-4 shrink-0' />
-            {label}
-          </button>
-        ))}
-      </div>
-
       <div
         className='flex rounded-xl border border-border/80 bg-muted/30 p-1'
         role='tablist'
@@ -77,11 +54,11 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
           onClick={() => setView('map')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
             view === 'map'
-              ? 'bg-background text-foreground shadow-sm'
+              ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <MapPin className='h-4 w-4 shrink-0' />
+          <MapPin className='h-4 w-4 shrink-0' aria-hidden />
           Map
         </button>
         <button
@@ -93,11 +70,11 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
           onClick={() => setView('table')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
             view === 'table'
-              ? 'bg-background text-foreground shadow-sm'
+              ? 'bg-background text-foreground shadow-sm ring-1 ring-border'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Table2 className='h-4 w-4 shrink-0' />
+          <Table2 className='h-4 w-4 shrink-0' aria-hidden />
           Table
         </button>
       </div>
@@ -111,18 +88,43 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
           <div className='overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm'>
             <div className='flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-b border-border/60'>
               <p className='text-xs text-muted-foreground'>
-                Showing {layerLabel} by state
+                Showing {layerLabel} by state (sorted by total)
               </p>
             </div>
             <table className='min-w-full text-left text-sm' aria-describedby='map-table-details'>
-              <thead className='bg-muted/50 border-b border-border/60'>
+              <thead className='bg-muted/40 border-b border-border/60'>
                 <tr>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground w-14 text-center'>#</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground'>State</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground hidden sm:table-cell w-20'>Code</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-28'>{layer === 'all' ? 'Gyms' : LAYERS.find((l) => l.id === layer)?.label ?? 'Count'}</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell w-36'>% of total</th>
-                  <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-32'>Action</th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 w-12 text-center text-xs font-medium text-muted-foreground'
+                  >
+                    #
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 text-xs font-medium text-muted-foreground min-w-[140px]'
+                  >
+                    State
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 hidden sm:table-cell w-16 text-xs font-medium text-muted-foreground text-center'
+                  >
+                    Code
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 text-right w-32 text-xs font-medium text-muted-foreground tabular-nums'
+                  >
+                    Count
+                  </th>
+                  <th
+                    scope='col'
+                    className='px-3 py-3 hidden md:table-cell w-40 text-xs font-medium text-muted-foreground text-right tabular-nums'
+                  >
+                    % of total
+                  </th>
+                  {/* <th scope='col' className='px-3 py-3 text-center w-40 min-w-[10rem] text-xs font-medium text-muted-foreground'>Action</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -131,24 +133,28 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                   const pct = pctNum.toFixed(1)
                   return (
                     <tr key={state.state} className='border-b border-border/50 last:border-b-0 hover:bg-muted/40 transition-colors'>
-                      <td className='px-4 py-3 text-center text-muted-foreground font-medium tabular-nums'>{idx + 1}</td>
-                      <td className='px-4 py-3 font-medium'>
+                      <td className='px-3 py-3 text-center text-muted-foreground font-medium tabular-nums'>{idx + 1}</td>
+                      <td className='px-3 py-3 font-medium'>
                         <span className='inline-flex items-center gap-1.5'>
-                          <Link href={stateGymsdataPath(state)} className='text-primary hover:underline'>
+                          <Link href={stateGymsdataPath(state, base)} className='text-primary hover:underline'>
                             {state.stateName}
                           </Link>
                           <span
                             className='inline-flex shrink-0 text-muted-foreground hover:text-foreground'
-                            title={`${state.stateName} (${state.state}): ${state.layerCount.toLocaleString('en-US')} ${layerLabel} — view gyms`}
-                            aria-label={`Details for ${state.stateName}`}
+                            title={`${state.stateName} (${state.state}): ${state.layerCount.toLocaleString('en-US')} ${layerLabel} (${pct}% of US total)`}
+                            aria-label={`${state.stateName} has ${state.layerCount.toLocaleString('en-US')} ${layerLabel}, about ${pct}% of the US total`}
                           >
-                            <Info className='h-3.5 w-3.5' />
+                            <Info className='h-3.5 w-3.5' aria-hidden />
                           </span>
                         </span>
                       </td>
-                      <td className='px-4 py-3 text-muted-foreground hidden sm:table-cell font-mono text-xs'>{state.state}</td>
-                      <td className='px-4 py-3 text-right font-semibold tabular-nums'>{state.layerCount.toLocaleString('en-US')}</td>
-                      <td className='px-4 py-3 hidden md:table-cell align-middle'>
+                      <td className='px-3 py-3 text-muted-foreground hidden sm:table-cell font-mono text-xs text-center'>
+                        {state.state}
+                      </td>
+                      <td className='px-3 py-3 text-right font-semibold tabular-nums'>
+                        {state.layerCount.toLocaleString('en-US')}
+                      </td>
+                      <td className='px-3 py-3 hidden md:table-cell align-middle'>
                         <div className='flex items-center gap-2 min-w-[100px]'>
                           <div className='flex-1 min-w-0 h-2 rounded-full bg-muted overflow-hidden'>
                             <div
@@ -160,23 +166,27 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                           <span className='text-muted-foreground tabular-nums text-xs shrink-0 w-9 text-right'>{pct}%</span>
                         </div>
                       </td>
-                      <td className='px-4 py-3 text-right'>
+                      {/* <td className='px-3 py-3 text-center align-middle'>
                         <Link
-                          href={stateGymsdataPath(state)}
-                          className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'
+                          href={stateGymsdataPath(state, base)}
+                          title={`View Fitness, Gym, and Health Services in ${state.stateName}`}
+                          className='inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors whitespace-nowrap min-w-[8rem] sm:min-w-[10rem]'
                         >
-                          View gyms
+                          <span className='sm:hidden'>View</span>
+                          <span className='hidden sm:inline'>View Fitness, Gym, and Health Services</span>
                         </Link>
-                      </td>
+                      </td> */}
                     </tr>
                   )
                 })}
                 <tr className='bg-muted/50 border-t-2 border-border font-semibold'>
-                  <td className='px-4 py-3 text-center text-muted-foreground'>—</td>
-                  <td className='px-4 py-3'>Total</td>
-                  <td className='px-4 py-3 text-muted-foreground hidden sm:table-cell'>—</td>
-                  <td className='px-4 py-3 text-right tabular-nums'>{totalForLayer.toLocaleString('en-US')}</td>
-                  <td className='px-4 py-3 hidden md:table-cell'>
+                  <td className='px-3 py-3 text-center text-muted-foreground'>—</td>
+                  <td className='px-3 py-3'>Total</td>
+                  <td className='px-3 py-3 text-muted-foreground hidden sm:table-cell text-center'>—</td>
+                  <td className='px-3 py-3 text-right tabular-nums font-semibold'>
+                    {totalForLayer.toLocaleString('en-US')}
+                  </td>
+                  <td className='px-3 py-3 hidden md:table-cell'>
                     <div className='flex items-center gap-2 min-w-[100px]'>
                       <div className='flex-1 min-w-0 h-2 rounded-full bg-muted overflow-hidden'>
                         <div className='h-full w-full rounded-full bg-primary/80' role='presentation' />
@@ -184,7 +194,6 @@ export function UsaMapOrTableSection({ sortedStates }: UsaMapOrTableSectionProps
                       <span className='text-muted-foreground tabular-nums text-xs shrink-0 w-9 text-right'>100%</span>
                     </div>
                   </td>
-                  <td className='px-4 py-3' />
                 </tr>
               </tbody>
             </table>

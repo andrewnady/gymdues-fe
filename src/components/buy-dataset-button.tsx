@@ -10,25 +10,25 @@ interface BuyDatasetButtonProps {
   children?: React.ReactNode
 }
 
-/** With JS: opens modal. Without JS: link goes to /gymsdata/checkout (form on page). */
+/** With JS: opens modal. Without JS: link goes to /checkout (form on page). */
 export function BuyDatasetButton({ className, children }: BuyDatasetButtonProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
     <>
       <Link
-        href="/gymsdata/checkout"
+        href="/checkout"
         className={className}
         onClick={(e) => {
           e.preventDefault()
           setModalOpen(true)
         }}
-        aria-label="Buy dataset (opens form)"
+        aria-label="Buy data (opens form)"
       >
         {children ?? (
           <>
             <ShoppingCart className="h-4 w-4" aria-hidden />
-            Buy dataset
+            Buy data
           </>
         )}
       </Link>

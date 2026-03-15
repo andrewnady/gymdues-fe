@@ -37,7 +37,7 @@ export function PersonaPageLayout({
   useCases,
   extraSection,
   ctaPrimaryText = 'Download Free Sample',
-  ctaSecondaryLabel = 'Browse full gym database',
+  ctaSecondaryLabel = 'Browse full data',
   intro,
   children,
 }: PersonaPageLayoutProps) {
@@ -47,8 +47,6 @@ export function PersonaPageLayout({
         <nav className='max-w-4xl mx-auto mb-6 text-sm text-muted-foreground' aria-label='Breadcrumb'>
           <ol className='flex flex-wrap items-center gap-1'>
             <li><Link href='/' className='hover:text-primary'>Home</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href='/gymsdata' className='hover:text-primary'>List of Gyms in United States</Link></li>
             <li aria-hidden>/</li>
             <li className='text-foreground font-medium'>{breadcrumbLabel}</li>
           </ol>
@@ -71,7 +69,7 @@ export function PersonaPageLayout({
               {ctaPrimaryText}
             </DownloadSampleButton>
             <Link
-              href='/gymsdata'
+              href='/'
               className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-6 py-3.5 text-sm font-semibold text-primary hover:bg-primary/20 transition-all'
             >
               {ctaSecondaryLabel}
@@ -118,7 +116,7 @@ export function PersonaPageLayout({
               Download Free Sample
             </DownloadSampleButton>
             <Link
-              href='/gymsdata'
+              href='/'
               className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-6 py-3.5 text-sm font-semibold hover:bg-muted'
             >
               View full database

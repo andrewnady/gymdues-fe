@@ -19,9 +19,10 @@ interface BestGymsByLocationProps {
   type: string
   initialGyms: Gym[]
   initialMeta: GymsPaginationMeta
+  featuredImage?: string
 }
 
-export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: BestGymsByLocationProps) {
+export function BestGymsByLocation({ filter, type, initialGyms, initialMeta, featuredImage }: BestGymsByLocationProps) {
   const [gyms, setGyms] = useState<Gym[]>(initialGyms)
   const [, setMeta] = useState<GymsPaginationMeta | null>(initialMeta)
   const [loading, setLoading] = useState(false)
@@ -125,9 +126,20 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
 
   return (
     <div className='min-h-screen'>
-      <section className='bg-primary/5 py-20'>
-        <div className='container mx-auto px-4 py-4 text-center max-w-screen-lg'>
-          <div className='mb-4'>
+      <section className='relative min-h-[420px] py-20 overflow-hidden bg-primary/5'>
+        {featuredImage && (
+          <>
+            <img
+              src={featuredImage}
+              alt=""
+              aria-hidden="true"
+              className='absolute inset-0 w-full h-full object-cover blur-sm'
+            />
+            <div className='absolute inset-0 bg-black/55' />
+          </>
+        )}
+        <div className='relative z-10 container mx-auto px-4 py-4 text-center max-w-screen-lg'>
+          <div className={`mb-4${featuredImage ? ' [&_*]:text-white/80 [&_*]:hover:text-white' : ''}`}>
             <Breadcrumb
               items={[
                 { label: 'Home', href: process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL ?? '/' },
@@ -135,8 +147,8 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta }: B
               ]}
             />
           </div>
-          <h1 className='text-4xl font-bold mb-4'>{title}</h1>
-          <ReadMoreText className='text-muted-foreground text-lg'>
+          <h1 className={`text-4xl font-bold mb-4${featuredImage ? ' text-white' : ''}`}>{title}</h1>
+          <ReadMoreText className={`text-lg${featuredImage ? ' text-white/90' : ' text-muted-foreground'}`}>
             {type === 'state' ? (
               <>
                 The best gyms in {displayName}—based on ratings and reviews from Google, Yelp, and ClassPass—include{' '}

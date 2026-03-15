@@ -62,12 +62,60 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(bestGymsUrl), { status: 301 })
   }
 
+  // Route gymsdata subdomain to /gymsdata/* pages (same pattern as bestgyms: clean URLs, internal rewrite)
+  if (hostname.startsWith('gymsdata.')) {
+    const url = request.nextUrl.clone()
+    const path = url.pathname
+    const gymsDataUrl = process.env.NEXT_PUBLIC_GYMSDATA_BASE_URL || 'https://gymsdata.gymdues.com'
+
+    // Serve sitemap index for gymsdata subdomain
+    if (path === '/sitemap.xml' || path === '/sitemap.xml/') {
+      url.pathname = '/api/sitemap-gymsdata-index'
+      return NextResponse.rewrite(url)
+    }
+
+    // Skip static files, Next.js internals, and API routes
+    if (path.startsWith('/_next') || path.startsWith('/api') || path.includes('.')) {
+      return NextResponse.next()
+    }
+
+    // On subdomain: canonical URLs must NOT include /gymsdata (same idea as bestgyms clean URLs)
+    // Redirect /gymsdata and /gymsdata/* → clean path so URL bar shows e.g. /california/ not /gymsdata/california/
+    if (path === '/gymsdata' || path === '/gymsdata/' || path.startsWith('/gymsdata/')) {
+      let cleanPath = path.replace(/^\/gymsdata\/?/, '/') || '/'
+      // Legacy: /types/health-clubs → /health-clubs (type pages now live at /{type})
+      if (cleanPath.startsWith('/types/')) cleanPath = cleanPath.replace(/^\/types\/?/, '/') || '/'
+      const pathWithSlash = cleanPath === '/' || cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`
+      const redirectUrl = new URL(pathWithSlash + url.search, gymsDataUrl)
+      return NextResponse.redirect(redirectUrl, 301)
+    }
+
+    // Root → /gymsdata (dataset list page); trailing slash to match next.config trailingSlash
+    if (path === '/' || path === '') {
+      url.pathname = '/gymsdata/'
+      const canonicalUrl = `${gymsDataUrl}/`
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-pathname', '/')
+      const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+      response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
+      return response
+    }
+
+    // Any other path on subdomain (e.g. /california/, /california/los-angeles/, /health-clubs/)
+    // → rewrite to /gymsdata/* (single segment can be state or type, resolved in [state]/page)
+    let pathWithSlash = path.endsWith('/') ? path : `${path}/`
+    url.pathname = `/gymsdata${pathWithSlash}`
+    const canonicalUrl = `${gymsDataUrl}${pathWithSlash}`
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-pathname', pathWithSlash)
+    const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+    response.headers.set('Link', `<${canonicalUrl}>; rel="canonical"`)
+    return response
+  }
+
   // ── Bulk 404 redirect rules ──────────────────────────────────────────────
   // All redirects use redirectHome(request) which builds the destination from
   // request.nextUrl.origin (scheme+host only) so query params are always stripped.
-  // next.config.ts redirects forward query strings by default, so all legacy
-  // redirect logic lives here for clean param-free destinations.
-
   const pathname = request.nextUrl.pathname
 
   // Pattern 0a: legacy path prefixes from previous site platforms

@@ -45,14 +45,14 @@ export default function ForSoftwareCompaniesPage() {
               <li>Lead enrichment and scoring workflows</li>
             </ul>
             <p className="text-sm">
-              <a href="/gymsdata" className="text-primary hover:underline">Browse the full gym database</a>
+              <a href="/" className="text-primary hover:underline">Browse the full data</a>
               {' '}to filter by state and city, then download a sample to test your pipeline.
             </p>
           </div>
         ),
       }}
       ctaPrimaryText="Download Free Sample"
-      ctaSecondaryLabel="Browse full gym database"
+      ctaSecondaryLabel="Browse full data"
     />
   )
 }

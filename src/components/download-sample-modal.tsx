@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download } from 'lucide-react'
+import { X, Download, CheckCircle2, Mail } from 'lucide-react'
 
 /* const USE_CASES = [
   'Marketing / Lead generation',
@@ -22,10 +22,12 @@ export interface DownloadSampleFormData {
 interface DownloadSampleModalProps {
   open: boolean
   onClose: () => void
-  onSubmit: (data: DownloadSampleFormData) => void
+  onSubmit: (data: DownloadSampleFormData) => void | Promise<void>
+  error?: string | null
+  successEmail?: string | null
 }
 
-export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleModalProps) {
+export function DownloadSampleModal({ open, onClose, onSubmit, error, successEmail }: DownloadSampleModalProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [company, setCompany] = useState('')
@@ -36,14 +38,15 @@ export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleM
     e.preventDefault()
     if (!name.trim() || !email.trim()) return
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 400))
-    onSubmit({ name: name.trim(), email: email.trim(), company: company.trim(), useCase })
-    setName('')
-    setEmail('')
-    setCompany('')
-    setUseCase('')
-    setLoading(false)
-    onClose()
+    try {
+      await onSubmit({ name: name.trim(), email: email.trim(), company: company.trim(), useCase })
+      setName('')
+      setEmail('')
+      setCompany('')
+      setUseCase('')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -66,7 +69,7 @@ export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleM
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 id="download-modal-title" className="text-lg font-semibold">
-            Get your sample
+            {successEmail ? 'Download successful' : 'Get your sample'}
           </h2>
           <button
             type="button"
@@ -77,9 +80,37 @@ export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleM
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {successEmail ? (
+          <div className="py-4 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+              <CheckCircle2 className="h-8 w-8" aria-hidden />
+            </div>
+            <p className="text-base font-medium text-foreground mb-2">
+              Your sample has been downloaded.
+            </p>
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+              <Mail className="h-4 w-4 shrink-0" aria-hidden />
+              A copy has been sent to <strong className="text-foreground">{successEmail}</strong>
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-6 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
         <p className="text-sm text-muted-foreground mb-4">
-          Enter your details to receive the sample download.
+          Enter your details to receive the sample CSV file. A copy will be sent to your email.
         </p>
+        {error && (
+          <p className="text-sm text-destructive mb-3 rounded-lg bg-destructive/10 px-3 py-2" role="alert">
+            {error}
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label htmlFor="dm-name" className="block text-sm font-medium text-muted-foreground mb-1">
@@ -149,13 +180,15 @@ export function DownloadSampleModal({ open, onClose, onSubmit }: DownloadSampleM
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap"
             >
-              <Download className="h-4 w-4" aria-hidden />
-              {loading ? 'Sending…' : 'Download sample'}
+              <Download className="h-4 w-4 shrink-0" aria-hidden />
+              {loading ? 'Sending…' : 'Download Free Sample'}
             </button>
           </div>
         </form>
+          </>
+        )}
       </div>
     </div>
   )

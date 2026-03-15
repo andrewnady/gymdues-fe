@@ -109,9 +109,13 @@ function normalizeBlogPosts(posts: Record<string, unknown>[]): BlogPost[] {
 }
 
 /**
- * Fetches all blog posts from the API
+ * Fetches all blog posts from the API.
+ * In CI/build returns [] so static generation does not require the CMS.
  */
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  if (process.env.CI === 'true') {
+    return []
+  }
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/posts`, {
       next: { revalidate: 60 }, // Revalidate every 60 seconds
@@ -153,9 +157,13 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 /**
- * Fetches a single blog post by slug from the API
+ * Fetches a single blog post by slug from the API.
+ * In CI/build returns null so static generation does not require the CMS.
  */
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  if (process.env.CI === 'true') {
+    return null
+  }
   try {
     // Try the slug endpoint first
     try {
@@ -171,20 +179,27 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
         // Handle different response formats
         let post: Record<string, unknown> | null = null
-        if (data.data) {
+        if (data && typeof data === 'object' && data.data != null) {
           post = data.data as Record<string, unknown>
-        } else if (data.post) {
+        } else if (data && typeof data === 'object' && data.post != null) {
           post = data.post as Record<string, unknown>
-        } else {
+        } else if (data && typeof data === 'object' && data !== null) {
           post = data as Record<string, unknown>
+        }
+        if (!post || typeof post !== 'object' || Array.isArray(post)) {
+          return null
         }
 
         // Normalize the post data
         return normalizeBlogPost(post)
       }
 
-      // If 404, return null
-      if (response.status === 404) {
+      // If 404 or 5xx, return null so the page can show 404 instead of 500
+      if (response.status === 404 || response.status >= 500) {
+        return null
+      }
+      // Other client errors (4xx): treat as not found
+      if (response.status >= 400) {
         return null
       }
     } catch {
@@ -193,12 +208,17 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     }
 
     // Fallback: fetch all posts and filter by slug
-    const allPosts = await getAllBlogPosts()
-    const post = allPosts.find((p) => p.slug === slug)
-    return post || null
+    try {
+      const allPosts = await getAllBlogPosts()
+      const post = allPosts.find((p) => p.slug === slug)
+      return post || null
+    } catch (fallbackError) {
+      console.error('Error in fallback fetch for blog post by slug:', fallbackError)
+      return null
+    }
   } catch (error) {
     console.error('Error fetching blog post by slug:', error)
-    throw error
+    return null
   }
 }
 

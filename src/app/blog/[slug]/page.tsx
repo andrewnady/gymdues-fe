@@ -15,14 +15,15 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  try {
+    const { slug } = await params;
+    const post = await getBlogPostBySlug(slug);
 
-  if (!post) {
-    return {
-      title: 'Post Not Found - GymDues',
-    };
-  }
+    if (!post) {
+      return {
+        title: 'Post Not Found - GymDues',
+      };
+    }
 
   // Get the current pathname from headers to match the requested URL
   const headersList = await headers()
@@ -74,7 +75,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       publishedTime: post.published_at,
       modifiedTime: post.updated_at || post.published_at,
-      authors: [post.author.name],
+      authors: [post.author?.name ?? 'GymDues'],
       ...(post.categories && post.categories.length > 0 && {
         tags: post.categories.map(cat => cat.name),
       }),
@@ -102,6 +103,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return metadata;
+  } catch {
+    return { title: 'Post Not Found - GymDues' };
+  }
 }
 
 export async function generateStaticParams() {
@@ -117,17 +121,23 @@ export async function generateStaticParams() {
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  try {
+    const { slug } = await params;
+    const post = await getBlogPostBySlug(slug);
 
-  if (!post) {
-    notFound();
-  }
+    if (!post) {
+      notFound();
+    }
 
-  let featuredGyms = await getTrendingGyms(3);
-  if (featuredGyms.length === 0) {
-    featuredGyms = await getLatestGyms(10);
-  }
+    let featuredGyms: Awaited<ReturnType<typeof getTrendingGyms>> = [];
+    try {
+      featuredGyms = await getTrendingGyms(3);
+      if (featuredGyms.length === 0) {
+        featuredGyms = await getLatestGyms(10);
+      }
+    } catch {
+      // Non-blocking: show post without sidebar gyms
+    }
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com';
@@ -149,8 +159,8 @@ export default async function BlogPostPage({ params }: PageProps) {
     dateModified: post.updated_at || post.published_at,
     author: {
       '@type': 'Person',
-      name: post.author.name,
-      ...(post.author.avatar && {
+      name: post.author?.name ?? 'GymDues',
+      ...(post.author?.avatar && {
         image: post.author.avatar.startsWith('http')
           ? post.author.avatar
           : `${siteUrl}${post.author.avatar}`,
@@ -184,8 +194,8 @@ export default async function BlogPostPage({ params }: PageProps) {
     dateModified: post.updated_at || post.published_at,
     author: {
       '@type': 'Person',
-      name: post.author.name,
-      ...(post.author.avatar && {
+      name: post.author?.name ?? 'GymDues',
+      ...(post.author?.avatar && {
         image: post.author.avatar.startsWith('http')
           ? post.author.avatar
           : `${siteUrl}${post.author.avatar}`,
@@ -310,10 +320,10 @@ export default async function BlogPostPage({ params }: PageProps) {
             {/* Author Section */}
             <div className="bg-muted/50 rounded-lg p-6">
               <div className="flex items-center gap-4">
-                {post.author.avatar && (
+                {post.author?.avatar && (
                   <Image
                     src={post.author.avatar}
-                    alt={post.author.name}
+                    alt={post.author?.name ?? 'Author'}
                     width={64}
                     height={64}
                     className="rounded-full"
@@ -321,7 +331,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 )}
                 <div>
                   <h3 className="font-semibold mb-1">About the Author</h3>
-                  <p className="text-sm text-muted-foreground">{post.author.name}</p>
+                  <p className="text-sm text-muted-foreground">{post.author?.name ?? 'GymDues'}</p>
                 </div>
               </div>
             </div>
@@ -345,5 +355,8 @@ export default async function BlogPostPage({ params }: PageProps) {
       </article>
     </div>
   );
+  } catch {
+    notFound();
+  }
 }
 

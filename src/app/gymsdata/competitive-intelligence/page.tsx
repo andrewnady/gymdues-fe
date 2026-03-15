@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BarChart2 } from 'lucide-react'
 import { CompetitiveIntelligenceTool } from './_components/competitive-intelligence-tool'
+import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
 
 const title = 'Competitive Intelligence Tool – Gym Market Analysis | Gymdues'
 const description =
@@ -13,17 +14,15 @@ export const metadata: Metadata = {
   openGraph: { title, description },
 }
 
-export default function CompetitiveIntelligencePage() {
+export default async function CompetitiveIntelligencePage() {
+  const base = await getGymsdataBasePath()
+  const homeHref = base === '' ? '/' : `${base}/`
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-4xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><Link href="/" className="hover:text-primary">Home</Link></li>
-            <li aria-hidden>/</li>
-            <li><Link href="/gymsdata/" className="hover:text-primary">List of Gyms in United States</Link></li>
-            <li aria-hidden>/</li>
-            <li className="text-foreground font-medium">Competitive Intelligence</li>
+            <li><Link href={homeHref} className="hover:text-primary">Home</Link></li>
           </ol>
         </nav>
 
@@ -44,8 +43,8 @@ export default function CompetitiveIntelligencePage() {
         </div>
 
         <div className="max-w-4xl mx-auto mt-12 pt-8 border-t text-center">
-          <Link href="/gymsdata/" className="text-primary font-medium hover:underline">
-            Back to full gym database
+          <Link href={homeHref} className="text-primary font-medium hover:underline">
+            Back to Home
           </Link>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { PersonaPageLayout } from '../_components/persona-page-layout'
 
 const title = 'Target 60K+ Gyms for Your Fitness Industry Clients | Gymdues'
 const description =
-  'Use cases for marketing agencies: email campaigns, cold calling, direct mail. Testimonials and bulk pricing for gym contact lists. Verified U.S. gym database.'
+  'Use cases for marketing agencies: email campaigns, cold calling, direct mail. Testimonials and bulk pricing for gym contact lists. Verified U.S. data.'
 
 export const metadata: Metadata = {
   title,
@@ -17,7 +17,7 @@ export default function ForMarketingAgenciesPage() {
       title="Target 60K+ Gyms for Your Fitness Industry Clients"
       subtitle="Reach decision-makers at every gym with verified emails, phones, and addresses. Built for agencies running email campaigns, cold calling, and direct mail."
       breadcrumbLabel="For Marketing Agencies"
-      intro="Our verified gym database gives your fitness-industry clients a direct line to owners and managers. Filter by state, city, or chain—then export for your campaigns."
+      intro="Our verified data gives your fitness-industry clients a direct line to owners and managers. Filter by state, city, or chain—then export for your campaigns."
       useCases={[
         {
           title: 'Email campaigns',
@@ -57,7 +57,7 @@ export default function ForMarketingAgenciesPage() {
         ),
       }}
       ctaPrimaryText="Download Free Sample"
-      ctaSecondaryLabel="Browse full gym database"
+      ctaSecondaryLabel="Browse full data"
     />
   )
 }

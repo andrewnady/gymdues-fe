@@ -37,7 +37,7 @@ export function getCountForLayer(state: StateWithCount, layer: MapLayer, code: s
 }
 
 export function getLayerLabel(layer: MapLayer): string {
-  if (layer === 'all') return 'gyms'
+  if (layer === 'all') return 'Fitness, Gym, and Health Services'
   if (layer === 'budget') return 'budget gyms'
   if (layer === '24hour') return '24-hour gyms'
   if (layer === 'highRated') return 'high-rated gyms'

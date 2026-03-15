@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
 
 const ORDER_COOKIE = 'gymdues_order'
 
@@ -12,8 +13,11 @@ export async function submitOrderFromForm(formData: FormData) {
   const company = (formData.get('company') as string)?.trim()
   const message = (formData.get('message') as string)?.trim()
 
+  const base = await getGymsdataBasePath()
+  const checkoutPath = base === '' ? '/checkout' : `${base}/checkout`
+
   if (!name || !email || !company) {
-    redirect('/gymsdata/checkout?error=missing')
+    redirect(`${checkoutPath}?error=missing`)
   }
 
   const order = JSON.stringify({ name, email, company, message: message || undefined })
@@ -25,5 +29,5 @@ export async function submitOrderFromForm(formData: FormData) {
     httpOnly: false, // so client can clear after read if desired
   })
 
-  redirect('/gymsdata/checkout')
+  redirect(checkoutPath)
 }

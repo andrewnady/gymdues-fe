@@ -78,7 +78,7 @@ export function BuyDatasetModal({ open, onClose }: BuyDatasetModalProps) {
         <div className="flex items-center justify-between mb-4">
           <h2 id="buy-dataset-modal-title" className="text-lg font-semibold flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-primary" aria-hidden />
-            Buy dataset
+            Buy data
           </h2>
           <button
             type="button"

@@ -19,7 +19,7 @@ export async function GET() {
 ${entries
   .map(
     (i) => `  <sitemap>
-    <loc>${BASE_URL}sitemap/best-gyms/${i}.xml</loc>
+    <loc>${BASE_URL}/sitemap/best-gyms/${i}.xml</loc>
   </sitemap>`
   )
   .join('\n')}

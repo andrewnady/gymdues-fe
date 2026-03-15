@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { AppLink } from '@/components/app-link'
 import { PersonaPageLayout } from '../_components/persona-page-layout'
 
 const title = 'Identify Underserved Markets for Gym Franchises | Gymdues'
@@ -38,7 +38,7 @@ export default function ForFranchiseDevelopmentPage() {
         children: (
           <div className='space-y-4'>
             <p className='text-sm text-muted-foreground'>
-              Our <Link href='/gymsdata' className='text-primary hover:underline'>State-by-State Comparison</Link> and state/city breakdowns give you gym counts and density per capita. Use them to:
+              Our <AppLink href='/' className='text-primary hover:underline'>State-by-State Comparison</AppLink> and state/city breakdowns give you gym counts and density per capita. Use them to:
             </p>
             <ul className='list-disc list-inside space-y-2 text-sm text-muted-foreground'>
               <li>Rank markets by saturation (low density = opportunity or low demand)</li>
@@ -52,7 +52,7 @@ export default function ForFranchiseDevelopmentPage() {
         ),
       }}
       ctaPrimaryText='Download Free Sample'
-      ctaSecondaryLabel='Browse full gym database'
+      ctaSecondaryLabel='Browse full data'
     />
   )
 }

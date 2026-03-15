@@ -5,7 +5,8 @@ import {
   getLatestGyms,
   getAllGyms,
   getRatedGyms,
-  getBestGymsByState,
+  getBestGymsBySlug,
+  getPopularGymsStateCities,
 } from '@/lib/gyms-api'
 import { getAllReviews } from '@/lib/reviews-api'
 import { getRecentBlogPosts } from '@/lib/blog-api'
@@ -18,8 +19,10 @@ import { TrendingGymsSection } from '@/components/trending-gyms-section'
 import { ReviewsSection } from '@/components/reviews-section'
 import { BlogSection } from '@/components/blog-section'
 import { RedirectGymsHash } from '@/components/redirect-gyms-hash'
+import { CalorieCalculatorSection } from '@/components/calorie-calculator-section'
 import { RatedGymsSection } from '@/components/rated-gyms-section'
 import { BestGymsLocationSection } from '@/components/best-gyms-location-section'
+import { PopularCitiesSlider } from '@/components/popular-cities-slider'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -118,14 +121,16 @@ export default async function Home() {
     caBestResult,
     reviewsResult,
     postsResult,
+    popularCitiesResult,
   ] = await Promise.allSettled([
     getTrendingGyms(),
     getAllGyms(undefined, undefined, undefined, undefined, true),
     getRatedGyms(20),
-    getBestGymsByState('New York', 20),
-    getBestGymsByState('California', 20),
+    getBestGymsBySlug('best-new-york-gyms', 20),
+    getBestGymsBySlug('best-california-gyms', 20),
     getAllReviews(12),
     getRecentBlogPosts(3),
+    getPopularGymsStateCities(),
   ])
 
   let trendingGyms: Gym[] = []
@@ -171,6 +176,8 @@ export default async function Home() {
   } else {
     console.error('Failed to load California best gyms:', caBestResult.reason)
   }
+
+  const popularCities = popularCitiesResult.status === 'fulfilled' ? popularCitiesResult.value : []
 
   let reviews: ReviewWithGym[] = []
   if (reviewsResult.status === 'fulfilled') {
@@ -244,10 +251,6 @@ export default async function Home() {
               const d = new Date(review.reviewed_at)
               return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : undefined
             })(),
-            itemReviewed: {
-              '@type': 'LocalBusiness',
-              name: review.gymName || review.gym?.name,
-            },
           })),
         }
       : null
@@ -266,6 +269,7 @@ export default async function Home() {
       )}
       <RedirectGymsHash />
       <HeroSection popularGyms={popularGyms} />
+      <CalorieCalculatorSection />
       {/* <WhyChooseSection /> */}
       {/* <ListingByStateSection states={states} /> */}
       <TrendingGymsSection gyms={trendingGyms} />
@@ -280,6 +284,7 @@ export default async function Home() {
         description="Searching for the best gyms in California? From Los Angeles and San Diego to San Francisco and beyond, California has an incredible range of gyms—high-end health clubs, CrossFit boxes, Pilates and yoga studios, and budget-friendly chains with multiple locations. On GymDues, you can compare gym memberships, amenities, hours, ratings, and reviews to choose the right gym for your lifestyle—whether you want serious strength training, group classes, or a flexible monthly plan."
         gyms={caBestGyms}
       />
+      <PopularCitiesSlider cities={popularCities} />
       <ReviewsSection reviews={reviews} />
       <BlogSection posts={recentPosts} />
 
@@ -295,16 +300,16 @@ export default async function Home() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
-                href='/gymsdata/dataset'
+                href='/checkout'
                 className='inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md transition-all'
               >
-                Buy dataset
+                Buy data
                 <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor' aria-hidden>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 7l5 5m0 0l-5 5m5-5H6' />
                 </svg>
               </Link>
               <Link
-                href='/gymsdata#use-cases-heading'
+                href='#use-cases-heading'
                 className='inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-transparent px-6 py-3 text-sm font-semibold text-primary hover:bg-primary/10 transition-all'
               >
                 Data & use cases

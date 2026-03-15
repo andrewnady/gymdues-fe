@@ -14,7 +14,6 @@ interface CommentFormProps {
 export function CommentForm({ onSuccess }: CommentFormProps) {
   const pathname = usePathname()
   const postSlug = pathname?.split('/').filter(Boolean).pop() || ''
-  console.log('postSlugt', postSlug)
 
   const [formData, setFormData] = useState({
     name: '',

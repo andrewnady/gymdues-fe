@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react'
+import { getIndustryTrends } from '@/lib/gymsdata-api'
+import { getGymsdataBasePath } from '../_lib/get-gymsdata-base-path'
 import { NewGymsTimelineChart } from './_components/new-gyms-timeline-chart'
 import { MostGrowingCitiesChart } from './_components/most-growing-cities-chart'
 import { FastestGrowingCategoriesChart } from './_components/fastest-growing-categories-chart'
@@ -16,17 +18,17 @@ export const metadata: Metadata = {
   openGraph: { title, description },
 }
 
-export default function GrowthTrendsPage() {
+export default async function GrowthTrendsPage() {
+  const [base, trends] = await Promise.all([getGymsdataBasePath(), getIndustryTrends()])
+  const homeHref = base === '' ? '/' : `${base}/`
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <nav className="max-w-6xl mx-auto mb-6 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-1">
-            <li><Link href="/" className="hover:text-primary">Home</Link></li>
+            <li><Link href={homeHref} className="hover:text-primary">Home</Link></li>
             <li aria-hidden>/</li>
-            <li><Link href="/gymsdata/" className="hover:text-primary">List of Gyms in United States</Link></li>
-            <li aria-hidden>/</li>
-            <li className="text-foreground font-medium">Growth Trends</li>
+            <li className="text-foreground font-medium">Gym Industry Trends</li>
           </ol>
         </nav>
 
@@ -48,7 +50,7 @@ export default function GrowthTrendsPage() {
               <LineChartIcon className="h-5 w-5 text-primary" />
               New Gyms Opened (Last 12 Months)
             </h2>
-            <NewGymsTimelineChart />
+            <NewGymsTimelineChart data={trends?.newGymsByMonth} />
           </section>
 
           <section className="rounded-2xl border border-border/80 bg-card p-5 md:p-6 shadow-sm" aria-labelledby="cities-heading">
@@ -56,7 +58,7 @@ export default function GrowthTrendsPage() {
               <BarChart3 className="h-5 w-5 text-primary" />
               Most Growing Cities
             </h2>
-            <MostGrowingCitiesChart />
+            <MostGrowingCitiesChart data={trends?.mostGrowingCities} />
           </section>
 
           <section className="rounded-2xl border border-border/80 bg-card p-5 md:p-6 shadow-sm" aria-labelledby="categories-heading">
@@ -64,7 +66,7 @@ export default function GrowthTrendsPage() {
               <PieChartIcon className="h-5 w-5 text-primary" />
               Fastest Growing Categories
             </h2>
-            <FastestGrowingCategoriesChart />
+            <FastestGrowingCategoriesChart data={trends?.categories} />
           </section>
 
           <section className="rounded-2xl border border-border/80 bg-card p-5 md:p-6 shadow-sm" aria-labelledby="franchise-heading">
@@ -75,18 +77,18 @@ export default function GrowthTrendsPage() {
             <p className="text-sm text-muted-foreground mb-4">
               U.S. gym count by type over time (quarterly).
             </p>
-            <FranchiseVsIndependentChart />
+            <FranchiseVsIndependentChart data={trends?.franchiseVsIndependent} />
           </section>
         </div>
 
         <div className="max-w-6xl mx-auto mt-12 pt-8 border-t text-center space-y-2">
-          <Link href="/gymsdata/" className="text-primary font-medium hover:underline">
-            ← Back to full gym database
+          <Link href={homeHref} className="text-primary font-medium hover:underline">
+            ← Back to Home
           </Link>
-          <span className="mx-2 text-muted-foreground">·</span>
-          <Link href="/gymsdata/competitive-intelligence" className="text-primary font-medium hover:underline">
+          {/* <span className="mx-2 text-muted-foreground">·</span>
+          <Link href={competitiveHref} className="text-primary font-medium hover:underline">
             Competitive Intelligence Tool
-          </Link>
+          </Link> */}
         </div>
       </div>
     </main>

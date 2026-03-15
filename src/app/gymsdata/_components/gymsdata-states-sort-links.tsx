@@ -4,10 +4,16 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Filter } from 'lucide-react'
 
-export function GymsdataStatesSortLinks() {
+interface GymsdataStatesSortLinksProps {
+  /** On gymsdata subdomain pass '' for clean URLs. */
+  base?: string
+}
+
+export function GymsdataStatesSortLinks({ base }: GymsdataStatesSortLinksProps) {
   const searchParams = useSearchParams()
   const sort = searchParams?.get('sort') ?? 'count'
   const isCount = sort !== 'name'
+  const rootHref = base === '' ? '/' : `${base || '/'}/`
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
@@ -15,7 +21,7 @@ export function GymsdataStatesSortLinks() {
       <span className='text-sm font-medium text-muted-foreground'>Sort states by:</span>
       <div className='flex rounded-lg border border-border/80 bg-muted/30 p-0.5' role='tablist' aria-label='Sort order'>
         <Link
-          href='/gymsdata/?sort=count'
+          href={`${rootHref}?sort=count`}
           role='tab'
           aria-selected={isCount}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -25,7 +31,7 @@ export function GymsdataStatesSortLinks() {
           Most gyms in USA
         </Link>
         <Link
-          href='/gymsdata/?sort=name'
+          href={`${rootHref}?sort=name`}
           role='tab'
           aria-selected={!isCount}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${

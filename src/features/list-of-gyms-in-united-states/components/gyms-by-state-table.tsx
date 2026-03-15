@@ -39,7 +39,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                 <Table2 className='h-5 w-5 text-primary' />
               </div>
               <h2 id='states-table-heading' className='text-2xl md:text-3xl font-bold tracking-tight'>
-                Number of gyms by U.S. state
+                Number of Fitness, Gym, and Health Services by U.S. state
               </h2>
               {/* <details className='ml-auto [&::-webkit-details-marker]:hidden' aria-label='Table details'>
                 <summary className='inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-sm font-medium text-muted-foreground hover:border-input hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring'>
@@ -52,7 +52,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
               </details> */}
             </div>
             <p className='text-sm md:text-base text-muted-foreground max-w-2xl'>
-              Gym count per state. Use the action to open the gyms page filtered by state and
+            Fitness, Gym, and Health Services count per state. Use the action to open the Fitness, Gym, and Health Services page filtered by state and
               compare membership prices, plans, and fees.
             </p>
           </div>
@@ -71,7 +71,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                 Code
               </th>
               <th className='px-4 py-3.5 font-medium text-muted-foreground text-right w-28'>
-                Gyms
+              Count
               </th>
               <th className='px-4 py-3.5 font-medium text-muted-foreground hidden md:table-cell w-40'>
                 % of total
@@ -112,7 +112,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                       </Link>
                       <span
                         className='inline-flex shrink-0 text-muted-foreground hover:text-foreground'
-                        title={`${state.stateName} (${state.state}): ${state.count.toLocaleString('en-US')} gyms — view state directory`}
+                        title={`${state.stateName} (${state.state}): ${state.count.toLocaleString('en-US')} Fitness, Gym, and Health Services — view state directory`}
                         aria-label={`Details for ${state.stateName}`}
                       >
                         <Info className='h-3.5 w-3.5' />
@@ -143,7 +143,7 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
                       className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-xs font-medium text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors'
                     >
                       <ExternalLink className='h-3.5 w-3.5 shrink-0' aria-hidden />
-                      <span className='hidden sm:inline'>View gyms</span>
+                      <span className='hidden sm:inline'>View Fitness, Gym, and Health Services</span>
                       <ChevronRight className='h-3.5 w-3.5 sm:hidden' aria-hidden />
                     </Link>
                   </td>
@@ -190,12 +190,12 @@ export function GymsByStateTable({ sortedStates, totalGyms }: GymsByStateTablePr
               )}
             </button>
           )}
-          <Link
+          {/* <Link
             href='#states-table'
             className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-2'
           >
             Show all data →
-          </Link>
+          </Link> */}
         </div>
       </div>
     </section>

@@ -1,41 +1,60 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getListPageData, getCitiesByState } from '@/lib/gyms-api'
+import { getListPageData, getGymsdataForCity, getCityPage } from '@/lib/gymsdata-api'
 import {
   getStateBySlug,
-  getCityBySlug,
   getCitiesInState,
+  getCityBySlug,
   cityGymsdataPath,
   stateGymsdataPath,
-  getCityDerivedStats,
-  getTopNeighborhoods,
   formatDataDate,
-  toSlug,
+  toUrlSegment,
 } from '@/lib/gymsdata-utils'
-import { MapPin, Building2 } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { GymsdataMiniMap } from '../../_components/gymsdata-mini-map'
+import { getGymsdataBasePath, getGymsdataCanonicalUrl } from '../../_lib/get-gymsdata-base-path'
+import { buildBreadcrumbSchema, buildProductSchema } from '@/lib/schema-builder'
+import { JsonLdSchema } from '@/components/json-ld-schema'
 import { DownloadSampleButton } from '@/components/download-sample-button'
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+import { FULL_DATA_PRICE_LABEL } from '../../_constants'
+import { BuyDataButton } from '../../_components/buy-data-button'
 
 type Props = { params: Promise<{ state: string; city: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { state: stateSlug, city: citySlug } = await params
+  const { state: stateSegment, city: citySegment } = await params
+  const stateParam = (stateSegment ?? '').trim()
+  const cityParam = (citySegment ?? '').trim()
+  if (!stateParam || !cityParam) return { title: 'City Not Found | Gymdues' }
+
   const { states, locations } = await getListPageData()
-  const state = getStateBySlug(states, stateSlug)
+  const state = getStateBySlug(states, stateParam)
   const stateCode = state?.state ?? null
-  const citiesFromApiMeta = stateCode ? await getCitiesByState(stateCode) : []
-  const citiesForState = stateCode
-    ? (citiesFromApiMeta.length > 0 ? citiesFromApiMeta : getCitiesInState(locations, stateCode, state?.stateName))
-    : []
-  const loc = stateCode && state ? getCityBySlug(citiesForState, stateCode, citySlug, state.stateName) : null
+  const citiesForState = stateCode && state ? getCitiesInState(locations, stateCode, state.stateName) : []
+  const loc = stateCode && state ? getCityBySlug(citiesForState, stateCode, cityParam, state.stateName) : null
+
+  const cityPage = await getCityPage(stateParam, cityParam)
+  if (cityPage) {
+    const cityName = cityPage.city ?? cityParam
+    const stateName = cityPage.stateName ?? state?.stateName ?? stateParam
+    const count = cityPage.totalGyms ?? 0
+    const title = `List of Gyms in ${cityName}, ${stateName} - ${count.toLocaleString('en-US')} Verified Contacts | Gymdues`
+    const description = `${count.toLocaleString('en-US')} gyms in ${cityName}, ${stateName}. Verified contact database with emails and phone numbers.`
+    const canonical = await getGymsdataCanonicalUrl(`${toUrlSegment(stateName)}/${toUrlSegment(cityName)}`)
+    return {
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: { title, description, url: canonical },
+    }
+  }
+
   if (!state || !loc) return { title: 'City Not Found | Gymdues' }
   const cityName = loc.city ?? loc.label ?? 'City'
   const count = loc.count ?? 0
   const title = `List of Gyms in ${cityName}, ${state.stateName} - ${count.toLocaleString('en-US')} Verified Contacts | Gymdues`
   const description = `${count.toLocaleString('en-US')} gyms in ${cityName}, ${state.stateName}. Verified contact database with emails and phone numbers.`
-  const canonical = new URL(`/gymsdata/${stateSlug}/${citySlug}`, siteUrl).toString()
+  const canonical = await getGymsdataCanonicalUrl(`${toUrlSegment(state.stateName)}/${toUrlSegment(cityName)}`)
   return {
     title,
     description,
@@ -48,59 +67,69 @@ export async function generateStaticParams() {
   const { states, locations } = await getListPageData()
   const params: { state: string; city: string }[] = []
   for (const state of states) {
-    const stateSlug = toSlug(state.stateName)
     const cities = getCitiesInState(locations, state.state, state.stateName)
     for (const loc of cities) {
       const cityName = loc.city ?? loc.label
-      if (cityName) params.push({ state: stateSlug, city: toSlug(cityName) })
+      if (cityName) params.push({ state: toUrlSegment(state.stateName), city: toUrlSegment(cityName) })
     }
   }
   return params
 }
 
 export default async function GymsdataCityPage({ params }: Props) {
-  const { state: stateSlug, city: citySlug } = await params
-  const { states, locations } = await getListPageData()
-  const state = getStateBySlug(states, stateSlug)
-  const stateCode = state?.state ?? null
-  const citiesFromApi = stateCode ? await getCitiesByState(stateCode) : []
-  const citiesInState = stateCode && state
-    ? (citiesFromApi.length > 0 ? citiesFromApi : getCitiesInState(locations, stateCode, state.stateName))
-    : []
-  const loc = stateCode && state ? getCityBySlug(citiesInState, stateCode, citySlug, state.stateName) : null
-
-  if (!state || !loc) {
+  const { state: stateSegment, city: citySegment } = await params
+  const stateParam = (stateSegment ?? '').trim()
+  const cityParam = (citySegment ?? '').trim()
+  const base = await getGymsdataBasePath()
+  const homeHref = base === '' ? '/' : `${base}/`
+  const data = await getGymsdataForCity(stateParam, cityParam)
+  if (data.notFound || !data.state) {
     return (
       <main className='min-h-screen container mx-auto px-4 py-16'>
         <h1 className='text-2xl font-bold mb-4'>City not found</h1>
-        <Link href={state ? stateGymsdataPath(state) : '/gymsdata/'} className='text-primary hover:underline'>
-          Back to {state?.stateName ?? 'states'}
+        <Link href={data.state ? stateGymsdataPath(data.state, base) : homeHref} className='text-primary hover:underline'>
+          Back to {data.state?.stateName ?? 'states'}
         </Link>
       </main>
     )
   }
-
-  const cityName = loc.city ?? loc.label ?? 'City'
-  const count = loc.count ?? 0
-  const stats = getCityDerivedStats(count, citySlug)
-  const neighborhoods = getTopNeighborhoods(cityName, count)
+  const state = data.state
+  const { cityName, count, stats, neighborhoods, nearbyCities } = data
   const dateStr = formatDataDate()
-  const nearbyCities = citiesInState.filter((c) => (c.city ?? c.label) !== cityName).slice(0, 6)
-  const statePath = stateGymsdataPath(state)
+  const statePath = stateGymsdataPath(state, base)
+  const cityPath = cityGymsdataPath(state.stateName ?? '', cityName, base)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
+  const schemaBreadcrumb = buildBreadcrumbSchema(
+    [
+      { name: 'Home', url: homeHref },
+      { name: state.stateName ?? '', url: statePath },
+      { name: cityName, url: cityPath },
+    ],
+    siteUrl.replace(/\/$/, '')
+  )
+  const cityPrice = typeof data.cityPage?.price === 'number' ? data.cityPage.price : parseFloat(String(data.cityPage?.price ?? 29)) || 29
+  const schemaProduct = buildProductSchema({
+    name: `Fitness, Gym, and Health Services Data - ${cityName}, ${state.stateName}`,
+    description: `${count.toLocaleString('en-US')}+ verified contacts in ${cityName}, ${state.stateName}. CSV/JSON. Updated weekly.`,
+    brandName: 'Gymdues',
+    price: cityPrice,
+    seller: { name: 'Gymdues', url: siteUrl },
+  })
 
   return (
     <main className='min-h-screen'>
+      <JsonLdSchema data={[schemaBreadcrumb, schemaProduct]} />
       {/* Above the fold */}
       <div className='border-b bg-muted/30'>
         <div className='container mx-auto px-4 py-8'>
           <nav className='text-sm text-muted-foreground mb-4' aria-label='Breadcrumb'>
-            <Link href='/' className='hover:text-primary'>Home</Link>
-            <span className='mx-2'>/</span>
-            <Link href='/gymsdata/' className='hover:text-primary'>List of Gyms in United States</Link>
-            <span className='mx-2'>/</span>
-            <Link href={statePath} className='hover:text-primary'>{state.stateName}</Link>
-            <span className='mx-2'>/</span>
-            <span className='text-foreground font-medium'>{cityName}</span>
+            <ol className='flex flex-wrap items-center gap-1'>
+              <li><Link href={homeHref} className='hover:text-primary'>Home</Link></li>
+              <li aria-hidden>/</li>
+              <li><Link href={statePath} className='hover:text-primary'>{state.stateName}</Link></li>
+              <li aria-hidden>/</li>
+              <li className='text-foreground font-medium'>{cityName}</li>
+            </ol>
           </nav>
           <h1 className='text-3xl md:text-4xl font-bold tracking-tight'>
             List of Gyms in {cityName}, {state.stateName} - {count.toLocaleString('en-US')} Verified Contacts
@@ -129,9 +158,6 @@ export default async function GymsdataCityPage({ params }: Props) {
           {/* Map and Overview side by side */}
           <div className='mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8'>
             <div className='min-w-0'>
-              <GymsdataMiniMap state={state} />
-            </div>
-            <div className='min-w-0'>
               <h2 className='text-2xl font-bold mb-4'>
                 Gyms in {cityName} – Complete Contact Database
               </h2>
@@ -140,14 +166,26 @@ export default async function GymsdataCityPage({ params }: Props) {
                   There are <strong className='text-foreground'>{count.toLocaleString('en-US')}</strong> gyms
                   in <strong className='text-foreground'>{cityName}, {state.stateName}</strong> as of {dateStr}.
                 </p>
-                <p>
-                  The top 3 areas are <strong className='text-foreground'>{neighborhoods[0].name}</strong> with{' '}
-                  {neighborhoods[0].gyms.toLocaleString('en-US')} gyms,{' '}
-                  <strong className='text-foreground'>{neighborhoods[1].name}</strong> with{' '}
-                  {neighborhoods[1].gyms.toLocaleString('en-US')} gyms, and{' '}
-                  <strong className='text-foreground'>{neighborhoods[2].name}</strong> with{' '}
-                  {neighborhoods[2].gyms.toLocaleString('en-US')} gyms.
-                </p>
+                {neighborhoods.length >= 3 ? (
+                  <p>
+                    The top 3 areas are <strong className='text-foreground'>{neighborhoods[0].name}</strong> with{' '}
+                    {neighborhoods[0].gyms.toLocaleString('en-US')} gyms,{' '}
+                    <strong className='text-foreground'>{neighborhoods[1].name}</strong> with{' '}
+                    {neighborhoods[1].gyms.toLocaleString('en-US')} gyms, and{' '}
+                    <strong className='text-foreground'>{neighborhoods[2].name}</strong> with{' '}
+                    {neighborhoods[2].gyms.toLocaleString('en-US')} gyms.
+                  </p>
+                ) : neighborhoods.length > 0 ? (
+                  <p>
+                    Top area{neighborhoods.length === 1 ? '' : 's'}:{' '}
+                    {neighborhoods.map((n, i) => (
+                      <span key={n.name}>
+                        <strong className='text-foreground'>{n.name}</strong> ({n.gyms.toLocaleString('en-US')} gyms)
+                        {i < neighborhoods.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}.
+                  </p>
+                ) : null}
                 <ul className='list-disc pl-6 space-y-1'>
                   <li>{stats.pctEmail}% have email addresses</li>
                   <li>{stats.pctPhone}% have verified phone numbers</li>
@@ -156,31 +194,33 @@ export default async function GymsdataCityPage({ params }: Props) {
                 </ul>
               </div>
             </div>
+            <div className='min-w-0'>
+              <GymsdataMiniMap state={state} />
+            </div>
           </div>
 
           {/* Download CTA */}
-          <div className='mt-6 flex flex-wrap gap-3'>
-            <DownloadSampleButton variant='primary' />
-            <Link
-              href={`/gymsdata/#location=${encodeURIComponent(loc.label ?? `${cityName}, ${state.state}`)}`}
-              className='inline-flex items-center gap-2 rounded-xl border-2 border-input bg-background px-5 py-2.5 text-sm font-semibold hover:bg-muted'
-            >
-              <Building2 className='h-4 w-4' />
-              View gyms & map in {cityName}
-            </Link>
+          <div className='mt-6 flex flex-wrap items-center gap-3'>
+            <DownloadSampleButton variant='outline' filter={{ state: stateParam, city: cityParam }} base={base} />
+            <BuyDataButton
+              href={base ? `${base}/checkout?state=${encodeURIComponent(stateParam)}&city=${encodeURIComponent(cityParam)}` : `/checkout?state=${encodeURIComponent(stateParam)}&city=${encodeURIComponent(cityParam)}`}
+              label='Buy data'
+              priceFromServer={data.cityPage?.formattedPrice ? { formattedPrice: data.cityPage.formattedPrice, price: data.cityPage.price, rowCount: data.cityPage.totalGyms } : undefined}
+              fallbackLabel={FULL_DATA_PRICE_LABEL}
+            />
           </div>
         </div>
       </div>
 
       {/* Internal linking: nearby cities, state page */}
-      <div className='container mx-auto px-4 py-10 max-w-3xl'>
+      <div className='container mx-auto px-4 py-10'>
         <section className='mt-10 pt-8 border-t' aria-label='Related pages'>
           <h3 className='font-semibold text-lg mb-3'>Nearby cities</h3>
           <ul className='flex flex-wrap gap-2'>
             {nearbyCities.map((c) => (
               <li key={c.label ?? c.city ?? ''}>
                 <Link
-                  href={cityGymsdataPath(stateSlug, c.city ?? '')}
+                  href={cityGymsdataPath(state.stateName, c.city ?? '', base)}
                   className='inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted hover:border-primary/40'
                 >
                   <MapPin className='h-3.5 w-3.5 text-primary' />
@@ -195,7 +235,7 @@ export default async function GymsdataCityPage({ params }: Props) {
             </Link>
           </p>
           <p className='mt-2'>
-            <Link href='/gymsdata/' className='text-primary hover:underline font-medium'>
+            <Link href={homeHref} className='text-primary hover:underline font-medium'>
               Browse all gyms
             </Link>
           </p> */}
