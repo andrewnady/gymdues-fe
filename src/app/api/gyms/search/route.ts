@@ -5,12 +5,14 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const query = searchParams.get('q') || ''
+    const city = searchParams.get('city')?.trim() || undefined
+    const state = searchParams.get('state')?.trim() || undefined
 
     if (!query.trim()) {
       return NextResponse.json([])
     }
 
-    const gyms = await getAllGyms(query.trim())
+    const gyms = await getAllGyms(query.trim(), state, city)
     
     // Filter and sort results by relevance (name match first, then location)
     const filteredGyms = gyms
