@@ -168,6 +168,7 @@ export function GymsMapPageClient() {
   const [nameOpen, setNameOpen] = useState(false)
   const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nameAbortRef = useRef<AbortController | null>(null)
+  const nameJustSelectedRef = useRef(false)
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null)
   const listItemRefs = useRef<Record<string, HTMLElement | null>>({})
@@ -297,6 +298,11 @@ export function GymsMapPageClient() {
     }
   }, [nameInput, appliedLocation, defaultLocation])
 
+  // When user clears gym name, apply immediately so list reloads without name filter
+  useEffect(() => {
+    if (nameInput.trim() === '') setAppliedName('')
+  }, [nameInput])
+
   // Click outside for dropdowns
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -394,6 +400,7 @@ export function GymsMapPageClient() {
   }, [])
 
   const handleSelectName = useCallback((gym: Gym) => {
+    nameJustSelectedRef.current = true
     setNameInput(gym.name)
     setAppliedName(gym.name)
     setNameOpen(false)
@@ -495,6 +502,14 @@ export function GymsMapPageClient() {
               onChange={(e) => {
                 setNameInput(e.target.value)
                 setNameOpen(true)
+              }}
+              onBlur={() => {
+                if (nameJustSelectedRef.current) {
+                  nameJustSelectedRef.current = false
+                  return
+                }
+                const value = (nameInputRef.current ?? nameInput).toString().trim()
+                setAppliedName((prev) => (prev === value ? prev : value))
               }}
               onFocus={() => setNameOpen(true)}
               onKeyDown={(e) => {
