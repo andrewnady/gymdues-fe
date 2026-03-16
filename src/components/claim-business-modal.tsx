@@ -40,7 +40,8 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [role, setRole] = useState('')
-  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', phone: '', role: '' })
+  const [smsConsent, setSmsConsent] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', phone: '', role: '', smsConsent: '' })
 
   // Step 2: Verification
   const [verificationMethod, setVerificationMethod] = useState<VerificationMethod>(null)
@@ -73,7 +74,7 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
   const gymDomain = gymWebsite ? extractDomain(gymWebsite) : null
 
   const validateStep1 = () => {
-    const errors = { name: '', email: '', phone: '', role: '' }
+    const errors = { name: '', email: '', phone: '', role: '', smsConsent: '' }
     if (!name.trim()) {
       errors.name = 'Full name is required.'
     } else if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
@@ -90,6 +91,7 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
       errors.phone = 'Please enter a valid phone number.'
     }
     if (!role.trim()) errors.role = 'Please select a role.'
+    if (!smsConsent) errors.smsConsent = 'You must agree to receive messages to continue.'
     return errors
   }
 
@@ -99,7 +101,7 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
       setFieldErrors(errors)
       return
     }
-    setFieldErrors({ name: '', email: '', phone: '', role: '' })
+    setFieldErrors({ name: '', email: '', phone: '', role: '', smsConsent: '' })
     setInitiating(true)
     setSubmitError(null)
     try {
@@ -550,6 +552,25 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
                     />
                     {fieldErrors.phone && (
                       <p className="mt-1 text-xs text-destructive">{fieldErrors.phone}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="flex items-start gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={smsConsent}
+                        onChange={(e) => {
+                          setSmsConsent(e.target.checked)
+                          setFieldErrors((prev) => ({ ...prev, smsConsent: '' }))
+                        }}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary cursor-pointer"
+                      />
+                      <span className="text-sm text-muted-foreground leading-snug">
+                        I consent to receive SMS or phone messages from <span className="font-medium text-foreground">GymDues</span> on the number provided above for ownership verification and marketing communications.
+                      </span>
+                    </label>
+                    {fieldErrors.smsConsent && (
+                      <p className="text-xs text-destructive">{fieldErrors.smsConsent}</p>
                     )}
                   </div>
                   <div>

@@ -55,6 +55,15 @@ export function clearAuthToken(): void {
   }
 }
 
+export async function apiRequestListingLink(email: string): Promise<SimpleResponse> {
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-owner/auth/request-listing-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  return res.json()
+}
+
 export async function apiMagicLogin(token: string): Promise<AuthResponse> {
   const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-owner/auth/magic-login`, {
     method: 'POST',

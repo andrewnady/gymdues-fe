@@ -5,6 +5,7 @@ import { GymsMapPageClient } from '@/components/gyms-map-page-client'
 import { GymsPageFaqSection } from '@/components/gyms-page-faq-section'
 import { ReadMoreText } from '@/components/read-more-text'
 import { gymsPageFaqs } from '@/data/gyms-page-faqs'
+import { ListYourGymButton } from '@/components/list-your-gym-button'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
@@ -106,6 +107,9 @@ export default function GymsPage() {
           <h1 className='text-4xl font-bold mb-4'>
             Browse Gyms Near You: Compare Membership Prices, Plans, and Fees by City or Zip Code
           </h1>
+          <div className='flex justify-center mb-4'>
+            <ListYourGymButton />
+          </div>
           <ReadMoreText className='text-muted-foreground text-lg mx-auto mb-6'>
             Browse gyms by city or zip code and compare membership prices, plans, and common fees in one place. GymDues helps you research popular searches like <strong>xsport membership cost</strong>, <strong>xsport fitness membership cost</strong>, <strong>xsport membership plans</strong>, <strong>la fitness membership cost</strong>, <strong>anytime fitness membership cost</strong>, <strong>24 hour fitness membership cost</strong>, <strong>ufc gym membership cost</strong>, <strong>fit body boot camp cost per month</strong>, <strong>9 round prices</strong>, <strong>pure barre pricing</strong>, <strong>fitness connection membership cost</strong>, <strong>nysc membership cost</strong>, <strong>princeton club membership cost</strong>, and <strong>newtown athletic club membership cost</strong>—then click into any gym for full details.
           </ReadMoreText>
