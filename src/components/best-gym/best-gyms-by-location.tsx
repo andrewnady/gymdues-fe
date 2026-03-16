@@ -124,6 +124,10 @@ export function BestGymsByLocation({ filter, type, initialGyms, initialMeta, fea
   
   const title = `Best Gyms in ${displayName}`
 
+  useEffect(() => {
+    document.title = title
+  }, [title])
+
   return (
     <div className='min-h-screen'>
       <section className='relative min-h-[420px] py-20 overflow-hidden bg-primary/5'>
