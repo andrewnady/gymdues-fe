@@ -175,6 +175,8 @@ export function GymsMapPageClient() {
   const locationRef = useRef<HTMLDivElement>(null)
   const nameRef = useRef<HTMLDivElement>(null)
   const initialLocationOptionsRef = useRef<LocationWithCount[]>([])
+  const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const locationAbortRef = useRef<AbortController | null>(null)
   const locationInputRef = useRef('')
   const nameInputRef = useRef('')
 
@@ -200,24 +202,53 @@ export function GymsMapPageClient() {
       .catch(() => {})
   }, [])
 
-  // Location options: no API on every keystroke — use initial list only; filter client-side for dropdown
+  // Location options: empty → initial list; typing → filter initial list first, then fetch /locations for other cities/zips
   useEffect(() => {
-    const q = locationInput.trim().toLowerCase()
+    const q = locationInput.trim()
+    const qLower = q.toLowerCase()
     if (!q) {
       setLocationOptions(initialLocationOptionsRef.current)
       setLocationLoading(false)
       return
     }
     const initial = initialLocationOptionsRef.current
-    const filtered = initial.filter(
+    const filteredFromInitial = initial.filter(
       (loc) =>
-        (loc.label ?? '').toLowerCase().includes(q) ||
-        (loc.city ?? '').toLowerCase().includes(q) ||
-        (loc.state ?? '').toLowerCase().includes(q) ||
+        (loc.label ?? '').toLowerCase().includes(qLower) ||
+        (loc.city ?? '').toLowerCase().includes(qLower) ||
+        (loc.state ?? '').toLowerCase().includes(qLower) ||
         (loc.postal_code ?? '').includes(q)
     )
-    setLocationOptions(filtered)
-    setLocationLoading(false)
+    setLocationOptions(filteredFromInitial)
+    if (q.length < 2) {
+      setLocationLoading(false)
+      return
+    }
+    if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current)
+    locationDebounceRef.current = setTimeout(() => {
+      locationAbortRef.current?.abort()
+      const controller = new AbortController()
+      locationAbortRef.current = controller
+      setLocationLoading(true)
+      getLocations(q, { signal: controller.signal })
+        .then((list) => {
+          if (!controller.signal.aborted) setLocationOptions(list)
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setLocationOptions(filteredFromInitial)
+        })
+        .finally(() => {
+          if (locationAbortRef.current === controller) {
+            locationAbortRef.current = null
+            setLocationLoading(false)
+          }
+          locationDebounceRef.current = null
+        })
+    }, 400)
+    return () => {
+      locationAbortRef.current?.abort()
+      if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current)
+    }
   }, [locationInput])
 
   // Gym name autocomplete: debounced (400ms), min 2 chars, scoped by current location
