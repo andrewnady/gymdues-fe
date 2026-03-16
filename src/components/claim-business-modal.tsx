@@ -307,7 +307,7 @@ export function ClaimBusinessModal({ open, onClose, onClaimed, gymId, gymName, g
     setEmail('')
     setPhone('')
     setRole('')
-    setFieldErrors({ name: '', email: '', phone: '', role: '' })
+    setFieldErrors({ name: '', email: '', phone: '', role: '', smsConsent: '' })
     setClaimId(null)
     setAvailableMethods([])
     setInitiating(false)
