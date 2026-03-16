@@ -31,18 +31,19 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const base = siteUrl.replace(/\/$/, '')
   const canonicalUrl = `${base}${pathname}/`
 
-  const locationLabel = type === 'state' ? `${filter} State` : filter
-  const title = `Best Gyms in ${locationLabel} | Gymdues`
-  const description = `Discover the top-rated gyms in ${locationLabel}. Compare membership prices, ratings, and amenities to find the best gym near you.`
-
-  // Fetch page data to get the featured image for OG/Twitter tags
+  // Use API display name so tab title is correct on first paint and refresh (no slug flash)
+  let displayName = type === 'state' ? `${filter} State` : filter
   let ogImage = `${siteUrl}/images/bg-header.jpg`
   try {
     const { meta } = await getPaginatedGyms({ slug, page: 1, perPage: 1, fields: 'topgyms' })
+    if (meta.filterValue) displayName = meta.filterValue
     if (meta.featuredImage) ogImage = meta.featuredImage
   } catch {
-    // fall back to default image
+    // fall back to slug-based label and default image
   }
+
+  const title = `Best Gyms in ${displayName} | Gymdues`
+  const description = `Discover the top-rated gyms in ${displayName}. Compare membership prices, ratings, and amenities to find the best gym near you.`
 
   return {
     title,
