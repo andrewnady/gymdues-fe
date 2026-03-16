@@ -164,18 +164,17 @@ export function GymsMapPageClient() {
   const [locationLoading, setLocationLoading] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [nameOptions, setNameOptions] = useState<Gym[]>([])
-  const [nameOpen, setNameOpen] = useState(false)
   const [nameLoading, setNameLoading] = useState(false)
+  const [nameOpen, setNameOpen] = useState(false)
+  const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nameAbortRef = useRef<AbortController | null>(null)
   const [selectedGymId, setSelectedGymId] = useState<string | null>(null)
   const [selectedLocationKey, setSelectedLocationKey] = useState<string | null>(null)
   const listItemRefs = useRef<Record<string, HTMLElement | null>>({})
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const locationRef = useRef<HTMLDivElement>(null)
   const nameRef = useRef<HTMLDivElement>(null)
-  const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const nameDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialLocationOptionsRef = useRef<LocationWithCount[]>([])
-  const locationAbortRef = useRef<AbortController | null>(null)
   const locationInputRef = useRef('')
   const nameInputRef = useRef('')
 
@@ -201,65 +200,71 @@ export function GymsMapPageClient() {
       .catch(() => {})
   }, [])
 
-  // Location autocomplete: only fetch when user has typed; cancel previous request when query changes
+  // Location options: no API on every keystroke — use initial list only; filter client-side for dropdown
   useEffect(() => {
-    if (locationDebounce.current) clearTimeout(locationDebounce.current)
-    const q = locationInput.trim()
+    const q = locationInput.trim().toLowerCase()
     if (!q) {
       setLocationOptions(initialLocationOptionsRef.current)
       setLocationLoading(false)
       return
     }
-    setLocationLoading(true)
-    locationDebounce.current = setTimeout(() => {
-      locationAbortRef.current?.abort()
-      const controller = new AbortController()
-      locationAbortRef.current = controller
-      getLocations(q, { signal: controller.signal })
-        .then((list) => {
-          if (!controller.signal.aborted) setLocationOptions(list)
-        })
-        .catch(() => {
-          if (!controller.signal.aborted) setLocationOptions([])
-        })
-        .finally(() => {
-          if (locationAbortRef.current === controller) {
-            locationAbortRef.current = null
-            setLocationLoading(false)
-          }
-          locationDebounce.current = null
-        })
-    }, 250)
-    return () => {
-      locationAbortRef.current?.abort()
-      if (locationDebounce.current) clearTimeout(locationDebounce.current)
-    }
+    const initial = initialLocationOptionsRef.current
+    const filtered = initial.filter(
+      (loc) =>
+        (loc.label ?? '').toLowerCase().includes(q) ||
+        (loc.city ?? '').toLowerCase().includes(q) ||
+        (loc.state ?? '').toLowerCase().includes(q) ||
+        (loc.postal_code ?? '').includes(q)
+    )
+    setLocationOptions(filtered)
+    setLocationLoading(false)
   }, [locationInput])
 
-  // Name autocomplete (gym name search)
+  // Gym name autocomplete: debounced (400ms), min 2 chars, scoped by current location
   useEffect(() => {
-    if (nameDebounce.current) clearTimeout(nameDebounce.current)
     const q = nameInput.trim()
     if (!q) {
       setNameOptions([])
       setNameLoading(false)
       return
     }
-    setNameLoading(true)
-    nameDebounce.current = setTimeout(() => {
-      fetch(`/api/gyms/search?q=${encodeURIComponent(q)}`)
-        .then((r) => r.json())
-        .then((data) => setNameOptions(Array.isArray(data) ? data.slice(0, 8) : []))
-        .catch(() => setNameOptions([]))
-        .finally(() => {
-          setNameLoading(false)
-          nameDebounce.current = null
-        })
-    }, 250)
-    return () => {
-      if (nameDebounce.current) clearTimeout(nameDebounce.current)
+    if (q.length < 2) {
+      setNameOptions([])
+      setNameLoading(false)
+      return
     }
-  }, [nameInput])
+    if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current)
+    nameDebounceRef.current = setTimeout(() => {
+      const loc = appliedLocation || (defaultLocation ? stringifyLocation(defaultLocation) : '')
+      const parsedLoc = parseLocationValue(loc)
+      const params = new URLSearchParams({ q })
+      if (parsedLoc.city) params.set('city', parsedLoc.city)
+      if (parsedLoc.state) params.set('state', parsedLoc.state)
+      nameAbortRef.current?.abort()
+      const controller = new AbortController()
+      nameAbortRef.current = controller
+      setNameLoading(true)
+      fetch(`/api/gyms/search?${params}`, { signal: controller.signal })
+        .then((r) => r.json())
+        .then((data) => {
+          if (!controller.signal.aborted) setNameOptions(Array.isArray(data) ? data.slice(0, 12) : [])
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setNameOptions([])
+        })
+        .finally(() => {
+          if (nameAbortRef.current === controller) {
+            nameAbortRef.current = null
+            setNameLoading(false)
+          }
+          nameDebounceRef.current = null
+        })
+    }, 400)
+    return () => {
+      nameAbortRef.current?.abort()
+      if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current)
+    }
+  }, [nameInput, appliedLocation, defaultLocation])
 
   // Click outside for dropdowns
   useEffect(() => {
@@ -379,7 +384,8 @@ export function GymsMapPageClient() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [])
 
-  const showLocationView = (locationGroups?.length ?? 0) > 0
+  // When user filters by gym name, show gym list (so count matches); otherwise show location groups
+  const showLocationView = (locationGroups?.length ?? 0) > 0 && !(name ?? '').trim()
 
   const firstAddressKey = useCallback((group: GymWithAddressesGroup): string | null => {
     const first = group.addresses.find(
@@ -504,7 +510,7 @@ export function GymsMapPageClient() {
             {loading
               ? 'Loading…'
               : showLocationView
-                ? `${totalGyms} gyms in ${parsed.city || effectiveLocation}`
+                ? `${locationGroups?.length ?? 0} gyms in ${parsed.city || effectiveLocation}`
                 : `${totalGyms} gyms`}
           </div>
           <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto p-4">
