@@ -39,6 +39,21 @@ export function Footer() {
                   Dataset
                 </Link>
               </li>
+              <li>
+                <Link href='/about' className='text-muted-foreground hover:text-primary'>
+                  About Gymdues
+                </Link>
+              </li>
+              <li>
+                <Link href='/contact' className='text-muted-foreground hover:text-primary'>
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href='/blog' className='text-muted-foreground hover:text-primary'>
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
