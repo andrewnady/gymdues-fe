@@ -1,14 +1,18 @@
 import type { Metadata } from 'next'
-import { CheckCircle2, MapPin, LogIn } from 'lucide-react'
+import { CheckCircle2, MapPin, LogIn, HelpCircle } from 'lucide-react'
 import { GymOwnerClaimCta } from './_components/gym-owner-claim-cta'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FaqAccordion } from './_components/faq-accordion'
+import { JsonLdSchema } from '@/components/json-ld-schema'
+import { buildWebPageSchema, buildFAQPageSchema, buildProductSchema, buildBreadcrumbSchema } from '@/lib/schema-builder'
 
-const title = 'For Gym Owners Page | GymDues'
+const title = 'Gym Owner Tools & Listing Management | GymDues'
 const description =
-  'Claim your gym on Gymdues in minutes. Update pricing, respond to reviews, see competitor insights, and turn profile views into new members.'
+  'Gym owner tools to claim and manage your Gymdues listing. Update pricing, respond to reviews, see competitor insights, and turn profile views into new members.'
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
 
 export const metadata: Metadata = {
   title,
@@ -17,8 +21,71 @@ export const metadata: Metadata = {
 }
 
 export default function ForGymOwnersPage() {
+  const webPageSchema = buildWebPageSchema({
+    baseUrl: siteUrl,
+    name: title,
+    description,
+    path: '/for-gym-owners',
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'For Gym Owners', url: '/for-gym-owners' },
+    ],
+  })
+
+  const breadcrumbSchema = buildBreadcrumbSchema(
+    [
+      { name: 'Home', url: '/' },
+      { name: 'For Gym Owners', url: '/for-gym-owners' },
+    ],
+    siteUrl,
+  )
+
+  const faqSchema = buildFAQPageSchema(
+    [
+      {
+        question: 'Is it really free to claim my gym?',
+        answer:
+          'Yes. Claiming your gym and managing your basic listing is completely free. You can update your info, respond to reviews, and see basic analytics without paying. Premium tools are optional.',
+      },
+      {
+        question: 'What if someone already claimed my gym?',
+        answer:
+          "If you believe your gym has been claimed by someone who isn't authorized, you can request an ownership review during the claim process. Our team will verify documentation and help transfer the listing to the rightful owner.",
+      },
+      {
+        question: 'How long does verification take?',
+        answer:
+          'For most owners, verification is instant or completed within a few minutes via email or phone. In some cases, it may take up to 1–2 business days if additional documents are needed.',
+      },
+      {
+        question: 'Do I need a credit card to get started?',
+        answer:
+          "No. You can claim your gym and use the free tools without entering any payment details. You'll only add a card if you choose to upgrade to Premium.",
+      },
+      {
+        question: 'Can I manage more than one location?',
+        answer:
+          'Yes. You can claim and manage multiple locations from the same account. Premium includes tools designed for franchises and chains.',
+      },
+    ],
+    { baseUrl: siteUrl, name: 'Gym Owner Tools & FAQ | GymDues', path: '/for-gym-owners' },
+  )
+
+  const premiumProductSchema = buildProductSchema({
+    name: 'GymDues Premium Subscription',
+    description:
+      'Premium subscription for gym owners on GymDues with priority placement, competitor pricing insights, lead details, booking tools, promotional banners, and bulk location management.',
+    brandName: 'GymDues',
+    price: 49,
+    priceCurrency: 'USD',
+    unitText: 'MON',
+    availability: 'https://schema.org/InStock',
+    seller: { name: 'GymDues', url: siteUrl },
+  })
+
   return (
     <main className='min-h-screen bg-background'>
+      <JsonLdSchema data={[webPageSchema, faqSchema, premiumProductSchema, breadcrumbSchema]} />
       <div className='container mx-auto px-4 py-12 lg:py-16 space-y-20'>
         <header className='text-center md:text-left'>
           <nav className='text-sm text-muted-foreground mb-2' aria-label='Breadcrumb'>
@@ -52,17 +119,49 @@ export default function ForGymOwnersPage() {
                 members.
               </p>
               <div className='space-y-4 max-w-xl'>
-                <GymOwnerClaimCta searchSize='md' />
+                {/* JS-enabled experience: interactive search + selected gym card */}
+                <div className='js-only'>
+                  <GymOwnerClaimCta searchSize='md' />
+                </div>
+
+                {/* No-JS fallback: simple HTML search form that works without client-side code */}
+                <div className='no-js-only space-y-2'>
+                  <form
+                    action='/gyms'
+                    method='get'
+                    className='flex flex-col sm:flex-row gap-3 sm:items-center'
+                  >
+                    <label className='sr-only' htmlFor='nojs-gym-search'>
+                      Search for gyms by name or city
+                    </label>
+                    <input
+                      id='nojs-gym-search'
+                      name='search'
+                      type='text'
+                      className='flex-1 min-w-0 rounded-2xl border border-border/70 bg-card/95 px-4 py-3 text-sm shadow-sm'
+                      placeholder='Search for gyms by name or city…'
+                    />
+                    <button
+                      type='submit'
+                      className='sm:shrink-0 w-full sm:w-auto rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors'
+                    >
+                      Search gyms
+                    </button>
+                  </form>
+                  <p className='text-[11px] text-muted-foreground'>
+                    No JavaScript? You can still search all gyms and then claim your listing from the
+                    gym page.
+                  </p>
+                </div>
                 <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-border/60'>
                   <p className='text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1'>
-                    <span className='inline-flex items-center gap-1.5'>
-                      <CheckCircle2 className='h-3.5 w-3.5 text-emerald-500' aria-hidden />
-                      Under 5 minutes
-                    </span>
-                    <span className='text-muted-foreground/60' aria-hidden>·</span>
-                    <span>No credit card required</span>
-                    <span className='text-muted-foreground/60' aria-hidden>·</span>
-                    <span>Can&apos;t find your gym? Add a new location in the claim flow.</span>
+                    <span>Can&apos;t find your gym?</span>
+                    <a
+                      href='/gyms'
+                      className='inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 font-medium text-primary hover:bg-primary/10 hover:border-primary/50 transition-colors whitespace-nowrap'
+                    >
+                      Browse all gyms
+                    </a>
                   </p>
                   <p className='text-xs text-muted-foreground sm:text-right inline-flex flex-nowrap items-center gap-x-1.5'>
                     <span className='whitespace-nowrap'>Already claimed?</span>
@@ -81,21 +180,51 @@ export default function ForGymOwnersPage() {
               <div className='absolute -inset-4 bg-gradient-to-br from-primary/15 via-transparent to-emerald-400/10 rounded-[2rem] blur-2xl opacity-60 pointer-events-none' />
               <div className='relative rounded-2xl border border-border/80 bg-card/95 backdrop-blur-sm p-6 shadow-xl shadow-primary/5 space-y-6'>
                 <div>
-                  <p className='text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/90 mb-3'>
+                  <p className='text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/90 mb-2'>
                     What you control
                   </p>
+                  <p className='text-xs text-muted-foreground mb-3'>
+                    Free covers the essentials. Premium unlocks more visibility and growth tools — all in one dashboard.
+                  </p>
                   <ul className='space-y-2.5 text-sm text-muted-foreground'>
+                    {/* Free listing basics (match Free card) */}
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
-                      <span>Membership pricing, hours, and amenities</span>
+                      <span>Edit hours, amenities, photos, and key details.</span>
                     </li>
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
-                      <span>Photos, branding, and featured offers</span>
+                      <span>Respond to reviews and member questions.</span>
                     </li>
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
-                      <span>Review responses and Q&amp;A</span>
+                      <span>Track basic views and click analytics.</span>
+                    </li>
+
+                    {/* Premium benefits (match Premium card) */}
+                    <li className='flex items-start gap-2 pt-2 border-t border-border/70 mt-2'>
+                      <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
+                      <span>Priority placement in Gymdues search results.</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
+                      <span>Competitor pricing insights in your local market.</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
+                      <span>Lead contact details for trials and tours.</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
+                      <span>Booking &amp; trial request management tools.</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
+                      <span>Promotional banners for time-limited offers.</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
+                      <span>Bulk location management for franchises and chains.</span>
                     </li>
                   </ul>
                 </div>
@@ -125,57 +254,58 @@ export default function ForGymOwnersPage() {
           </div>
         </section>
 
-        {/* Section 2: Membership for Gyms – What You Get */}
-        <section className='space-y-6'>
-          <div className='max-w-2xl'>
-            <h2 className='text-2xl md:text-3xl font-semibold mb-2'>
-              A membership built for gyms, not just members.
+        {/* Section 2: The Problem You're Solving */}
+        <section className='space-y-8 rounded-3xl bg-muted/60 px-6 py-10 md:px-10 md:py-14 border border-border/70'>
+          <div className='max-w-3xl'>
+            <p className='text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80'>
+              The problem
+            </p>
+            <h2 className='mt-3 text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-foreground'>
+              Right now, someone else controls your first impression.
             </h2>
-            <p className='text-muted-foreground'>
-              This page is about what Gymdues does for <span className='font-medium text-foreground'>your business</span>:
-              claim control, list your gym, upgrade to Premium, and unlock pricing
-              intelligence on your competitors.
+            <p className='mt-4 text-sm md:text-base text-muted-foreground max-w-2xl'>
+              Every day your gym is unclaimed, you&apos;re losing prospects to outdated information,
+              unanswered reviews, and competitors who already manage their listings.
             </p>
           </div>
-          <div className='grid gap-4 md:grid-cols-4'>
-            <Card className='p-5 space-y-2'>
-              <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary'>
-                1
-              </span>
-              <h3 className='font-semibold text-base'>Claim your gym</h3>
-              <p className='text-sm text-muted-foreground'>
-                Take ownership of your existing Gymdues listing so you control
-                pricing, photos, reviews, and how you appear in search.
+
+          <div className='grid gap-4 md:grid-cols-3'>
+            <Card className='h-full rounded-2xl border border-border bg-background p-6 text-left shadow-sm'>
+              <div className='mb-4 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600'>
+                <span className='text-lg'>📉</span>
+              </div>
+              <h3 className='text-base font-semibold text-foreground'>
+                Stale pricing drives prospects away
+              </h3>
+              <p className='mt-2 text-sm text-muted-foreground'>
+                When your listed prices are wrong or out of date, people leave before contacting you.
+                You lose the lead before you knew you had it.
               </p>
             </Card>
-            <Card className='p-5 space-y-2'>
-              <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary'>
-                2
-              </span>
-              <h3 className='font-semibold text-base'>List your gym</h3>
-              <p className='text-sm text-muted-foreground'>
-                Add missing locations or new openings so people can actually find
-                you when they compare membership options in your area.
+
+            <Card className='h-full rounded-2xl border border-border bg-background p-6 text-left shadow-sm'>
+              <div className='mb-4 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600'>
+                <span className='text-lg'>💬</span>
+              </div>
+              <h3 className='text-base font-semibold text-foreground'>
+                Unresponded reviews hurt trust
+              </h3>
+              <p className='mt-2 text-sm text-muted-foreground'>
+                Every unanswered 3-star review is a conversion killer. Claimed owners respond.
+                Unclaimed owners just lose members.
               </p>
             </Card>
-            <Card className='p-5 space-y-2'>
-              <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary'>
-                3
-              </span>
-              <h3 className='font-semibold text-base'>Go Premium</h3>
-              <p className='text-sm text-muted-foreground'>
-                Unlock priority placement, richer leads, and conversion tools that
-                turn profile views into tours, trials, and new memberships.
-              </p>
-            </Card>
-            <Card className='p-5 space-y-2'>
-              <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary'>
-                4
-              </span>
-              <h3 className='font-semibold text-base'>Intelligence pricing tool</h3>
-              <p className='text-sm text-muted-foreground'>
-                Use our hidden pricing intelligence from Gymdues data to benchmark
-                your rates against nearby competitors and spot smart pricing moves.
+
+            <Card className='h-full rounded-2xl border border-border bg-background p-6 text-left shadow-sm'>
+              <div className='mb-4 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600'>
+                <span className='text-lg'>🏆</span>
+              </div>
+              <h3 className='text-base font-semibold text-foreground'>
+                Your competitors are already here
+              </h3>
+              <p className='mt-2 text-sm text-muted-foreground'>
+                Nearby gyms have claimed their listings, optimized their profiles, and are getting
+                the leads that should be yours.
               </p>
             </Card>
           </div>
@@ -237,7 +367,7 @@ export default function ForGymOwnersPage() {
             <p className='text-xs font-semibold uppercase tracking-[0.2em] text-primary/80'>
               Free &amp; Premium only
             </p>
-            <h2 className='text-2xl md:text-3xl font-semibold'>
+            <h2 className='text-xl md:text-2xl font-semibold'>
               Start free. Upgrade to Premium when you&apos;re ready.
             </h2>
             <p className='text-sm md:text-base text-muted-foreground'>
@@ -247,8 +377,7 @@ export default function ForGymOwnersPage() {
           </div>
 
           <div className='relative'>
-            <div className='pointer-events-none absolute inset-x-0 -inset-y-10 md:-inset-y-14 bg-gradient-to-b from-primary/5 via-background to-background' />
-            <div className='relative max-w-5xl mx-auto'>
+            <div className='max-w-5xl mx-auto'>
               <div className='flex items-center justify-center mb-6'>
                 <span className='inline-flex items-center gap-2 rounded-full bg-primary/5 px-4 py-1.5 text-[11px] font-medium text-muted-foreground'>
                   <span className='h-1.5 w-1.5 rounded-full bg-emerald-500' />
@@ -271,15 +400,29 @@ export default function ForGymOwnersPage() {
                         <p className='text-3xl font-semibold'>$0</p>
                         <p className='text-xs text-muted-foreground'>per location / month</p>
                       </div>
-                      <ul className='mt-3 space-y-2 text-sm text-muted-foreground'>
-                        <li>• Edit hours, amenities, photos, and membership details</li>
-                        <li>• Respond to reviews and member questions</li>
-                        <li>• Basic analytics on profile views and clicks</li>
-                        <li>• Appear in local search results on GymDues</li>
+                      <ul className='mt-4 space-y-2.5 text-sm text-muted-foreground'>
+                        <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                          <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/5 text-primary'>
+                            <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                          </span>
+                          <span>Edit hours, amenities, photos, and key details.</span>
+                        </li>
+                        <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                          <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/5 text-primary'>
+                            <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                          </span>
+                          <span>Respond to reviews and member questions.</span>
+                        </li>
+                        <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                          <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/5 text-primary'>
+                            <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                          </span>
+                          <span>Track basic views and click analytics.</span>
+                        </li>
                       </ul>
                     </div>
                     <Button className='mt-6 w-full' size='lg' variant='outline'>
-                      Claim your gym free
+                      List your gym for free
                     </Button>
                   </div>
                 </Card>
@@ -299,7 +442,7 @@ export default function ForGymOwnersPage() {
                           <p className='text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/90'>
                             Premium
                           </p>
-                          <h3 className='text-xl font-semibold mt-1'>Premium growth tools</h3>
+                          <h3 className='text-xl font-semibold mt-1'>Premium Subscription</h3>
                         </div>
                         <div className='text-right'>
                           <p className='text-3xl font-semibold text-foreground'>$49</p>
@@ -311,23 +454,53 @@ export default function ForGymOwnersPage() {
                         Gym owners on Premium get <span className='font-semibold'>3× more profile clicks</span> on average.
                       </p>
 
-                      <div className='grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground mt-1'>
-                        <ul className='space-y-2'>
-                          <li>• Priority placement in GymDues search results</li>
-                          <li>• Competitor pricing insights in your local market</li>
-                          <li>• Lead contact details for trial and tour requests</li>
+                      <div className='grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground mt-2'>
+                        <ul className='space-y-2.5'>
+                          <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                            <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                              <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                            </span>
+                            <span>Priority placement in Gymdues search results.</span>
+                          </li>
+                          <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                            <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                              <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                            </span>
+                            <span>Competitor pricing insights in your local market.</span>
+                          </li>
+                          <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                            <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                              <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                            </span>
+                            <span>Lead contact details for trials and tours.</span>
+                          </li>
                         </ul>
-                        <ul className='space-y-2'>
-                          <li>• Booking &amp; trial request management tools</li>
-                          <li>• Promotional banners for time-limited offers</li>
-                          <li>• Bulk location management for franchises and chains</li>
+                        <ul className='space-y-2.5'>
+                          <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                            <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                              <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                            </span>
+                            <span>Booking &amp; trial request management tools.</span>
+                          </li>
+                          <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                            <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                              <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                            </span>
+                            <span>Promotional banners for time-limited offers.</span>
+                          </li>
+                          <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
+                            <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
+                              <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
+                            </span>
+                            <span>Bulk location management for franchises and chains.</span>
+                          </li>
                         </ul>
                       </div>
                     </div>
 
                     <div className='mt-6 space-y-2'>
                       <Button className='w-full' size='lg'>
-                        Upgrade to Premium
+                        List your gym
                       </Button>
                       <p className='text-[11px] text-muted-foreground text-center'>
                         Managing multiple locations? <span className='font-medium text-primary'>Talk to our team</span> for Premium pricing.
@@ -583,38 +756,84 @@ export default function ForGymOwnersPage() {
               </div>
             </div>
           </Card>
+          {/* FAQ – same card style as /gymsdata, with JS and no-JS modes */}
+          <section
+            className='max-w-4xl mx-auto rounded-2xl border border-border/80 bg-card shadow-sm overflow-hidden'
+            aria-labelledby='faq-heading'
+          >
+            <div className='p-6 md:p-8 pb-4'>
+              <div className='flex items-center gap-3 mb-2'>
+                <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10'>
+                  <HelpCircle className='h-6 w-6 text-primary' />
+                </div>
+                <div>
+                  <h2 id='faq-heading' className='text-lg font-semibold text-foreground md:text-xl'>
+                    Frequently asked questions
+                  </h2>
+                  <p className='text-sm text-muted-foreground mt-1'>
+                    Quick answers about claiming your gym, verification, and how Free vs Premium works for owners.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          <div className='grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-start'>
-            <div>
-              <h2 className='text-xl md:text-2xl font-semibold mb-2'>
-                Frequently asked questions
-              </h2>
-              <p className='text-sm text-muted-foreground'>
-                Answers to common questions from gym owners and operators.
-              </p>
+            {/* JS: Radix accordion UI */}
+            <div className='js-only w-full px-6 md:px-8 pb-6'>
               <FaqAccordion />
             </div>
-            <div className='space-y-4 text-sm text-muted-foreground'>
-              <Card className='p-5 space-y-2'>
-                <p className='text-xs font-semibold text-muted-foreground'>
-                  SEO title target
-                </p>
-                <p className='text-sm font-medium text-foreground'>
-                  Gym Owner Tools &amp; Listing Management | Gymdues
-                </p>
-                <p className='text-xs'>
-                  Optimized to capture &ldquo;gym owners&rdquo; and &ldquo;gym
-                  listing management&rdquo; searches while staying natural and
-                  click-worthy.
-                </p>
-              </Card>
-              <p className='text-xs text-muted-foreground'>
-                In the main site navigation, make sure &ldquo;Claim your gym&rdquo;
-                is visible as a primary call-to-action so owners can always get
-                back to this page.
-              </p>
+
+            {/* No-JS: native <details> so questions can still be opened */}
+            <div className='no-js-only w-full px-6 md:px-8 pb-6 text-sm'>
+              <details className='border-t border-border/60' open>
+                <summary className='cursor-pointer list-none font-semibold py-4 hover:text-primary [&::-webkit-details-marker]:hidden'>
+                  Is it really free to claim my gym?
+                </summary>
+                <div className='text-muted-foreground leading-relaxed pb-4'>
+                  Yes. Claiming your gym and managing your basic listing is completely free. You can
+                  update your info, respond to reviews, and see basic analytics without paying.
+                  Premium tools are optional.
+                </div>
+              </details>
+              <details className='border-t border-border/60'>
+                <summary className='cursor-pointer list-none font-semibold py-4 hover:text-primary [&::-webkit-details-marker]:hidden'>
+                  What if someone already claimed my gym?
+                </summary>
+                <div className='text-muted-foreground leading-relaxed pb-4'>
+                  If you believe your gym has been claimed by someone who isn&apos;t authorized, you
+                  can request an ownership review during the claim process. Our team will verify
+                  documentation and help transfer the listing to the rightful owner.
+                </div>
+              </details>
+              <details className='border-t border-border/60'>
+                <summary className='cursor-pointer list-none font-semibold py-4 hover:text-primary [&::-webkit-details-marker]:hidden'>
+                  How long does verification take?
+                </summary>
+                <div className='text-muted-foreground leading-relaxed pb-4'>
+                  For most owners, verification is instant or completed within a few minutes via
+                  email or phone. In some cases, it may take up to 1–2 business days if additional
+                  documents are needed.
+                </div>
+              </details>
+              <details className='border-t border-border/60'>
+                <summary className='cursor-pointer list-none font-semibold py-4 hover:text-primary [&::-webkit-details-marker]:hidden'>
+                  Do I need a credit card to get started?
+                </summary>
+                <div className='text-muted-foreground leading-relaxed pb-4'>
+                  No. You can claim your gym and use the free tools without entering any payment
+                  details. You&apos;ll only add a card if you choose to upgrade to Premium.
+                </div>
+              </details>
+              <details className='border-t border-border/60'>
+                <summary className='cursor-pointer list-none font-semibold py-4 hover:text-primary [&::-webkit-details-marker]:hidden'>
+                  Can I manage more than one location?
+                </summary>
+                <div className='text-muted-foreground leading-relaxed pb-4'>
+                  Yes. You can claim and manage multiple locations from the same account. Premium
+                  includes tools designed for franchises and chains.
+                </div>
+              </details>
             </div>
-          </div>
+          </section>
         </section>
       </div>
     </main>
