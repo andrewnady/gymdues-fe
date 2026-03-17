@@ -269,10 +269,8 @@ export async function getPaginatedGyms(options: {
     if (page && page > 0) {
       url.searchParams.append('page', page.toString())
     }
-    if (perPage && perPage > 0) {
-      // Laravel-style per-page parameter
-      url.searchParams.append('per_page', perPage.toString())
-    }
+    // Default 10 per page so backend never uses a large default (e.g. 500)
+    url.searchParams.append('per_page', (perPage && perPage > 0 ? perPage : 10).toString())
     if (fields === 'sitemap') {
       url.searchParams.append('fields', 'sitemap')
     } else if (fields) {
@@ -741,13 +739,17 @@ export async function getCitiesByState(
  * Fetches locations (city+state and postal_code) with counts for autocomplete (main gyms API).
  * Sorted by count desc. Optional q filters by label.
  */
-export async function getLocations(q?: string): Promise<LocationWithCount[]> {
+export async function getLocations(q?: string, options?: { signal?: AbortSignal }): Promise<LocationWithCount[]> {
   const url = new URL(`${API_BASE_URL}/api/v1/gyms/locations`)
   if (q && q.trim()) {
     url.searchParams.set('q', q.trim())
   }
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  const callerSignal = options?.signal
+  if (callerSignal) {
+    callerSignal.addEventListener('abort', () => controller.abort())
+  }
   try {
     const response = await fetch(url.toString(), {
       next: { revalidate: 300 },
