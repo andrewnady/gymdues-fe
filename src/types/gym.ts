@@ -116,6 +116,15 @@ export interface GymContactItem {
   updated_at?: string
 }
 
+/** Minimal shape returned by GET /api/v1/gyms/search (backend search endpoint) */
+export interface GymSearchResult {
+  id: number
+  name: string
+  slug: string
+  city?: string | null
+  state?: string | null
+}
+
 export interface Gym {
   id: string
   slug: string

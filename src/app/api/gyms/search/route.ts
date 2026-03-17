@@ -1,47 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllGyms } from '@/lib/gyms-api'
+import { getApiBaseUrl } from '@/lib/api-config'
 
+/**
+ * Proxies to backend GET /api/v1/gyms/search/
+ * Backend expects: q (search term), per_page (optional, default 10, max 20).
+ */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const query = searchParams.get('q') || ''
-    const city = searchParams.get('city')?.trim() || undefined
-    const state = searchParams.get('state')?.trim() || undefined
+    const query = searchParams.get('q') || searchParams.get('search') || ''
+    const perPage = Math.min(20, Math.max(1, Number(searchParams.get('per_page')) || 10))
 
     if (!query.trim()) {
       return NextResponse.json([])
     }
 
-    const gyms = await getAllGyms(query.trim(), state, city)
-    
-    // Filter and sort results by relevance (name match first, then location)
-    const filteredGyms = gyms
-      .filter((gym) => {
-        const searchLower = query.toLowerCase()
-        return (
-          gym.name.toLowerCase().includes(searchLower) ||
-          gym.city?.toLowerCase().includes(searchLower) ||
-          gym.state?.toLowerCase().includes(searchLower) ||
-          gym.description?.toLowerCase().includes(searchLower)
-        )
-      })
-      .sort((a, b) => {
-        const searchLower = query.toLowerCase()
-        const aNameMatch = a.name.toLowerCase().startsWith(searchLower) ? 0 : 1
-        const bNameMatch = b.name.toLowerCase().startsWith(searchLower) ? 0 : 1
-        if (aNameMatch !== bNameMatch) return aNameMatch - bNameMatch
-        
-        const aNameContains = a.name.toLowerCase().includes(searchLower) ? 0 : 1
-        const bNameContains = b.name.toLowerCase().includes(searchLower) ? 0 : 1
-        if (aNameContains !== bNameContains) return aNameContains - bNameContains
-        
-        return (b.rating || 0) - (a.rating || 0)
-      })
+    const baseUrl = getApiBaseUrl()
+    const url = new URL('/api/v1/gyms/search/', baseUrl)
+    url.searchParams.set('q', query.trim())
+    url.searchParams.set('per_page', String(perPage))
 
-    return NextResponse.json(filteredGyms)
+    const response = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
+    })
+
+    if (!response.ok) {
+      console.error('Backend search failed:', response.status, response.statusText)
+      return NextResponse.json([])
+    }
+
+    const data = await response.json()
+    const list = Array.isArray(data) ? data : []
+    return NextResponse.json(list)
   } catch (error) {
     console.error('Error searching gyms:', error)
-    return NextResponse.json([], { status: 500 })
+    return NextResponse.json([])
   }
 }
 
