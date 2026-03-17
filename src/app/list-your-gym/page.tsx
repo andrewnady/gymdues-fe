@@ -1721,7 +1721,7 @@ export default function ListYourGymPage() {
                         <span className='text-sm text-muted-foreground leading-snug'>
                           I consent to receive SMS or phone messages from{' '}
                           <span className='font-medium text-foreground'>GymDues</span>{' '}
-                          on the number provided above for ownership verification.
+                          on the number provided above for ownership verification and marketing communications.
                         </span>
                       </label>
                       {step7SmsConsentError && (
