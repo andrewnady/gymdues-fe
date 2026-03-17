@@ -400,7 +400,7 @@ export default async function GymDetailPage({ params }: PageProps) {
                     className='!text-background'
                     items={[
                       { label: 'Home', href: '/' },
-                      { label: 'Gyms', href: '/' },
+                      { label: 'Gyms', href: '/gyms' },
                       { label: gym.name, href: `/gyms/${slug}` },
                     ]}
                   />
@@ -485,7 +485,7 @@ export default async function GymDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* Claim / Verified Banner */}
+        {/* Claim / Verified Banner — reads sessionStorage for open-claim signal from For Gym Owners */}
         <GymClaimBanner
           gymId={Number(gym.id)}
           gymName={gym.name}

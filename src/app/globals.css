@@ -204,3 +204,16 @@ body {
     width: var(--bar-width);
   }
 }
+
+/* Gym search autocomplete: indeterminate loading bar */
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(200%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Building2 } from 'lucide-react'
 import { ClaimBusinessModal } from './claim-business-modal'
 
@@ -12,10 +12,16 @@ interface ClaimBusinessButtonProps {
   className?: string
   label?: string
   onClaimed?: () => void
+  /** When true, open the claim modal on mount (e.g. when arriving from For Gym Owners flow). */
+  defaultOpen?: boolean
 }
 
-export function ClaimBusinessButton({ gymId, gymName, gymWebsite, gymPhones, className, label, onClaimed }: ClaimBusinessButtonProps) {
-  const [modalOpen, setModalOpen] = useState(false)
+export function ClaimBusinessButton({ gymId, gymName, gymWebsite, gymPhones, className, label, onClaimed, defaultOpen }: ClaimBusinessButtonProps) {
+  const [modalOpen, setModalOpen] = useState(!!defaultOpen)
+
+  useEffect(() => {
+    if (defaultOpen) setModalOpen(true)
+  }, [defaultOpen])
 
   return (
     <>
