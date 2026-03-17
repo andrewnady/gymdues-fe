@@ -30,13 +30,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href='/about' className='text-muted-foreground hover:text-primary'>
-                  About
+                <Link href={process.env.NEXT_PUBLIC_BEST_GYMS_BASE_URL || '/best-gyms'} className='text-muted-foreground hover:text-primary'>
+                  Best Gyms
                 </Link>
               </li>
               <li>
-                <Link href='/blog' className='text-muted-foreground hover:text-primary'>
-                  Blog
+                <Link href={process.env.NEXT_PUBLIC_GYMSDATA_BASE_URL || '/gymsdata'} className='text-muted-foreground hover:text-primary'>
+                  Dataset
                 </Link>
               </li>
             </ul>

@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
 import { ClaimBusinessButton } from './claim-business-button'
 import { revalidateGymPage } from '@/app/actions/revalidate-gym'
 import { getAuthToken } from '@/lib/gym-owner-auth'
+
+const OPEN_CLAIM_ON_MOUNT_KEY = 'gymdues.openClaimOnMount'
 
 interface GymClaimBannerProps {
   gymId: number
@@ -33,10 +35,27 @@ function formatUpdatedDate(dateStr?: string): string {
 export function GymClaimBanner({ gymId, gymName, gymSlug, isClaimed, updatedAt, gymWebsite, gymPhones }: GymClaimBannerProps) {
   const [claimed, setClaimed] = useState(isClaimed)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [openClaimOnMount, setOpenClaimOnMount] = useState(false)
+  const bannerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsAuthenticated(!!getAuthToken())
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const flag = sessionStorage.getItem(OPEN_CLAIM_ON_MOUNT_KEY)
+    if (flag) {
+      sessionStorage.removeItem(OPEN_CLAIM_ON_MOUNT_KEY)
+      setOpenClaimOnMount(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (openClaimOnMount && !claimed && bannerRef.current) {
+      bannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [openClaimOnMount, claimed])
 
   if (claimed) {
     const formattedDate = formatUpdatedDate(updatedAt)
@@ -67,7 +86,7 @@ export function GymClaimBanner({ gymId, gymName, gymSlug, isClaimed, updatedAt, 
   }
 
   return (
-    <div className='flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-amber-800 dark:bg-amber-950/40'>
+    <div ref={bannerRef} className='flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-amber-800 dark:bg-amber-950/40'>
       <p className='text-sm text-amber-900 dark:text-amber-200'>
         <span className='font-semibold'>Are you the owner of {gymName}?</span>{' '}
         Claim this business to update your listing, manage reviews, and reach new members.
@@ -79,6 +98,7 @@ export function GymClaimBanner({ gymId, gymName, gymSlug, isClaimed, updatedAt, 
           gymWebsite={gymWebsite}
           gymPhones={gymPhones}
           label='Claim This Business'
+          defaultOpen={openClaimOnMount}
           className='inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition-colors whitespace-nowrap'
           onClaimed={() => {
             setClaimed(true)
