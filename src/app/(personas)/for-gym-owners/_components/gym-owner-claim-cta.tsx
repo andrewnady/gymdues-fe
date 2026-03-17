@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { MapPin, Building2 } from 'lucide-react'
 import type { GymSearchResult } from '@/types/gym'
 import { GymAutocompleteSearch } from '@/components/gym-autocomplete-search'
-import { ClaimBusinessButton } from '@/components/claim-business-button'
 import { Card } from '@/components/ui/card'
 import type { GymAutocompleteSearchSize } from '@/components/gym-autocomplete-search'
+
+const OPEN_CLAIM_ON_MOUNT_KEY = 'gymdues.openClaimOnMount'
 
 interface GymOwnerClaimCtaProps {
   searchSize?: GymAutocompleteSearchSize
@@ -14,10 +16,16 @@ interface GymOwnerClaimCtaProps {
 
 /**
  * Hero CTA: search (data from backend) → select a gym from list → card shows
- * gym details with "Claim This Business" button.
+ * gym details with "Claim This Business" button (internal link to gym page; opens claim modal there).
  */
 export function GymOwnerClaimCta({ searchSize = 'md' }: GymOwnerClaimCtaProps) {
   const [selectedGym, setSelectedGym] = useState<GymSearchResult | null>(null)
+
+  const handleClaimClick = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(OPEN_CLAIM_ON_MOUNT_KEY, '1')
+    }
+  }
 
   return (
     <div className='space-y-4 max-w-xl'>
@@ -51,12 +59,15 @@ export function GymOwnerClaimCta({ searchSize = 'md' }: GymOwnerClaimCtaProps) {
             </div>
           </div>
           <div className='mt-4 pt-4 border-t border-border/60'>
-            <ClaimBusinessButton
-              gymId={selectedGym.id}
-              gymName={selectedGym.name}
-              label='Claim This Business'
+            <Link
+              href={`/gyms/${selectedGym.slug}`}
+              onClick={handleClaimClick}
               className='w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors'
-            />
+              aria-label={`Claim ${selectedGym.name}`}
+            >
+              <Building2 className='h-4 w-4' aria-hidden />
+              Claim This Business
+            </Link>
           </div>
         </Card>
       )}
