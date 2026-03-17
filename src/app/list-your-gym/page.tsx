@@ -7,7 +7,7 @@ import { getApiBaseUrl } from '@/lib/api-config'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Trash2, Upload, X } from 'lucide-react'
+import { CheckCircle, FileText, Mail, Phone, Plus, Trash2, Upload, X } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -58,6 +58,7 @@ interface FormData {
   ownerEmail: string
   ownerPhone: string
   verificationMethod: string
+  verificationDoc: File | null
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -75,16 +76,16 @@ const STEP_LABELS: Record<Step, string> = {
   8: 'Review',
 }
 
-const GYM_TYPES = [
-  'Traditional gym',
-  'CrossFit box',
-  'Yoga/Pilates studio',
-  'Martial arts',
-  'Boutique fitness',
-  'Swimming',
-  'Rock climbing',
-  'Personal training studio',
-  'Other',
+const GYM_TYPES: { value: string; label: string }[] = [
+  { value: 'traditional_gym',           label: 'Traditional gym' },
+  { value: 'crossfit_box',              label: 'CrossFit box' },
+  { value: 'yoga_pilates_studio',       label: 'Yoga/Pilates studio' },
+  { value: 'martial_arts',              label: 'Martial arts' },
+  { value: 'boutique_fitness',          label: 'Boutique fitness' },
+  { value: 'swimming',                  label: 'Swimming' },
+  { value: 'rock_climbing',             label: 'Rock climbing' },
+  { value: 'personal_training_studio',  label: 'Personal training studio' },
+  { value: 'other',                     label: 'Other' },
 ]
 
 const CONTRACT_OPTIONS = [
@@ -139,6 +140,49 @@ const AMENITIES_CONFIG: Record<string, string[]> = {
   ],
 }
 
+// Maps frontend display labels → backend snake_case values accepted by Gym::AMENITIES.
+// Labels not present here are frontend-only and will be omitted from the API payload.
+const AMENITY_LABEL_TO_VALUE: Record<string, string> = {
+  'Free weights':              'free_weights',
+  'Cardio machines':           'cardio_machines',
+  'Cable machines':            'cable_machines',
+  'Functional training':       'functional_training',
+  'Olympic lifting platforms': 'olympic_lifting_platforms',
+  'Turf area':                 'turf_area',
+  'Group fitness':             'group_fitness',
+  'HIIT':                      'hiit',
+  'Yoga':                      'yoga',
+  'Spin/Cycling':              'spin',
+  'Pilates':                   'pilates',
+  'Boxing':                    'boxing',
+  'Personal training':         'personal_training',
+  'Locker rooms':              'locker_rooms',
+  'Showers':                   'showers',
+  'Sauna':                     'sauna',
+  'Steam room':                'steam_room',
+  'Pool':                      'pool',
+  'Basketball court':          'basketball_court',
+  'Parking':                   'parking',
+  'Childcare':                 'childcare',
+  '24/7 access':               '24_7_access',
+  'Keycard entry':             'keycard_entry',
+  'Guest passes':              'guest_passes',
+  'Multi-location access':     'multi_location_access',
+}
+
+// Reverse map: backend snake_case amenity value → frontend display label
+const AMENITY_VALUE_TO_LABEL: Record<string, string> = Object.fromEntries(
+  Object.entries(AMENITY_LABEL_TO_VALUE).map(([label, value]) => [value, label])
+)
+
+// Reverse map: backend contract_length value → frontend contractLength key
+const API_CONTRACT_TO_FE: Record<string, string> = {
+  'month_to_month': 'month-to-month',
+  '6_months':       '6months',
+  '12_months':      '12months',
+  '24_months':      '24months',
+}
+
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 const OWNER_ROLES = ['Owner', 'Manager', 'Marketing', 'Other']
@@ -179,6 +223,7 @@ const EMPTY_FORM: FormData = {
   ownerEmail: '',
   ownerPhone: '',
   verificationMethod: '',
+  verificationDoc: null,
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -291,22 +336,55 @@ export default function ListYourGymPage() {
   const [searchState, setSearchState] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState('')
-  const [matchedGym, setMatchedGym] = useState<{
+  const [matchedGyms, setMatchedGyms] = useState<{
     id: number
     name: string
     city: string
+    state?: string
     slug?: string
-  } | null>(null)
+  }[]>([])
+
+  // Step API state
+  const [gymId, setGymId] = useState<number | null>(null)
+  const [claimId, setClaimId] = useState<number | null>(null)
+  const [stepLoading, setStepLoading] = useState(false)
+  const [stepError, setStepError] = useState('')
 
   // Submit state
   const [submitted, setSubmitted] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [listingStatus, setListingStatus] = useState<'live' | 'pending_review' | ''>('')
+
+  // Step 7 two-phase verification state
+  const [step7Phase, setStep7Phase] = useState<1 | 2>(1)
+  const [step7AvailableMethods, setStep7AvailableMethods] = useState<string[]>([])
+  const [step7SmsConsent, setStep7SmsConsent] = useState(false)
+  const [step7SmsConsentError, setStep7SmsConsentError] = useState('')
+  const [step7SelMethod, setStep7SelMethod] = useState<'email' | 'phone' | 'document' | ''>('')
+  const [step7EmailCodeSent, setStep7EmailCodeSent] = useState(false)
+  const [step7EmailCode, setStep7EmailCode] = useState('')
+  const [step7PhoneCodeSent, setStep7PhoneCodeSent] = useState(false)
+  const [step7PhoneCode, setStep7PhoneCode] = useState('')
+  const [step7SelectedPhone, setStep7SelectedPhone] = useState('')
+  const [step7DocType, setStep7DocType] = useState('')
+  const [step7VerifError, setStep7VerifError] = useState('')
+  const [step7SendingCode, setStep7SendingCode] = useState(false)
+  const [step7VerifyLoading, setStep7VerifyLoading] = useState(false)
+  const step7OtpRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  // Previously-uploaded photo info (set when resuming a draft; File objects can't be restored from URLs)
+  const [draftPhotoInfo, setDraftPhotoInfo] = useState<{
+    coverPhoto?: string
+    galleryCount?: number
+    logo?: string
+  }>({})
 
   // Photo refs
   const coverRef = useRef<HTMLInputElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
   const logoRef = useRef<HTMLInputElement>(null)
+  const docRef = useRef<HTMLInputElement>(null)
 
   // ── Auth guard ────────────────────────────────────────────────────────────
 
@@ -316,13 +394,97 @@ export default function ListYourGymPage() {
       router.replace('/gyms')
       return
     }
-    apiGetMe(token).then((res) => {
+    ;(async () => {
+      const res = await apiGetMe(token)
       if (!res.success) {
         router.replace('/gyms')
-      } else {
-        setAuthChecked(true)
+        return
       }
-    })
+      // Resume any in-progress draft session
+      try {
+        const draftRes = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        })
+        const draftData = await draftRes.json()
+        if (draftData.success && draftData.draft) {
+          setGymId(draftData.draft.gym_id)
+          setStep(Math.min(draftData.draft.current_step + 1, 8) as Step)
+
+          // Populate form with previously saved draft data so the review step is not empty
+          try {
+            const reviewRes = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/review`, {
+              headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+            })
+            if (reviewRes.ok) {
+              const rd = await reviewRes.json()
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              setForm((f) => ({
+                ...f,
+                // Step 2 — gym info
+                gymName:     rd.gym?.name          ?? f.gymName,
+                gymTypes:    Array.isArray(rd.gym?.gym_types) ? rd.gym.gym_types : f.gymTypes,
+                address:     rd.address?.street    ?? f.address,
+                city:        rd.address?.city      ?? f.city,
+                state:       rd.address?.state     ?? f.state,
+                zip:         rd.address?.zip       ?? f.zip,
+                phone:       rd.contacts?.phone    ?? f.phone,
+                website:     rd.contacts?.website  ?? f.website,
+                yearFounded: rd.gym?.year_founded  != null ? String(rd.gym.year_founded) : f.yearFounded,
+                description: rd.gym?.description   ?? f.description,
+                // Step 3 — pricing
+                pricingVaries:   rd.address?.pricing_on_request ?? f.pricingVaries,
+                membershipPlans: Array.isArray(rd.plans) && rd.plans.length > 0
+                  ? rd.plans.map((p: any) => ({
+                      name:           String(p.tier_name ?? ''),
+                      pricePerMonth:  p.price          != null ? String(p.price)          : '',
+                      contractLength: API_CONTRACT_TO_FE[String(p.contract_length ?? '')] ?? String(p.contract_length ?? 'month-to-month'),
+                      enrollmentFee:  p.enrollment_fee != null ? String(p.enrollment_fee) : '',
+                      annualFee:      p.annual_fee     != null ? String(p.annual_fee)     : '',
+                    }))
+                  : f.membershipPlans,
+                // Step 4 — amenities (backend stores snake_case values; map back to display labels)
+                amenities: Array.isArray(rd.gym?.amenities)
+                  ? rd.gym.amenities.map((v: string) => AMENITY_VALUE_TO_LABEL[v] ?? v).filter(Boolean)
+                  : f.amenities,
+                // Step 5 — hours (strip trailing seconds from "06:00:00" → "06:00")
+                hours: rd.hours
+                  ? Object.fromEntries(
+                      Object.entries(rd.hours).map(([day, h]: [string, any]) => [
+                        day,
+                        {
+                          open:   h.open  ? String(h.open).slice(0, 5)  : h.open,
+                          close:  h.close ? String(h.close).slice(0, 5) : h.close,
+                          closed: h.closed ?? false,
+                          is24:   h.is24   ?? false,
+                        },
+                      ])
+                    )
+                  : f.hours,
+                // Step 7 — verification
+                ownerName:          rd.owner?.full_name      ?? f.ownerName,
+                ownerRole:          rd.owner?.job_title
+                  ? rd.owner.job_title.charAt(0).toUpperCase() + rd.owner.job_title.slice(1)
+                  : f.ownerRole,
+                ownerEmail:         rd.owner?.business_email ?? f.ownerEmail,
+                ownerPhone:         rd.owner?.phone_number   ?? f.ownerPhone,
+                verificationMethod: rd.verification_method   ?? f.verificationMethod,
+              }))
+              // Track uploaded photo info (File objects cannot be restored from server URLs)
+              setDraftPhotoInfo({
+                coverPhoto:   rd.photos?.cover_photo?.file_name ?? undefined,
+                galleryCount: Array.isArray(rd.photos?.gallery) ? rd.photos.gallery.length : undefined,
+                logo:         rd.photos?.logo?.file_name        ?? undefined,
+              })
+            }
+          } catch {
+            // ignore — review will show empty fields; user can navigate back to each step
+          }
+        }
+      } catch {
+        // ignore — proceed to step 1 as normal
+      }
+      setAuthChecked(true)
+    })()
   }, [router])
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -334,10 +496,10 @@ export default function ListYourGymPage() {
     }
   }
 
-  function toggleGymType(type: string) {
+  function toggleGymType(value: string) {
     setForm((f) => ({
       ...f,
-      gymTypes: f.gymTypes.includes(type) ? f.gymTypes.filter((t) => t !== type) : [...f.gymTypes, type],
+      gymTypes: f.gymTypes.includes(value) ? f.gymTypes.filter((t) => t !== value) : [...f.gymTypes, value],
     }))
     setErrors((er) => ({ ...er, gymTypes: '' }))
   }
@@ -420,11 +582,34 @@ export default function ListYourGymPage() {
     if (!form.ownerEmail.trim()) e.ownerEmail = 'Business email is required.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.ownerEmail)) e.ownerEmail = 'Please enter a valid email.'
     if (!form.ownerPhone.trim()) e.ownerPhone = 'Phone number is required.'
-    if (!form.verificationMethod) e.verificationMethod = 'Please select a verification method.'
     return e
   }
 
-  function handleNext() {
+  async function extractApiError(res: Response, fallback: string): Promise<string> {
+    try {
+      const data = await res.json()
+      // Laravel validation errors: { errors: { field: [msg, ...] } }
+      if (data.errors && typeof data.errors === 'object') {
+        const messages = (Object.values(data.errors) as string[][]).flat()
+        if (messages.length) return messages[0]
+      }
+      return data.message ?? fallback
+    } catch {
+      return fallback
+    }
+  }
+
+  function contractLengthToApi(fe: string): string {
+    const map: Record<string, string> = {
+      'month-to-month': 'month_to_month',
+      '6months': '6_months',
+      '12months': '12_months',
+      '24months': '24_months',
+    }
+    return map[fe] ?? fe
+  }
+
+  async function handleNext() {
     let e: Record<string, string> = {}
     if (step === 2) e = validateStep2()
     if (step === 3) e = validateStep3()
@@ -435,6 +620,224 @@ export default function ListYourGymPage() {
       return
     }
     setErrors({})
+    setStepError('')
+
+    const token = getAuthToken()
+
+    if (step === 2) {
+      setStepLoading(true)
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step2`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            gym_name: form.gymName,
+            gym_types: form.gymTypes,
+            description: form.description || undefined,
+            street: form.address,
+            city: form.city,
+            state: form.state,
+            zip: form.zip,
+            phone: form.phone,
+            website: form.website || undefined,
+            year_founded: form.yearFounded ? parseInt(form.yearFounded) : undefined,
+          }),
+        })
+        if (!res.ok) {
+          setStepError(await extractApiError(res, 'Failed to save gym info. Please try again.'))
+          return
+        }
+        const data = await res.json()
+        setGymId(data.gym_id)
+      } catch {
+        setStepError('Could not reach the server. Please check your connection and try again.')
+        return
+      } finally {
+        setStepLoading(false)
+      }
+    }
+
+    if (step === 3) {
+      setStepLoading(true)
+      try {
+        const pricingOnRequest = form.pricingVaries
+        const body: Record<string, unknown> = {
+          gym_id: gymId,
+          pricing_on_request: pricingOnRequest,
+        }
+        if (!pricingOnRequest) {
+          body.plans = form.membershipPlans.map((plan) => ({
+            plan_name: plan.name,
+            price_per_month: parseFloat(plan.pricePerMonth),
+            contract_length: contractLengthToApi(plan.contractLength),
+            enrollment_fee: plan.enrollmentFee ? parseFloat(plan.enrollmentFee) : undefined,
+            annual_fee: plan.annualFee ? parseFloat(plan.annualFee) : undefined,
+          }))
+        }
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step3`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(body),
+        })
+        if (!res.ok) {
+          setStepError(await extractApiError(res, 'Failed to save pricing. Please try again.'))
+          return
+        }
+      } catch {
+        setStepError('Could not reach the server. Please check your connection and try again.')
+        return
+      } finally {
+        setStepLoading(false)
+      }
+    }
+
+    if (step === 4) {
+      setStepLoading(true)
+      try {
+        const amenityValues = form.amenities
+          .map((label) => AMENITY_LABEL_TO_VALUE[label])
+          .filter(Boolean)
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step4`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            gym_id: gymId,
+            amenities: amenityValues,
+          }),
+        })
+        if (!res.ok) {
+          setStepError(await extractApiError(res, 'Failed to save amenities. Please try again.'))
+          return
+        }
+      } catch {
+        setStepError('Could not reach the server. Please check your connection and try again.')
+        return
+      } finally {
+        setStepLoading(false)
+      }
+    }
+
+    if (step === 5) {
+      setStepLoading(true)
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step5`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            gym_id: gymId,
+            hours: form.hours,
+          }),
+        })
+        if (!res.ok) {
+          setStepError(await extractApiError(res, 'Failed to save hours. Please try again.'))
+          return
+        }
+      } catch {
+        setStepError('Could not reach the server. Please check your connection and try again.')
+        return
+      } finally {
+        setStepLoading(false)
+      }
+    }
+
+    if (step === 6) {
+      setStepLoading(true)
+      try {
+        const fd = new FormData()
+        fd.append('gym_id', String(gymId))
+        fd.append('cover_photo', form.coverPhoto as File)
+        form.galleryPhotos.forEach((file) => fd.append('gallery_photos[]', file))
+        if (form.logo) fd.append('logo', form.logo)
+
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step6`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+          body: fd,
+        })
+        if (!res.ok) {
+          setStepError(await extractApiError(res, 'Failed to save photos. Please try again.'))
+          return
+        }
+      } catch {
+        setStepError('Could not reach the server. Please check your connection and try again.')
+        return
+      } finally {
+        setStepLoading(false)
+      }
+    }
+
+    if (step === 7) {
+      // Phase 1: validate SMS consent then save owner details → get available methods
+      if (!step7SmsConsent) {
+        setStep7SmsConsentError('You must agree to receive messages to continue.')
+        return
+      }
+      setStep7SmsConsentError('')
+      setStepLoading(true)
+      try {
+        const step7Res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step7`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            gym_id: gymId,
+            full_name: form.ownerName,
+            job_title: form.ownerRole.toLowerCase(),
+            business_email: form.ownerEmail,
+            phone_number: form.ownerPhone,
+          }),
+        })
+        if (!step7Res.ok) {
+          setStepError(await extractApiError(step7Res, 'Failed to save verification info. Please try again.'))
+          return
+        }
+        const step7Data = await step7Res.json()
+        const newClaimId: number = step7Data.claim_id
+        const methods: string[] = step7Data.available_methods ?? ['email_domain', 'phone_sms', 'document']
+        setClaimId(newClaimId)
+        setStep7AvailableMethods(methods)
+        // Auto-select first available method
+        const methodMap: Record<string, 'email' | 'phone' | 'document'> = {
+          email_matched: 'email', email_domain: 'email',
+          phone_matched: 'phone', phone_sms: 'phone',
+          document: 'document',
+        }
+        const first = methods.map((m) => methodMap[m]).find(Boolean) ?? 'document'
+        setStep7SelMethod(first)
+        setForm((f) => ({ ...f, verificationMethod: first }))
+        setStep7SelectedPhone(form.ownerPhone) // pre-select owner's phone for phone method
+        setStep7Phase(2)
+        return // stay on step 7, show phase 2
+      } catch {
+        setStepError('Could not reach the server. Please check your connection and try again.')
+        return
+      } finally {
+        setStepLoading(false)
+      }
+    }
+
     if (fromReview) {
       setFromReview(false)
       setStep(8)
@@ -443,8 +846,87 @@ export default function ListYourGymPage() {
     setStep((s) => (s + 1) as Step)
   }
 
+  async function handleStep7OtpVerify() {
+    const code = step7SelMethod === 'email' ? step7EmailCode : step7PhoneCode
+    if (code.trim().length < 6) {
+      setStep7VerifError('Please enter the 6-digit verification code.')
+      return
+    }
+    if (!claimId) return
+    setStep7VerifyLoading(true)
+    setStep7VerifError('')
+    try {
+      const endpoint = step7SelMethod === 'email'
+        ? `${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/verify-email`
+        : `${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/verify-phone`
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setStep7VerifError(data.message ?? 'Invalid code. Please try again.')
+        return
+      }
+      if (fromReview) setFromReview(false)
+      setStep(8)
+    } catch {
+      setStep7VerifError('Could not reach the server. Please check your connection and try again.')
+    } finally {
+      setStep7VerifyLoading(false)
+    }
+  }
+
+  async function handleStep7DocUpload() {
+    if (!step7DocType) {
+      setStep7VerifError('Please select a document type.')
+      return
+    }
+    if (!form.verificationDoc) {
+      setStep7VerifError('Please upload a document.')
+      return
+    }
+    if (!claimId) return
+    setStep7VerifyLoading(true)
+    setStep7VerifError('')
+    try {
+      const fd = new FormData()
+      fd.append('document', form.verificationDoc)
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/upload-document`, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: fd,
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        setStep7VerifError(d.message ?? 'Failed to upload document. Please try again.')
+        return
+      }
+      if (fromReview) setFromReview(false)
+      setStep(8)
+    } catch {
+      setStep7VerifError('Could not reach the server. Please check your connection and try again.')
+    } finally {
+      setStep7VerifyLoading(false)
+    }
+  }
+
   function handleBack() {
     setErrors({})
+    if (step === 7 && step7Phase === 2) {
+      // If OTP was sent, go back to method selection; otherwise back to owner details
+      if (step7EmailCodeSent || step7PhoneCodeSent) {
+        setStep7EmailCodeSent(false)
+        setStep7EmailCode('')
+        setStep7PhoneCodeSent(false)
+        setStep7PhoneCode('')
+        setStep7VerifError('')
+      } else {
+        setStep7Phase(1)
+      }
+      return
+    }
     if (fromReview) {
       setFromReview(false)
       setStep(8)
@@ -456,6 +938,7 @@ export default function ListYourGymPage() {
   function goEditStep(target: Step) {
     setFromReview(true)
     setErrors({})
+    if (target === 7) setStep7Phase(1)
     setStep(target)
   }
 
@@ -464,8 +947,22 @@ export default function ListYourGymPage() {
     setSubmitLoading(true)
     setSubmitError('')
     try {
-      // TODO: POST full form data to listing API
-      await new Promise((r) => setTimeout(r, 800))
+      const token = getAuthToken()
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/draft/step8`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ gym_id: gymId }),
+      })
+      if (!res.ok) {
+        setSubmitError(await extractApiError(res, 'Failed to submit listing. Please try again.'))
+        return
+      }
+      const data = await res.json()
+      setListingStatus(data.listing_status ?? '')
       setSubmitted(true)
     } catch {
       setSubmitError('Something went wrong. Please try again.')
@@ -479,7 +976,7 @@ export default function ListYourGymPage() {
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setSearchError('')
-    setMatchedGym(null)
+    setMatchedGyms([])
     if (!searchName.trim()) {
       setSearchError('Gym name is required.')
       return
@@ -491,13 +988,12 @@ export default function ListYourGymPage() {
     setSearchLoading(true)
     try {
       const params = new URLSearchParams({ name: searchName.trim(), city: searchCity.trim() })
-      if (searchState.trim()) params.append('state', searchState.trim())
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/gyms/search?${params}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-listing/search?${params}`, {
         headers: { Accept: 'application/json' },
       })
       const data = await res.json()
-      if (data.gym) {
-        setMatchedGym(data.gym)
+      if (data.found && data.gyms?.length > 0) {
+        setMatchedGyms(data.gyms)
       } else {
         // No duplicate — prefill step 2 and proceed
         setForm((f) => ({
@@ -542,9 +1038,9 @@ export default function ListYourGymPage() {
             Thanks for submitting <strong>{form.gymName}</strong>.
           </p>
           <p className='text-muted-foreground mb-6'>
-            {form.verificationMethod === 'document'
-              ? 'Our team will review your document and listing within 24–48 hours.'
-              : 'Your listing will go live once verified — usually within minutes.'}
+            {listingStatus === 'live'
+              ? 'Your listing is now live on GymDues.'
+              : 'Our team will review your listing and get it live within 24–48 hours.'}
           </p>
           <Button onClick={() => router.push('/gyms')}>Browse gyms</Button>
         </div>
@@ -603,39 +1099,52 @@ export default function ListYourGymPage() {
               </p>
             </div>
 
-            {matchedGym && (
-              <div className='border border-yellow-300 bg-yellow-50 rounded-lg p-4'>
-                <p className='font-semibold text-yellow-900 mb-1'>We found a matching gym</p>
-                <p className='text-sm text-yellow-800 mb-3'>
-                  <strong>{matchedGym.name}</strong> in {matchedGym.city} is already listed on GymDues. Would
-                  you like to claim it instead?
+            {matchedGyms.length > 0 && (
+              <div className='border border-yellow-300 bg-yellow-50 rounded-lg p-4 space-y-3'>
+                <p className='font-semibold text-yellow-900'>
+                  {matchedGyms.length === 1
+                    ? 'We found a matching gym'
+                    : `We found ${matchedGyms.length} matching gyms`}
                 </p>
-                <div className='flex gap-2 flex-wrap'>
-                  <Button
-                    type='button'
-                    size='sm'
-                    onClick={() => router.push(`/gyms/${matchedGym.slug ?? matchedGym.id}?claim=1`)}
-                  >
-                    Claim this gym
-                  </Button>
-                  <Button
-                    type='button'
-                    size='sm'
-                    variant='outline'
-                    onClick={() => {
-                      setMatchedGym(null)
-                      setForm((f) => ({
-                        ...f,
-                        gymName: searchName.trim(),
-                        city: searchCity.trim(),
-                        state: searchState.trim(),
-                      }))
-                      setStep(2)
-                    }}
-                  >
-                    This is a different gym
-                  </Button>
-                </div>
+                <p className='text-sm text-yellow-800'>
+                  {matchedGyms.length === 1
+                    ? 'This gym is already listed on GymDues. Would you like to claim it instead?'
+                    : 'These gyms are already listed on GymDues. Would you like to claim one?'}
+                </p>
+                {matchedGyms.map((gym) => (
+                  <div key={gym.id} className='flex items-center justify-between gap-3 bg-white rounded-md border border-yellow-200 px-3 py-2'>
+                    <span className='text-sm font-medium'>
+                      {gym.name}
+                      <span className='text-muted-foreground font-normal ml-1'>
+                        — {gym.city}{gym.state ? `, ${gym.state}` : ''}
+                      </span>
+                    </span>
+                    <Button
+                      type='button'
+                      size='sm'
+                      onClick={() => router.push(`/gyms/${gym.slug ?? gym.id}`)}
+                    >
+                      Claim
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  onClick={() => {
+                    setMatchedGyms([])
+                    setForm((f) => ({
+                      ...f,
+                      gymName: searchName.trim(),
+                      city: searchCity.trim(),
+                      state: searchState.trim(),
+                    }))
+                    setStep(2)
+                  }}
+                >
+                  None of these — list a new gym
+                </Button>
               </div>
             )}
 
@@ -646,7 +1155,7 @@ export default function ListYourGymPage() {
                 onChange={(e) => {
                   setSearchName(e.target.value)
                   setSearchError('')
-                  setMatchedGym(null)
+                  setMatchedGyms([])
                 }}
               />
             </Field>
@@ -658,7 +1167,7 @@ export default function ListYourGymPage() {
                   value={searchCity}
                   onChange={(e) => {
                     setSearchCity(e.target.value)
-                    setMatchedGym(null)
+                    setMatchedGyms([])
                   }}
                 />
               </Field>
@@ -703,11 +1212,11 @@ export default function ListYourGymPage() {
                     )}
                   </Label>
                   <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2'>
-                    {GYM_TYPES.map((type) => (
+                    {GYM_TYPES.map(({ value, label }) => (
                       <label
-                        key={type}
+                        key={value}
                         className={`flex items-center gap-2 border rounded-md px-3 py-2 cursor-pointer text-sm transition-colors ${
-                          form.gymTypes.includes(type)
+                          form.gymTypes.includes(value)
                             ? 'border-primary bg-primary/5'
                             : 'border-input hover:border-primary/50'
                         }`}
@@ -715,10 +1224,10 @@ export default function ListYourGymPage() {
                         <input
                           type='checkbox'
                           className='accent-primary shrink-0'
-                          checked={form.gymTypes.includes(type)}
-                          onChange={() => toggleGymType(type)}
+                          checked={form.gymTypes.includes(value)}
+                          onChange={() => toggleGymType(value)}
                         />
-                        {type}
+                        {label}
                       </label>
                     ))}
                   </div>
@@ -1147,101 +1656,375 @@ export default function ListYourGymPage() {
             {/* ── Step 7: Owner Verification ── */}
             {step === 7 && (
               <>
-                <h2 className='text-2xl font-semibold'>Owner verification</h2>
-                <p className='text-sm text-muted-foreground'>
-                  Confirm you have the authority to list this gym on GymDues.
-                </p>
+                {/* ── Phase 1: Owner details ── */}
+                {step7Phase === 1 && (
+                  <>
+                    <h2 className='text-2xl font-semibold'>Owner verification</h2>
+                    <p className='text-sm text-muted-foreground'>
+                      Confirm you have the authority to list this gym on GymDues.
+                    </p>
 
-                <Field label='Full name *' error={errors.ownerName}>
-                  <Input
-                    placeholder='Jane Smith'
-                    value={form.ownerName}
-                    onChange={setField('ownerName')}
-                  />
-                </Field>
-
-                <div className='space-y-1.5'>
-                  <Label>Role *</Label>
-                  <select
-                    className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
-                      errors.ownerRole ? 'border-red-400' : 'border-input'
-                    }`}
-                    value={form.ownerRole}
-                    onChange={setField('ownerRole')}
-                  >
-                    <option value=''>Select your role…</option>
-                    {OWNER_ROLES.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.ownerRole && <p className='text-red-500 text-xs'>{errors.ownerRole}</p>}
-                </div>
-
-                <Field label='Business email *' error={errors.ownerEmail}>
-                  <Input
-                    type='email'
-                    placeholder='you@yourgym.com'
-                    value={form.ownerEmail}
-                    onChange={setField('ownerEmail')}
-                  />
-                </Field>
-
-                <Field label='Phone number *' error={errors.ownerPhone}>
-                  <Input
-                    type='tel'
-                    placeholder='(312) 555-0100'
-                    value={form.ownerPhone}
-                    onChange={setField('ownerPhone')}
-                  />
-                </Field>
-
-                <div className='space-y-2'>
-                  <Label>Preferred verification method *</Label>
-                  {errors.verificationMethod && (
-                    <p className='text-red-500 text-xs'>{errors.verificationMethod}</p>
-                  )}
-                  {[
-                    {
-                      value: 'email',
-                      label: 'Email domain match',
-                      desc: 'Verify via your business email domain',
-                    },
-                    {
-                      value: 'phone',
-                      label: 'SMS to listed number',
-                      desc: "Verify via a code sent to your gym's phone number",
-                    },
-                    {
-                      value: 'document',
-                      label: 'Document upload',
-                      desc: 'Upload a business license or lease agreement',
-                    },
-                  ].map((opt) => (
-                    <label
-                      key={opt.value}
-                      className={`flex items-start gap-3 border rounded-lg px-4 py-3 cursor-pointer transition-colors ${
-                        form.verificationMethod === opt.value
-                          ? 'border-primary bg-primary/5'
-                          : 'border-input hover:border-primary/50'
-                      }`}
-                    >
-                      <input
-                        type='radio'
-                        name='verificationMethod'
-                        value={opt.value}
-                        checked={form.verificationMethod === opt.value}
-                        onChange={setField('verificationMethod')}
-                        className='accent-primary mt-0.5'
+                    <Field label='Full name *' error={errors.ownerName}>
+                      <Input
+                        placeholder='Jane Smith'
+                        value={form.ownerName}
+                        onChange={setField('ownerName')}
                       />
-                      <div>
-                        <p className='text-sm font-medium'>{opt.label}</p>
-                        <p className='text-xs text-muted-foreground'>{opt.desc}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
+                    </Field>
+
+                    <div className='space-y-1.5'>
+                      <Label>Role *</Label>
+                      <select
+                        className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+                          errors.ownerRole ? 'border-red-400' : 'border-input'
+                        }`}
+                        value={form.ownerRole}
+                        onChange={setField('ownerRole')}
+                      >
+                        <option value=''>Select your role…</option>
+                        {OWNER_ROLES.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                      {errors.ownerRole && <p className='text-red-500 text-xs'>{errors.ownerRole}</p>}
+                    </div>
+
+                    <Field label='Business email *' error={errors.ownerEmail}>
+                      <Input
+                        type='email'
+                        placeholder='you@yourgym.com'
+                        value={form.ownerEmail}
+                        onChange={setField('ownerEmail')}
+                      />
+                    </Field>
+
+                    <Field label='Phone number *' error={errors.ownerPhone}>
+                      <Input
+                        type='tel'
+                        placeholder='(312) 555-0100'
+                        value={form.ownerPhone}
+                        onChange={setField('ownerPhone')}
+                      />
+                    </Field>
+
+                    <div className='flex flex-col gap-1'>
+                      <label className='flex items-start gap-2 cursor-pointer'>
+                        <input
+                          type='checkbox'
+                          checked={step7SmsConsent}
+                          onChange={(e) => {
+                            setStep7SmsConsent(e.target.checked)
+                            setStep7SmsConsentError('')
+                          }}
+                          className='mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary cursor-pointer'
+                        />
+                        <span className='text-sm text-muted-foreground leading-snug'>
+                          I consent to receive SMS or phone messages from{' '}
+                          <span className='font-medium text-foreground'>GymDues</span>{' '}
+                          on the number provided above for ownership verification.
+                        </span>
+                      </label>
+                      {step7SmsConsentError && (
+                        <p className='text-xs text-red-500'>{step7SmsConsentError}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* ── Phase 2: Verification method selection + OTP/document ── */}
+                {step7Phase === 2 && (() => {
+                  const methodMap: Record<string, { id: 'email' | 'phone' | 'document'; icon: typeof Mail; title: string; description: string; badge: string }> = {
+                    email_matched: { id: 'email', icon: Mail, title: 'Business Email', description: `We'll send a verification code to ${form.ownerEmail}.`, badge: 'Instant' },
+                    email_domain:  { id: 'email', icon: Mail, title: 'Business Email', description: `We'll send a verification code to ${form.ownerEmail}.`, badge: 'Instant' },
+                    phone_matched: { id: 'phone', icon: Phone, title: 'Phone Verification', description: 'Send a code to your phone number to verify ownership.', badge: 'Instant' },
+                    phone_sms:     { id: 'phone', icon: Phone, title: 'Phone Verification', description: 'Send a code to your phone number to verify ownership.', badge: 'Instant' },
+                    document:      { id: 'document', icon: FileText, title: 'Document Upload', description: 'Upload a business license or tax document for manual review.', badge: '24–48 hrs' },
+                  }
+                  const verificationMethods = step7AvailableMethods
+                    .map((m) => methodMap[m])
+                    .filter((v, i, arr) => v && arr.findIndex((x) => x?.id === v.id) === i) // dedupe by id
+
+                  const showOtp = (step7SelMethod === 'email' && step7EmailCodeSent) || (step7SelMethod === 'phone' && step7PhoneCodeSent)
+
+                  return (
+                    <>
+                      <h2 className='text-2xl font-semibold'>Verify ownership</h2>
+                      <p className='text-sm text-muted-foreground'>
+                        Choose how you&apos;d like to verify ownership of your gym.
+                      </p>
+
+                      {showOtp ? (
+                        /* ── OTP entry ── */
+                        <div className='space-y-4'>
+                          <div className='flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2.5 dark:border-green-800 dark:bg-green-900/20'>
+                            <CheckCircle className='h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400' />
+                            <p className='text-xs text-green-800 dark:text-green-300'>
+                              {step7SelMethod === 'email'
+                                ? <> A 6-digit code was sent to <strong>{form.ownerEmail}</strong>. Enter it below to verify.</>
+                                : <> A 6-digit code was sent to <strong>{step7SelectedPhone}</strong>. Enter it below to verify.</>
+                              }
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className='block text-sm font-medium text-muted-foreground mb-2'>
+                              6-digit verification code
+                            </label>
+                            <div className='flex gap-2'>
+                              {Array.from({ length: 6 }).map((_, i) => {
+                                const currentCode = step7SelMethod === 'email' ? step7EmailCode : step7PhoneCode
+                                const setCurrentCode = step7SelMethod === 'email' ? setStep7EmailCode : setStep7PhoneCode
+                                return (
+                                  <input
+                                    key={i}
+                                    ref={(el) => { step7OtpRefs.current[i] = el }}
+                                    type='text'
+                                    inputMode='numeric'
+                                    maxLength={1}
+                                    value={currentCode[i] || ''}
+                                    autoFocus={i === 0}
+                                    onFocus={(e) => e.target.select()}
+                                    onChange={(e) => {
+                                      const digit = e.target.value.replace(/\D/g, '').slice(-1)
+                                      const digits = Array.from({ length: 6 }, (_, j) => currentCode[j] || '')
+                                      digits[i] = digit
+                                      setCurrentCode(digits.join(''))
+                                      if (digit && i < 5) step7OtpRefs.current[i + 1]?.focus()
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Backspace' && !currentCode[i] && i > 0) {
+                                        step7OtpRefs.current[i - 1]?.focus()
+                                      }
+                                    }}
+                                    onPaste={(e) => {
+                                      e.preventDefault()
+                                      const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+                                      setCurrentCode(pasted)
+                                      step7OtpRefs.current[Math.min(pasted.length, 5)]?.focus()
+                                    }}
+                                    className='h-12 w-10 rounded-lg border border-input bg-background text-center text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-ring'
+                                  />
+                                )
+                              })}
+                            </div>
+                          </div>
+
+                          {step7VerifError && (
+                            <p className='text-xs text-red-500' role='alert'>{step7VerifError}</p>
+                          )}
+
+                          <Button
+                            type='button'
+                            className='w-full'
+                            onClick={handleStep7OtpVerify}
+                            disabled={step7VerifyLoading}
+                          >
+                            {step7VerifyLoading ? 'Verifying…' : 'Verify & continue'}
+                          </Button>
+                        </div>
+                      ) : (
+                        /* ── Method cards ── */
+                        <div className='space-y-2'>
+                          {verificationMethods.map(({ id, icon: Icon, title, description, badge }) => (
+                            <div key={id}>
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  setStep7SelMethod(id)
+                                  setForm((f) => ({ ...f, verificationMethod: id }))
+                                  setStep7VerifError('')
+                                }}
+                                className={`w-full rounded-xl border p-4 text-left transition-colors ${
+                                  step7SelMethod === id
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                                }`}
+                              >
+                                <div className='flex items-start gap-3'>
+                                  <div className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${
+                                    step7SelMethod === id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                  }`}>
+                                    <Icon className='h-5 w-5' />
+                                  </div>
+                                  <div className='flex-1 min-w-0'>
+                                    <div className='flex items-center gap-2'>
+                                      <p className='text-base font-semibold'>{title}</p>
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                        badge === 'Instant'
+                                          ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+                                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                                      }`}>
+                                        {badge}
+                                      </span>
+                                    </div>
+                                    <p className='text-sm text-muted-foreground mt-0.5'>{description}</p>
+                                  </div>
+                                </div>
+                              </button>
+
+                              {/* Email expanded panel */}
+                              {id === 'email' && step7SelMethod === 'email' && (
+                                <div className='mt-2 space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3'>
+                                  <div className='flex gap-2'>
+                                    <input
+                                      type='text'
+                                      value={form.ownerEmail}
+                                      readOnly
+                                      className='flex-1 rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground'
+                                    />
+                                    <button
+                                      type='button'
+                                      disabled={step7SendingCode}
+                                      onClick={async () => {
+                                        if (!claimId) return
+                                        setStep7SendingCode(true)
+                                        setStep7VerifError('')
+                                        try {
+                                          const r = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/send-email-code`, {
+                                            method: 'POST', headers: { Accept: 'application/json' },
+                                          })
+                                          if (!r.ok) {
+                                            const d = await r.json().catch(() => ({}))
+                                            setStep7VerifError(d.message ?? 'Failed to send code.')
+                                            return
+                                          }
+                                          setStep7EmailCodeSent(true)
+                                        } catch { setStep7VerifError('Network error. Please try again.') }
+                                        finally { setStep7SendingCode(false) }
+                                      }}
+                                      className='rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 whitespace-nowrap'
+                                    >
+                                      {step7SendingCode ? '…' : 'Send code'}
+                                    </button>
+                                  </div>
+                                  {step7VerifError && <p className='text-xs text-red-500'>{step7VerifError}</p>}
+                                </div>
+                              )}
+
+                              {/* Phone expanded panel */}
+                              {id === 'phone' && step7SelMethod === 'phone' && (
+                                <div className='mt-2 space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3'>
+                                  <div className='space-y-1.5'>
+                                    {[form.ownerPhone].filter(Boolean).map((num) => (
+                                      <label
+                                        key={num}
+                                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                                          step7SelectedPhone === num ? 'border-primary bg-primary/5' : 'border-input bg-background hover:border-primary/50'
+                                        }`}
+                                      >
+                                        <input
+                                          type='radio'
+                                          name='step7-phone'
+                                          value={num}
+                                          checked={step7SelectedPhone === num}
+                                          onChange={() => { setStep7SelectedPhone(num); setStep7VerifError('') }}
+                                          className='accent-primary'
+                                        />
+                                        <span className='text-sm font-mono font-medium'>{num}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                  <button
+                                    type='button'
+                                    disabled={step7SendingCode || !step7SelectedPhone}
+                                    onClick={async () => {
+                                      if (!claimId) return
+                                      setStep7SendingCode(true)
+                                      setStep7VerifError('')
+                                      try {
+                                        const r = await fetch(`${getApiBaseUrl()}/api/v1/gym-claims/${claimId}/send-phone-code`, {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                                          body: JSON.stringify({ phone_number: step7SelectedPhone }),
+                                        })
+                                        if (!r.ok) {
+                                          const d = await r.json().catch(() => ({}))
+                                          setStep7VerifError(d.message ?? 'Failed to send code.')
+                                          return
+                                        }
+                                        setStep7PhoneCodeSent(true)
+                                      } catch { setStep7VerifError('Network error. Please try again.') }
+                                      finally { setStep7SendingCode(false) }
+                                    }}
+                                    className='w-full rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50'
+                                  >
+                                    {step7SendingCode ? 'Sending…' : 'Send verification code'}
+                                  </button>
+                                  {step7VerifError && <p className='text-xs text-red-500'>{step7VerifError}</p>}
+                                </div>
+                              )}
+
+                              {/* Document expanded panel */}
+                              {id === 'document' && step7SelMethod === 'document' && (
+                                <div className='mt-2 space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-3'>
+                                  <select
+                                    value={step7DocType}
+                                    onChange={(e) => { setStep7DocType(e.target.value); setStep7VerifError('') }}
+                                    className='w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring'
+                                  >
+                                    <option value='' disabled>Select document type</option>
+                                    <option value='business_license'>Business license or registration certificate</option>
+                                    <option value='tax_document'>Tax document (EIN letter / business tax return)</option>
+                                    <option value='other'>Other ownership proof</option>
+                                  </select>
+
+                                  <input
+                                    ref={docRef}
+                                    type='file'
+                                    accept='.pdf,.jpg,.jpeg,.png'
+                                    className='hidden'
+                                    onChange={(e) => {
+                                      setForm((f) => ({ ...f, verificationDoc: e.target.files?.[0] ?? null }))
+                                      setStep7VerifError('')
+                                    }}
+                                  />
+                                  <button
+                                    type='button'
+                                    onClick={() => docRef.current?.click()}
+                                    className='w-full rounded-lg border-2 border-dashed border-primary/30 px-4 py-4 text-center text-sm text-muted-foreground hover:border-primary/60 hover:text-foreground transition-colors'
+                                  >
+                                    {form.verificationDoc
+                                      ? <span className='text-foreground font-medium'>{form.verificationDoc.name}</span>
+                                      : 'Click to choose a file (PDF, JPG, PNG — max 10 MB)'
+                                    }
+                                  </button>
+                                  {form.verificationDoc && (
+                                    <button
+                                      type='button'
+                                      onClick={() => setForm((f) => ({ ...f, verificationDoc: null }))}
+                                      className='text-xs text-muted-foreground hover:text-red-500'
+                                    >
+                                      Remove file
+                                    </button>
+                                  )}
+
+                                  <p className='rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300'>
+                                    Our team will review your documents within 24–48 hours and notify you by email.
+                                  </p>
+
+                                  {step7VerifError && <p className='text-xs text-red-500'>{step7VerifError}</p>}
+
+                                  <Button
+                                    type='button'
+                                    className='w-full'
+                                    onClick={handleStep7DocUpload}
+                                    disabled={step7VerifyLoading}
+                                  >
+                                    {step7VerifyLoading ? 'Uploading…' : 'Upload & continue'}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+
+                          {step7VerifError && !['email', 'phone', 'document'].includes(step7SelMethod) && (
+                            <p className='text-xs text-red-500'>{step7VerifError}</p>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
               </>
             )}
 
@@ -1255,7 +2038,12 @@ export default function ListYourGymPage() {
 
                 <ReviewSection title='Gym info' onEdit={() => goEditStep(2)}>
                   <ReviewRow label='Name' value={form.gymName} />
-                  <ReviewRow label='Type' value={form.gymTypes.join(', ')} />
+                  <ReviewRow
+                    label='Type'
+                    value={form.gymTypes
+                      .map((v) => GYM_TYPES.find((t) => t.value === v)?.label ?? v)
+                      .join(', ')}
+                  />
                   <ReviewRow
                     label='Address'
                     value={`${form.address}, ${form.city}, ${form.state} ${form.zip}`}
@@ -1317,12 +2105,24 @@ export default function ListYourGymPage() {
                 </ReviewSection>
 
                 <ReviewSection title='Photos' onEdit={() => goEditStep(6)}>
-                  <ReviewRow label='Cover' value={form.coverPhoto ? form.coverPhoto.name : 'None'} />
+                  <ReviewRow
+                    label='Cover'
+                    value={form.coverPhoto ? form.coverPhoto.name : draftPhotoInfo.coverPhoto ? 'Previously uploaded' : 'None'}
+                  />
                   <ReviewRow
                     label='Gallery'
-                    value={form.galleryPhotos.length > 0 ? `${form.galleryPhotos.length} photo(s)` : 'None'}
+                    value={
+                      form.galleryPhotos.length > 0
+                        ? `${form.galleryPhotos.length} photo(s)`
+                        : draftPhotoInfo.galleryCount != null
+                          ? `${draftPhotoInfo.galleryCount} photo(s) previously uploaded`
+                          : 'None'
+                    }
                   />
-                  <ReviewRow label='Logo' value={form.logo ? form.logo.name : 'None'} />
+                  <ReviewRow
+                    label='Logo'
+                    value={form.logo ? form.logo.name : draftPhotoInfo.logo ? 'Previously uploaded' : 'None'}
+                  />
                 </ReviewSection>
 
                 <ReviewSection title='Verification' onEdit={() => goEditStep(7)}>
@@ -1330,7 +2130,17 @@ export default function ListYourGymPage() {
                   <ReviewRow label='Role' value={form.ownerRole} />
                   <ReviewRow label='Email' value={form.ownerEmail} />
                   <ReviewRow label='Phone' value={form.ownerPhone} />
-                  <ReviewRow label='Method' value={form.verificationMethod} />
+                  <ReviewRow
+                    label='Method'
+                    value={
+                      { email: 'Email verification', phone: 'Phone verification', document: 'Document upload' }[form.verificationMethod]
+                      ?? form.verificationMethod
+                      ?? '—'
+                    }
+                  />
+                  {form.verificationMethod === 'document' && form.verificationDoc && (
+                    <ReviewRow label='Document' value={form.verificationDoc.name} />
+                  )}
                 </ReviewSection>
 
                 <div className='border rounded-lg p-4'>
@@ -1351,18 +2161,22 @@ export default function ListYourGymPage() {
             )}
 
             {/* ── Navigation ── */}
+            {stepError && <p className='text-red-500 text-sm'>{stepError}</p>}
             <div className='flex justify-between pt-2'>
-              <Button type='button' variant='outline' onClick={handleBack}>
-                {fromReview ? 'Back to review' : 'Back'}
+              <Button type='button' variant='outline' onClick={handleBack} disabled={stepLoading || step7VerifyLoading}>
+                {fromReview && !(step === 7 && step7Phase === 2) ? 'Back to review' : 'Back'}
               </Button>
-              {step < 8 ? (
-                <Button type='button' onClick={handleNext}>
-                  {fromReview ? 'Save & back to review' : 'Next'}
-                </Button>
-              ) : (
-                <Button type='submit' disabled={submitLoading}>
-                  {submitLoading ? 'Submitting…' : 'Submit listing'}
-                </Button>
+              {/* Step 7 phase 2: inline buttons handle the action — no Next button here */}
+              {!(step === 7 && step7Phase === 2) && (
+                step < 8 ? (
+                  <Button type='button' onClick={handleNext} disabled={stepLoading}>
+                    {stepLoading ? 'Saving…' : fromReview ? 'Save & back to review' : 'Next'}
+                  </Button>
+                ) : (
+                  <Button type='submit' disabled={submitLoading}>
+                    {submitLoading ? 'Submitting…' : 'Submit listing'}
+                  </Button>
+                )
               )}
             </div>
           </form>
