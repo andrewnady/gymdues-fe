@@ -216,7 +216,7 @@ export default function ForGymOwnersPage() {
                     </li>
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
-                      <span>Booking &amp; trial request management tools.</span>
+                      <span>Booking &amp; Subscription request management tools.</span>
                     </li>
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
@@ -480,7 +480,7 @@ export default function ForGymOwnersPage() {
                             <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
                               <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
                             </span>
-                            <span>Booking &amp; trial request management tools.</span>
+                            <span>Booking &amp; Subscription request management tools.</span>
                           </li>
                           <li className='flex items-start gap-2 group-hover:translate-x-0.5 transition-transform'>
                             <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
@@ -503,7 +503,7 @@ export default function ForGymOwnersPage() {
                         List your gym
                       </Button>
                       <p className='text-[11px] text-muted-foreground text-center'>
-                        Managing multiple locations? <span className='font-medium text-primary'>Talk to our team</span> for Premium pricing.
+                        Managing multiple locations? <a href='/contact' className='font-medium text-primary hover:underline'>Talk to our team</a> for Premium pricing.
                       </p>
                     </div>
                   </div>
@@ -591,7 +591,7 @@ export default function ForGymOwnersPage() {
                     <p className='text-xs text-emerald-600'>+18% vs. last month</p>
                   </div>
                   <div className='rounded-xl bg-background p-3 shadow-sm'>
-                    <p className='text-xs text-muted-foreground'>Trial requests</p>
+                    <p className='text-xs text-muted-foreground'>Subscription requests</p>
                     <p className='text-2xl font-semibold'>47</p>
                     <p className='text-xs text-emerald-600'>+3.1% conversion</p>
                   </div>
@@ -604,7 +604,7 @@ export default function ForGymOwnersPage() {
                     <li>✓ Add membership plans and pricing</li>
                     <li>✓ Upload photos of your space</li>
                     <li>• Respond to 3 new reviews</li>
-                    <li>• Turn on trial request notifications</li>
+                    <li>• Turn on Subscription request notifications</li>
                   </ul>
                 </div>
               </div>
@@ -667,7 +667,7 @@ export default function ForGymOwnersPage() {
             <Card className='p-5'>
               <p className='text-3xl font-semibold mb-1'>50K+</p>
               <p className='text-sm text-muted-foreground'>
-                clicks and trial requests driven to gym websites each month.
+                clicks and Subscription requests driven to gym websites each month.
               </p>
             </Card>
           </div>
