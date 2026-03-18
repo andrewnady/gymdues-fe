@@ -25,6 +25,7 @@ export interface AuthResponse {
 
 export interface MeResponse {
   success: boolean
+  is_owner?: boolean
   user?: GymOwnerUser
   gym?: GymInfo | null
 }

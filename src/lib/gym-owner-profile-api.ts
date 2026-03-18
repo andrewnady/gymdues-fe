@@ -5,7 +5,7 @@ import { getApiBaseUrl } from './api-config'
 export interface Location {
   id: number
   is_primary: boolean
-  address: string | null
+  street: string | null
   city: string | null
   state: string | null
   zip: string | null
@@ -76,6 +76,7 @@ export interface HourEntry {
   from: string | null
   to: string | null
   is_closed: boolean
+  is_24?: boolean
 }
 
 export interface HoursResponse {

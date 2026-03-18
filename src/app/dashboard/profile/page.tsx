@@ -3,510 +3,1473 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { getAuthToken } from '@/lib/gym-owner-auth'
+import { CheckCircle, Mail, Plus, Trash2, Upload, X } from 'lucide-react'
+import { getAuthToken, apiGetMe } from '@/lib/gym-owner-auth'
 import {
   apiListTeamMembers,
   apiInviteTeamMember,
   apiRevokeTeamMember,
   type TeamMember,
 } from '@/lib/gym-team-api'
-import {
-  apiGetLocations,
-  apiGetDescription,
-  apiUpdateDescription,
-  apiGetPhotos,
-  apiUploadPhotos,
-  apiDeletePhoto,
-  apiGetPricing,
-  apiAddPricing,
-  apiUpdatePricing,
-  apiDeletePricing,
-  apiGetReviews,
-  apiRespondToReview,
-  type Location,
-  type Photo,
-  type PricingPlan,
-  type Review,
-  type HourEntry,
-  apiGetHours,
-  apiUpdateHours,
-} from '@/lib/gym-owner-profile-api'
-import { transformApiUrl } from '@/lib/api-config'
+import { getApiBaseUrl } from '@/lib/api-config'
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const GYM_TYPES: { value: string; label: string }[] = [
+  { value: 'traditional_gym',          label: 'Traditional gym' },
+  { value: 'crossfit_box',             label: 'CrossFit box' },
+  { value: 'yoga_pilates_studio',      label: 'Yoga/Pilates studio' },
+  { value: 'martial_arts',             label: 'Martial arts' },
+  { value: 'boutique_fitness',         label: 'Boutique fitness' },
+  { value: 'swimming',                 label: 'Swimming' },
+  { value: 'rock_climbing',            label: 'Rock climbing' },
+  { value: 'personal_training_studio', label: 'Personal training studio' },
+  { value: 'boxing_mma',               label: 'Boxing / MMA' },
+  { value: 'cycling_studio',           label: 'Cycling studio' },
+  { value: 'dance_studio',             label: 'Dance studio' },
+  { value: 'other',                    label: 'Other' },
+]
+
+const CONTRACT_OPTIONS = [
+  { value: 'month_to_month', label: 'Month-to-month' },
+  { value: '6_months', label: '6 months' },
+  { value: '12_months', label: '12 months' },
+  { value: '24_months', label: '24 months' },
+]
+
+const AMENITIES_CONFIG: Record<string, string[]> = {
+  Equipment: [
+    'Free weights', 'Cardio machines', 'Cable machines', 'Functional training',
+    'Olympic lifting platforms', 'Turf area', 'Resistance machines', 'Battle ropes',
+  ],
+  Classes: [
+    'Group fitness', 'HIIT', 'Yoga', 'Spin/Cycling', 'Pilates', 'Boxing',
+    'Personal training', 'Zumba', 'CrossFit', 'Streching',
+  ],
+  Facilities: [
+    'Locker rooms', 'Showers', 'Sauna', 'Steam room', 'Pool',
+    'Basketball court', 'Childcare', 'Cafe/Juice bar', 'Wheelchair accessible',
+  ],
+  Access: [
+    '24/7 access', 'Keycard entry', 'Guest passes', 'Multi-location access',
+    'App-based entry', 'Parking', 'Bike Storage',
+  ],
+}
+
+const AMENITY_LABEL_TO_VALUE: Record<string, string> = {
+  'Free weights': 'free_weights',
+  'Cardio machines': 'cardio_machines',
+  'Cable machines': 'cable_machines',
+  'Functional training': 'functional_training',
+  'Olympic lifting platforms': 'olympic_lifting_platforms',
+  'Turf area': 'turf_area',
+  'Resistance machines': 'resistance_machines',
+  'Battle ropes': 'battle_ropes',
+  'Group fitness': 'group_fitness',
+  'HIIT': 'hiit',
+  'Yoga': 'yoga',
+  'Spin/Cycling': 'spin',
+  'Pilates': 'pilates',
+  'Boxing': 'boxing',
+  'Personal training': 'personal_training',
+  'Zumba': 'zumba',
+  'CrossFit': 'crossfit',
+  'Streching': 'stretching',
+  'Locker rooms': 'locker_rooms',
+  'Showers': 'showers',
+  'Sauna': 'sauna',
+  'Steam room': 'steam_room',
+  'Pool': 'pool',
+  'Basketball court': 'basketball_court',
+  'Childcare': 'childcare',
+  'Cafe/Juice bar': 'cafe',
+  'Wheelchair accessible': 'wheelchair_accessible',
+  '24/7 access': '24_7_access',
+  'Keycard entry': 'keycard_entry',
+  'Guest passes': 'guest_passes',
+  'Multi-location access': 'multi_location_access',
+  'App-based entry': 'app_entry',
+  'Parking': 'parking',
+  'Bike Storage': 'bike_storage',
+}
+
+const AMENITY_VALUE_TO_LABEL: Record<string, string> = Object.fromEntries(
+  Object.entries(AMENITY_LABEL_TO_VALUE).map(([label, value]) => [value, label])
+)
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface DayHours {
+  open: string
+  close: string
+  closed: boolean
+  is24: boolean
+}
+
+interface PlanFormItem {
+  id: number | null
+  name: string
+  price: string
+  frequency: string
+  contractLength: string
+  enrollmentFee: string
+  annualFee: string
+}
+
+interface ApiLocation {
+  id: number
+  is_primary: boolean
+  street: string
+  city: string
+  state: string
+  zip: string
+  country: string
+  pricing_on_request: boolean
+}
+
+interface Photo {
+  id: number
+  file_name: string
+  url: string
+  thumb_url: string
+  created_at: string
+}
+
+interface Review {
+  id: number
+  rating: number
+  text: string
+  reviewer: string
+  created_at: string
+  owner_response: string | null
+}
+
+// ─── API helper ───────────────────────────────────────────────────────────────
+
+async function apiFetch(url: string, token: string, options: RequestInit = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(options.headers || {}),
+    },
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
 
 // ─── Location Selector ────────────────────────────────────────────────────────
 
 function LocationSelector({
   locations,
-  selected,
+  selectedId,
   onChange,
 }: {
-  locations: Location[]
-  selected: number | null
+  locations: ApiLocation[]
+  selectedId: number | null
   onChange: (id: number) => void
 }) {
   if (!locations.length) return null
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm font-medium text-muted-foreground">Location:</span>
-      {locations.map((loc) => (
-        <button
-          key={loc.id}
-          onClick={() => onChange(loc.id)}
-          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
-            selected === loc.id
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background text-muted-foreground border-border hover:border-primary/50'
-          }`}
-        >
-          {loc.city || loc.address || `Location #${loc.id}`}
-          {loc.is_primary && (
-            <span className="ml-1 opacity-70">(Primary)</span>
-          )}
-        </button>
-      ))}
+    <div className="mb-4">
+      <Label>Location</Label>
+      <div className="flex flex-wrap gap-2 mt-1">
+        {locations.map((loc) => (
+          <button
+            key={loc.id}
+            type="button"
+            onClick={() => onChange(loc.id)}
+            className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+              selectedId === loc.id
+                ? 'bg-[#16a34a] text-white border-[#16a34a]'
+                : 'border-gray-300 hover:border-[#16a34a]'
+            }`}
+          >
+            {loc.street}, {loc.city}
+            {loc.is_primary && <span className="ml-1 text-xs opacity-75">(Primary)</span>}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
 
-// ─── Description Tab ──────────────────────────────────────────────────────────
+// ─── Gym Info Tab ─────────────────────────────────────────────────────────────
 
-function DescriptionTab({ token }: { token: string }) {
-  const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(true)
+interface GymInfoForm {
+  gymName: string
+  gymTypes: string[]
+  street: string
+  city: string
+  state: string
+  zip: string
+  phone: string
+  website: string
+  yearFounded: string
+  description: string
+}
+
+function GymInfoTab({
+  isActive,
+  isOwner,
+}: {
+  isActive: boolean
+  isOwner: boolean
+}) {
+  const loadedRef = useRef(false)
+  const [form, setForm] = useState<GymInfoForm>({
+    gymName: '', gymTypes: [], street: '', city: '', state: '',
+    zip: '', phone: '', website: '', yearFounded: '', description: '',
+  })
+  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const fetchedRef = useRef(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (fetchedRef.current) return
-    fetchedRef.current = true
-    apiGetDescription(token).then((res) => {
-      if (res.success) setDescription(res.description ?? '')
-      setLoading(false)
-    })
-  }, [token])
+    if (!isActive || loadedRef.current) return
+    loadedRef.current = true
+    const token = getAuthToken()
+    if (!token) return
+    setLoading(true)
+    const base = getApiBaseUrl()
+    apiFetch(`${base}/api/v1/gym-owner/profile/info`, token)
+      .then((data) => {
+        setForm({
+          gymName:     data.gym_name ?? '',
+          gymTypes:    data.gym_types ?? [],
+          street:      data.street ?? '',
+          city:        data.city ?? '',
+          state:       data.state ?? '',
+          zip:         data.zip ?? '',
+          phone:       data.phone ?? '',
+          website:     data.website ?? '',
+          yearFounded: data.year_founded ? String(data.year_founded) : '',
+          description: data.description ?? '',
+        })
+      })
+      .catch(() => setError('Failed to load gym info'))
+      .finally(() => setLoading(false))
+  }, [isActive])
 
-  async function handleSave() {
-    setSaving(true)
-    setMessage(null)
-    const res = await apiUpdateDescription(token, description)
-    setSaving(false)
-    setMessage(
-      res.success
-        ? { type: 'success', text: 'Description saved.' }
-        : { type: 'error', text: res.message ?? 'Failed to save.' },
-    )
+  const set = (field: keyof GymInfoForm, value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }))
+
+  const toggleGymType = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      gymTypes: prev.gymTypes.includes(value)
+        ? prev.gymTypes.filter((t) => t !== value)
+        : [...prev.gymTypes, value],
+    }))
   }
 
-  if (loading) return <TabSkeleton />
+  const handleSave = async () => {
+    const token = getAuthToken()
+    if (!token) return
+    if (isOwner && form.gymTypes.length === 0) {
+      setError('Please select at least one gym type.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    setSuccess(false)
+    try {
+      const base = getApiBaseUrl()
+      if (isOwner) {
+        await apiFetch(`${base}/api/v1/gym-owner/profile/info`, token, {
+          method: 'PUT',
+          body: JSON.stringify({
+            gym_name:     form.gymName,
+            gym_types:    form.gymTypes,
+            description:  form.description,
+            street:       form.street,
+            city:         form.city,
+            state:        form.state,
+            zip:          form.zip,
+            phone:        form.phone,
+            website:      form.website || undefined,
+            year_founded: form.yearFounded ? parseInt(form.yearFounded) : undefined,
+          }),
+        })
+      } else {
+        // Non-owners can only update description
+        await apiFetch(`${base}/api/v1/gym-owner/profile/description`, token, {
+          method: 'PUT',
+          body: JSON.stringify({ description: form.description }),
+        })
+      }
+      setSuccess(true)
+    } catch {
+      setError('Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) return <div className="p-6 text-center text-gray-500">Loading…</div>
+
+  const ro = !isOwner // readonly flag for non-owner fields
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Gym Description</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          This description is shared across all your locations and appears on your public listing.
-        </p>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={8}
-          maxLength={5000}
-          placeholder="Write a description of your gym..."
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring placeholder:text-muted-foreground"
-        />
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{description.length} / 5000</span>
-          <Button onClick={handleSave} disabled={saving} size="sm">
-            {saving ? 'Saving…' : 'Save Description'}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Gym Information</CardTitle>
+            {!isOwner && (
+              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                Only the gym owner can edit all fields. You can only update the description.
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Gym Name */}
+          <div>
+            <Label>Gym Name</Label>
+            <Input
+              className="mt-1"
+              value={form.gymName}
+              disabled={ro}
+              onChange={(e) => set('gymName', e.target.value)}
+            />
+          </div>
+
+          {/* Gym Types */}
+          <div>
+            <Label>Gym Type(s)</Label>
+            <div className={`flex flex-wrap gap-2 mt-2 ${ro ? 'pointer-events-none opacity-60' : ''}`}>
+              {GYM_TYPES.map((t) => {
+                const active = form.gymTypes.includes(t.value)
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => !ro && toggleGymType(t.value)}
+                    className={`px-3 py-1.5 rounded-full border text-sm transition-colors ${
+                      active
+                        ? 'bg-[#16a34a] text-white border-[#16a34a]'
+                        : 'border-gray-300 hover:border-[#16a34a]'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Label>Street Address</Label>
+              <Input
+                className="mt-1"
+                placeholder="123 Main St"
+                value={form.street}
+                disabled={ro}
+                onChange={(e) => set('street', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>City</Label>
+              <Input
+                className="mt-1"
+                placeholder="City"
+                value={form.city}
+                disabled={ro}
+                onChange={(e) => set('city', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>State</Label>
+              <Input
+                className="mt-1"
+                placeholder="State"
+                value={form.state}
+                disabled={ro}
+                onChange={(e) => set('state', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>ZIP Code</Label>
+              <Input
+                className="mt-1"
+                placeholder="ZIP"
+                value={form.zip}
+                disabled={ro}
+                onChange={(e) => set('zip', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Phone Number</Label>
+              <Input
+                className="mt-1"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={form.phone}
+                disabled={ro}
+                onChange={(e) => set('phone', e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Business Website</Label>
+              <Input
+                className="mt-1"
+                type="url"
+                placeholder="https://yourgym.com"
+                value={form.website}
+                disabled={ro}
+                onChange={(e) => set('website', e.target.value)}
+              />
+            </div>
+            {/* Year Founded */}
+            <div>
+              <Label>Year Founded</Label>
+              <Input
+                className="mt-1"
+                type="number"
+                placeholder="e.g. 2010"
+                value={form.yearFounded}
+                disabled={ro}
+                onChange={(e) => set('yearFounded', e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Description — editable for everyone */}
+          <div>
+            <Label>Description</Label>
+            <textarea
+              className="w-full mt-1 px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#16a34a]"
+              rows={6}
+              placeholder="Tell potential members about your gym…"
+              value={form.description}
+              onChange={(e) => set('description', e.target.value)}
+            />
+          </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">Saved successfully.</p>}
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-[#16a34a] hover:bg-[#15803a] text-white"
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
           </Button>
-        </div>
-        {message && (
-          <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
-            {message.text}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
-// ─── Photos Tab ───────────────────────────────────────────────────────────────
+// ─── Amenities Tab ────────────────────────────────────────────────────────────
 
-function PhotosTab({ token, locations }: { token: string; locations: Location[] }) {
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(locations[0]?.id ?? null)
-  const [photos, setPhotos] = useState<Photo[]>([])
-  const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const fetchedLocationRef = useRef<number | null>(null)
+function AmenitiesTab({ isActive }: { isActive: boolean }) {
+  const loadedRef = useRef(false)
+  const [selected, setSelected] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
-  const loadPhotos = useCallback(async () => {
-    setLoading(true)
-    const res = await apiGetPhotos(token)
-    if (res.success) setPhotos(res.photos ?? [])
-    setLoading(false)
-  }, [token])
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!selectedLocation || fetchedLocationRef.current === selectedLocation) return
-    fetchedLocationRef.current = selectedLocation
-    loadPhotos()
-  }, [selectedLocation])
+    if (!isActive || loadedRef.current) return
+    loadedRef.current = true
+    const token = getAuthToken()
+    if (!token) return
+    setLoading(true)
+    const base = getApiBaseUrl()
+    apiFetch(`${base}/api/v1/gym-owner/profile/amenities`, token)
+      .then((data) => {
+        const labels = (data.amenities as string[]).map(
+          (v) => AMENITY_VALUE_TO_LABEL[v] ?? v
+        )
+        setSelected(labels)
+      })
+      .catch(() => setError('Failed to load amenities'))
+      .finally(() => setLoading(false))
+  }, [isActive])
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    if (!files.length) return
-    setUploading(true)
-    setMessage(null)
-    const res = await apiUploadPhotos(token, files)
-    setUploading(false)
-    if (res.success) {
-      setMessage({ type: 'success', text: res.message ?? 'Photos uploaded.' })
-      await loadPhotos()
-    } else {
-      setMessage({ type: 'error', text: res.message ?? 'Upload failed.' })
-    }
-    if (fileInputRef.current) fileInputRef.current.value = ''
+  const toggle = (label: string) => {
+    setSelected((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    )
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm('Delete this photo?')) return
-    setDeletingId(id)
-    const res = await apiDeletePhoto(token, id)
-    setDeletingId(null)
-    if (res.success) {
-      setPhotos((prev) => prev.filter((p) => p.id !== id))
-      setMessage({ type: 'success', text: 'Photo deleted.' })
-    } else {
-      setMessage({ type: 'error', text: res.message ?? 'Failed to delete.' })
+  const handleSave = async () => {
+    const token = getAuthToken()
+    if (!token) return
+    setSaving(true)
+    setError('')
+    setSuccess(false)
+    try {
+      const base = getApiBaseUrl()
+      const values = selected.map((l) => AMENITY_LABEL_TO_VALUE[l] ?? l)
+      await apiFetch(`${base}/api/v1/gym-owner/profile/amenities`, token, {
+        method: 'PUT',
+        body: JSON.stringify({ amenities: values }),
+      })
+      setSuccess(true)
+    } catch {
+      setError('Failed to save')
+    } finally {
+      setSaving(false)
     }
   }
+
+  if (loading) return <div className="p-6 text-center text-gray-500">Loading…</div>
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Gym Photos</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <LocationSelector
-          locations={locations}
-          selected={selectedLocation}
-          onChange={(id) => { setSelectedLocation(id); setMessage(null) }}
-        />
-
-        {!selectedLocation ? (
-          <p className="text-sm text-muted-foreground">Select a location to manage photos.</p>
-        ) : loading ? (
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto my-8" />
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">
-              Upload photos that appear in your public gallery. Max 10 files per upload, 5 MB each.
-            </p>
-
-            <div className="flex items-center gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                multiple
-                className="hidden"
-                onChange={handleUpload}
-              />
-              <Button
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? 'Uploading…' : 'Upload Photos'}
-              </Button>
-              <span className="text-xs text-muted-foreground">{photos.length} photo(s)</span>
-            </div>
-
-            {message && (
-              <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
-                {message.text}
-              </p>
-            )}
-
-            {photos.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center border border-dashed rounded-lg">
-                No photos yet. Upload your first photo above.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="group relative aspect-[4/3] rounded-lg overflow-hidden border">
-                    <Image
-                      src={transformApiUrl(photo.thumb_url) || transformApiUrl(photo.url)}
-                      alt={photo.file_name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button
-                        onClick={() => handleDelete(photo.id)}
-                        disabled={deletingId === photo.id}
-                        className="rounded-md bg-destructive text-destructive-foreground text-xs px-3 py-1.5 font-medium hover:bg-destructive/90 disabled:opacity-50"
-                      >
-                        {deletingId === photo.id ? 'Deleting…' : 'Delete'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle>Amenities & Features</CardTitle></CardHeader>
+        <CardContent className="space-y-6">
+          {Object.entries(AMENITIES_CONFIG).map(([category, items]) => (
+            <div key={category}>
+              <h3 className="font-medium text-gray-700 mb-3">{category}</h3>
+              <div className="flex flex-wrap gap-2">
+                {items.map((item) => {
+                  const active = selected.includes(item)
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggle(item)}
+                      className={`px-3 py-1.5 rounded-full border text-sm transition-colors ${
+                        active
+                          ? 'bg-[#16a34a] text-white border-[#16a34a]'
+                          : 'border-gray-300 hover:border-[#16a34a]'
+                      }`}
+                    >
+                      {active && <CheckCircle className="inline w-3 h-3 mr-1" />}
+                      {item}
+                    </button>
+                  )
+                })}
               </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          ))}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">Saved successfully.</p>}
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-[#16a34a] hover:bg-[#15803a] text-white"
+          >
+            {saving ? 'Saving…' : 'Save Amenities'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
 // ─── Pricing Tab ──────────────────────────────────────────────────────────────
 
-type PlanForm = { tier_name: string; price: string; frequency: string; description: string }
-const emptyPlanForm = (): PlanForm => ({ tier_name: '', price: '', frequency: '', description: '' })
-
-function PricingTab({ token, locations }: { token: string; locations: Location[] }) {
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(
-    locations[0]?.id ?? null,
+function PricingTab({
+  isActive,
+  locations,
+}: {
+  isActive: boolean
+  locations: ApiLocation[]
+}) {
+  const [selectedLocId, setSelectedLocId] = useState<number | null>(
+    locations[0]?.id ?? null
   )
-  const [plans, setPlans] = useState<PricingPlan[]>([])
+  const loadedLocRef = useRef<number | null>(null)
+  const [plans, setPlans] = useState<PlanFormItem[]>([])
+  const [pricingOnRequest, setPricingOnRequest] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [editingPlan, setEditingPlan] = useState<PricingPlan | null>(null)
-  const [form, setForm] = useState<PlanForm>(emptyPlanForm())
-  const [submitting, setSubmitting] = useState(false)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const fetchedLocationRef = useRef<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
-  const loadPlans = useCallback(async (addressId: number) => {
-    setLoading(true)
-    const res = await apiGetPricing(token, addressId)
-    if (res.success) setPlans(res.pricing ?? [])
-    else setMessage({ type: 'error', text: res.message ?? 'Failed to load pricing.' })
-    setLoading(false)
-  }, [token])
+  const loadPlans = useCallback(
+    async (locId: number) => {
+      const token = getAuthToken()
+      if (!token) return
+      setLoading(true)
+      setError('')
+      try {
+        const base = getApiBaseUrl()
+        const data = await apiFetch(
+          `${base}/api/v1/gym-owner/locations/${locId}/pricing`,
+          token
+        )
+        const loc = locations.find((l) => l.id === locId)
+        setPricingOnRequest(loc?.pricing_on_request ?? false)
+        setPlans(
+          (data.pricing as any[]).map((p) => ({
+            id: p.id,
+            name: p.tier_name,
+            price: String(p.price),
+            frequency: p.frequency,
+            contractLength: p.contract_length,
+            enrollmentFee: String(p.enrollment_fee ?? ''),
+            annualFee: String(p.annual_fee ?? ''),
+          }))
+        )
+      } catch {
+        setError('Failed to load pricing')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [locations]
+  )
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!selectedLocation || fetchedLocationRef.current === selectedLocation) return
-    fetchedLocationRef.current = selectedLocation
-    loadPlans(selectedLocation)
-  }, [selectedLocation])
+    if (!isActive || selectedLocId === null) return
+    if (loadedLocRef.current === selectedLocId) return
+    loadedLocRef.current = selectedLocId
+    loadPlans(selectedLocId)
+  }, [isActive, selectedLocId, loadPlans])
 
-  function openAdd() {
-    setEditingPlan(null)
-    setForm(emptyPlanForm())
-    setShowForm(true)
+  const addPlan = () => {
+    setPlans((prev) => [
+      ...prev,
+      { id: null, name: '', price: '', frequency: 'monthly', contractLength: 'month_to_month', enrollmentFee: '', annualFee: '' },
+    ])
   }
 
-  function openEdit(plan: PricingPlan) {
-    setEditingPlan(plan)
-    setForm({
-      tier_name: plan.tier_name,
-      price: String(plan.price),
-      frequency: plan.frequency ?? '',
-      description: plan.description ?? '',
-    })
-    setShowForm(true)
+  const updatePlan = (index: number, field: keyof PlanFormItem, value: string) => {
+    setPlans((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!selectedLocation) return
-    setSubmitting(true)
-    setMessage(null)
-    const payload = {
-      tier_name: form.tier_name,
-      price: parseFloat(form.price),
-      frequency: form.frequency || null,
-      description: form.description || null,
+  const deletePlan = async (index: number) => {
+    const plan = plans[index]
+    if (plan.id !== null && selectedLocId !== null) {
+      const token = getAuthToken()
+      if (!token) return
+      try {
+        const base = getApiBaseUrl()
+        await apiFetch(
+          `${base}/api/v1/gym-owner/locations/${selectedLocId}/pricing/${plan.id}`,
+          token,
+          { method: 'DELETE' }
+        )
+      } catch {
+        setError('Failed to delete plan')
+        return
+      }
     }
-    const res = editingPlan
-      ? await apiUpdatePricing(token, selectedLocation, editingPlan.id, payload)
-      : await apiAddPricing(token, selectedLocation, payload)
-    setSubmitting(false)
-    if (res.success) {
-      setMessage({ type: 'success', text: editingPlan ? 'Plan updated.' : 'Plan added.' })
-      setShowForm(false)
-      await loadPlans(selectedLocation)
-    } else {
-      setMessage({ type: 'error', text: res.message ?? 'Failed to save plan.' })
-    }
+    setPlans((prev) => prev.filter((_, i) => i !== index))
   }
 
-  async function handleDelete(planId: number) {
-    if (!selectedLocation || !confirm('Delete this pricing plan?')) return
-    setDeletingId(planId)
-    const res = await apiDeletePricing(token, selectedLocation, planId)
-    setDeletingId(null)
-    if (res.success) {
-      setPlans((prev) => prev.filter((p) => p.id !== planId))
-      setMessage({ type: 'success', text: 'Plan deleted.' })
-    } else {
-      setMessage({ type: 'error', text: res.message ?? 'Failed to delete.' })
+  const handleSave = async () => {
+    if (selectedLocId === null) return
+    const token = getAuthToken()
+    if (!token) return
+    setSaving(true)
+    setError('')
+    setSuccess(false)
+    try {
+      const base = getApiBaseUrl()
+      for (const plan of plans) {
+        const body = JSON.stringify({
+          tier_name: plan.name,
+          price: parseFloat(plan.price) || 0,
+          frequency: plan.frequency,
+          contract_length: plan.contractLength,
+          enrollment_fee: parseFloat(plan.enrollmentFee) || 0,
+          annual_fee: parseFloat(plan.annualFee) || 0,
+        })
+        if (plan.id === null) {
+          await apiFetch(
+            `${base}/api/v1/gym-owner/locations/${selectedLocId}/pricing`,
+            token,
+            { method: 'POST', body }
+          )
+        } else {
+          await apiFetch(
+            `${base}/api/v1/gym-owner/locations/${selectedLocId}/pricing/${plan.id}`,
+            token,
+            { method: 'PUT', body }
+          )
+        }
+      }
+      setSuccess(true)
+      loadedLocRef.current = null
+      loadPlans(selectedLocId)
+    } catch {
+      setError('Failed to save plans')
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Pricing & Membership Plans</CardTitle>
+          <CardTitle>Membership Plans</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <LocationSelector
             locations={locations}
-            selected={selectedLocation}
-            onChange={(id) => { setSelectedLocation(id); setMessage(null) }}
+            selectedId={selectedLocId}
+            onChange={(id) => {
+              setSelectedLocId(id)
+              loadedLocRef.current = null
+            }}
           />
-
-          {!selectedLocation ? (
-            <p className="text-sm text-muted-foreground">Select a location to manage pricing.</p>
-          ) : loading ? (
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto my-8" />
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <input
+              id="pricing-on-request"
+              type="checkbox"
+              className="rounded"
+              checked={pricingOnRequest}
+              onChange={async (e) => {
+                const value = e.target.checked
+                const token = getAuthToken()
+                if (!token || selectedLocId === null) return
+                try {
+                  await apiFetch(
+                    `${getApiBaseUrl()}/api/v1/gym-owner/locations/${selectedLocId}/pricing-on-request`,
+                    token,
+                    { method: 'PUT', body: JSON.stringify({ pricing_on_request: value }) }
+                  )
+                  setPricingOnRequest(value)
+                } catch {
+                  setError('Failed to update pricing preference')
+                }
+              }}
+            />
+            <label htmlFor="pricing-on-request" className="text-sm text-gray-700 cursor-pointer select-none">
+              Pricing on request — hide listed prices and ask members to contact the gym
+            </label>
+          </div>
+          {loading ? (
+            <div className="text-center text-gray-500 py-4">Loading…</div>
           ) : (
             <>
-              {message && (
-                <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
-                  {message.text}
-                </p>
-              )}
-
-              {/* Plan list */}
-              {plans.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">
-                  No pricing plans yet. Add your first plan below.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {plans.map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="flex items-start justify-between gap-4 rounded-lg border p-4"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{plan.tier_name}</span>
-                          {plan.frequency && (
-                            <Badge variant="secondary" className="text-xs">
-                              {plan.frequency}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-lg font-semibold text-primary">
-                          ${Number(plan.price).toFixed(2)}
-                        </p>
-                        {plan.description && (
-                          <p className="text-sm text-muted-foreground">{plan.description}</p>
-                        )}
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEdit(plan)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          onClick={() => handleDelete(plan.id)}
-                          disabled={deletingId === plan.id}
-                        >
-                          {deletingId === plan.id ? '…' : 'Delete'}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <Button size="sm" variant="outline" onClick={openAdd}>
-                + Add Plan
-              </Button>
-
-              {/* Inline add/edit form */}
-              {showForm && (
-                <form
-                  onSubmit={handleSubmit}
-                  className="rounded-lg border p-4 space-y-3 bg-muted/30"
-                >
-                  <p className="text-sm font-medium">
-                    {editingPlan ? 'Edit Plan' : 'New Plan'}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Plan Name *</label>
+              {plans.map((plan, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => deletePlan(index)}
+                    className="absolute top-3 right-3 text-red-400 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Plan Name</Label>
                       <Input
-                        required
-                        value={form.tier_name}
-                        onChange={(e) => setForm({ ...form, tier_name: e.target.value })}
-                        placeholder="e.g. Monthly Membership"
+                        className="mt-1"
+                        placeholder="e.g. Basic, Premium"
+                        value={plan.name}
+                        onChange={(e) => updatePlan(index, 'name', e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Price ($) *</label>
+                    <div>
+                      <Label>Price</Label>
                       <Input
-                        required
+                        className="mt-1"
                         type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.price}
-                        onChange={(e) => setForm({ ...form, price: e.target.value })}
-                        placeholder="49.99"
+                        placeholder="0.00"
+                        value={plan.price}
+                        onChange={(e) => updatePlan(index, 'price', e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Frequency</label>
+                    <div>
+                      <Label>Frequency</Label>
+                      <select
+                        className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
+                        value={plan.frequency}
+                        onChange={(e) => updatePlan(index, 'frequency', e.target.value)}
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="annually">Annually</option>
+                        <option value="daily">Daily</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Contract Length</Label>
+                      <select
+                        className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
+                        value={plan.contractLength}
+                        onChange={(e) => updatePlan(index, 'contractLength', e.target.value)}
+                      >
+                        {CONTRACT_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Enrollment Fee</Label>
                       <Input
-                        value={form.frequency}
-                        onChange={(e) => setForm({ ...form, frequency: e.target.value })}
-                        placeholder="e.g. month, year, day"
+                        className="mt-1"
+                        type="number"
+                        placeholder="0.00"
+                        value={plan.enrollmentFee}
+                        onChange={(e) => updatePlan(index, 'enrollmentFee', e.target.value)}
                       />
                     </div>
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-xs text-muted-foreground">Description</label>
+                    <div>
+                      <Label>Annual Fee</Label>
                       <Input
-                        value={form.description}
-                        onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        placeholder="What's included in this plan?"
-                        maxLength={1000}
+                        className="mt-1"
+                        type="number"
+                        placeholder="0.00"
+                        value={plan.annualFee}
+                        onChange={(e) => updatePlan(index, 'annualFee', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button type="submit" size="sm" disabled={submitting}>
-                      {submitting ? 'Saving…' : editingPlan ? 'Update Plan' : 'Add Plan'}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowForm(false)}
-                    >
-                      Cancel
-                    </Button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPlan}
+                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#16a34a] hover:text-[#16a34a] flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add Plan
+              </button>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {success && <p className="text-green-600 text-sm">Saved successfully.</p>}
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-[#16a34a] hover:bg-[#15803a] text-white"
+              >
+                {saving ? 'Saving…' : 'Save All Plans'}
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ─── Hours Tab ────────────────────────────────────────────────────────────────
+
+function HoursTab({
+  isActive,
+  locations,
+}: {
+  isActive: boolean
+  locations: ApiLocation[]
+}) {
+  const [selectedLocId, setSelectedLocId] = useState<number | null>(
+    locations[0]?.id ?? null
+  )
+  const loadedLocRef = useRef<number | null>(null)
+  const defaultHours = (): Record<string, DayHours> =>
+    Object.fromEntries(
+      DAYS.map((d) => [d, { open: '06:00', close: '22:00', closed: false, is24: false }])
+    )
+  const [hours, setHours] = useState<Record<string, DayHours>>(defaultHours())
+  const [sameHours, setSameHours] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+
+  const loadHours = useCallback(async (locId: number) => {
+    const token = getAuthToken()
+    if (!token) return
+    setLoading(true)
+    setError('')
+    try {
+      const base = getApiBaseUrl()
+      const data = await apiFetch(
+        `${base}/api/v1/gym-owner/locations/${locId}/hours`,
+        token
+      )
+      const newHours = defaultHours()
+      for (const entry of data.hours as any[]) {
+        const day = DAYS.find((d) => d.toLowerCase() === entry.day?.toLowerCase())
+        if (!day) continue
+        newHours[day] = {
+          open: entry.from ?? '06:00',
+          close: entry.to ?? '22:00',
+          closed: !!entry.is_closed,
+          is24: !!entry.is_24,
+        }
+      }
+      setHours(newHours)
+    } catch {
+      setError('Failed to load hours')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isActive || selectedLocId === null) return
+    if (loadedLocRef.current === selectedLocId) return
+    loadedLocRef.current = selectedLocId
+    loadHours(selectedLocId)
+  }, [isActive, selectedLocId, loadHours])
+
+  const updateDay = (day: string, field: keyof DayHours, value: string | boolean) => {
+    setHours((prev) => {
+      const updated = { ...prev, [day]: { ...prev[day], [field]: value } }
+      if (sameHours && field !== 'closed' && field !== 'is24') {
+        DAYS.forEach((d) => { updated[d] = { ...updated[d], [field]: value } })
+      }
+      return updated
+    })
+  }
+
+  const applySameHours = (enable: boolean) => {
+    setSameHours(enable)
+    if (enable) {
+      const mon = hours['Monday']
+      setHours((prev) => {
+        const next = { ...prev }
+        DAYS.forEach((d) => { next[d] = { ...next[d], open: mon.open, close: mon.close } })
+        return next
+      })
+    }
+  }
+
+  const handleSave = async () => {
+    if (selectedLocId === null) return
+    const token = getAuthToken()
+    if (!token) return
+    setSaving(true)
+    setError('')
+    setSuccess(false)
+    try {
+      const base = getApiBaseUrl()
+      const hoursPayload = DAYS.map((day) => ({
+        day: day.toLowerCase(),
+        from: hours[day].closed || hours[day].is24 ? null : hours[day].open,
+        to: hours[day].closed || hours[day].is24 ? null : hours[day].close,
+        is_closed: hours[day].closed,
+        is_24: hours[day].is24,
+      }))
+      await apiFetch(
+        `${base}/api/v1/gym-owner/locations/${selectedLocId}/hours`,
+        token,
+        { method: 'PUT', body: JSON.stringify({ hours: hoursPayload }) }
+      )
+      setSuccess(true)
+    } catch {
+      setError('Failed to save hours')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle>Operating Hours</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <LocationSelector
+            locations={locations}
+            selectedId={selectedLocId}
+            onChange={(id) => {
+              setSelectedLocId(id)
+              loadedLocRef.current = null
+            }}
+          />
+          {loading ? (
+            <div className="text-center text-gray-500 py-4">Loading…</div>
+          ) : (
+            <>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sameHours}
+                  onChange={(e) => applySameHours(e.target.checked)}
+                  className="rounded"
+                />
+                Apply Monday hours to all days
+              </label>
+              <div className="space-y-3">
+                {DAYS.map((day) => (
+                  <div key={day} className="flex items-center gap-3 flex-wrap">
+                    <span className="w-24 text-sm font-medium text-gray-700">{day}</span>
+                    <label className="flex items-center gap-1.5 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={hours[day].closed}
+                        onChange={(e) => updateDay(day, 'closed', e.target.checked)}
+                        className="rounded"
+                      />
+                      Closed
+                    </label>
+                    <label className="flex items-center gap-1.5 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={hours[day].is24}
+                        onChange={(e) => updateDay(day, 'is24', e.target.checked)}
+                        className="rounded"
+                      />
+                      24 hrs
+                    </label>
+                    {!hours[day].closed && !hours[day].is24 && (
+                      <>
+                        <Input
+                          type="time"
+                          className="w-32"
+                          value={hours[day].open}
+                          onChange={(e) => updateDay(day, 'open', e.target.value)}
+                        />
+                        <span className="text-sm text-gray-400">–</span>
+                        <Input
+                          type="time"
+                          className="w-32"
+                          value={hours[day].close}
+                          onChange={(e) => updateDay(day, 'close', e.target.value)}
+                        />
+                      </>
+                    )}
                   </div>
-                </form>
+                ))}
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {success && <p className="text-green-600 text-sm">Saved successfully.</p>}
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-[#16a34a] hover:bg-[#15803a] text-white"
+              >
+                {saving ? 'Saving…' : 'Save Hours'}
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ─── Photos Tab ───────────────────────────────────────────────────────────────
+
+type SinglePhotoType = 'logo' | 'featured_image'
+
+function SingleImageUpload({
+  label,
+  description,
+  type,
+  current,
+  onUploaded,
+  onDeleted,
+}: {
+  label: string
+  description: string
+  type: SinglePhotoType
+  current: Photo | null
+  onUploaded: (file: Photo) => void
+  onDeleted: () => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (file: File | null) => {
+    if (!file) return
+    const token = getAuthToken()
+    if (!token) return
+    setUploading(true)
+    setError('')
+    try {
+      const form = new FormData()
+      form.append('type', type)
+      form.append('photo', file)
+      const data = await apiFetch(
+        `${getApiBaseUrl()}/api/v1/gym-owner/profile/photos`,
+        token,
+        { method: 'POST', body: form }
+      )
+      if (data.file) onUploaded(data.file)
+    } catch {
+      setError('Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!current) return
+    const token = getAuthToken()
+    if (!token) return
+    try {
+      await apiFetch(
+        `${getApiBaseUrl()}/api/v1/gym-owner/profile/photos/${current.id}?type=${type}`,
+        token,
+        { method: 'DELETE' }
+      )
+      onDeleted()
+    } catch {
+      setError('Failed to delete')
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+      <p className="text-xs text-gray-400 mb-3">{description}</p>
+      {current ? (
+        <div className="relative inline-block group">
+          <Image
+            src={current.thumb_url || current.url}
+            alt={label}
+            width={160}
+            height={160}
+            className="rounded-lg object-cover border"
+          />
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <div
+          className="w-40 h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#16a34a] transition-colors"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload className="w-6 h-6 text-gray-400 mb-1" />
+          <span className="text-xs text-gray-400">Upload</span>
+        </div>
+      )}
+      {current && (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="mt-2 text-xs text-[#16a34a] hover:underline block"
+        >
+          Replace
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleUpload(e.target.files?.[0] ?? null)}
+      />
+      {uploading && <p className="text-xs text-gray-500 mt-1">Uploading…</p>}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  )
+}
+
+function PhotosTab({ isActive }: { isActive: boolean }) {
+  const loadedRef = useRef(false)
+  const [logo, setLogo] = useState<Photo | null>(null)
+  const [featuredImage, setFeaturedImage] = useState<Photo | null>(null)
+  const [photos, setPhotos] = useState<Photo[]>([])
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const loadPhotos = useCallback(async () => {
+    const token = getAuthToken()
+    if (!token) return
+    setLoading(true)
+    try {
+      const data = await apiFetch(`${getApiBaseUrl()}/api/v1/gym-owner/profile/photos`, token)
+      setLogo(data.logo ?? null)
+      setFeaturedImage(data.featured_image ?? null)
+      setPhotos(data.photos ?? [])
+    } catch {
+      setError('Failed to load photos')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isActive || loadedRef.current) return
+    loadedRef.current = true
+    loadPhotos()
+  }, [isActive, loadPhotos])
+
+  const handleGalleryUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const token = getAuthToken()
+    if (!token) return
+    setUploading(true)
+    setError('')
+    setSuccess(false)
+    try {
+      const form = new FormData()
+      form.append('type', 'gallery')
+      Array.from(files).forEach((f) => form.append('photos[]', f))
+      const data = await apiFetch(`${getApiBaseUrl()}/api/v1/gym-owner/profile/photos`, token, {
+        method: 'POST',
+        body: form,
+      })
+      setPhotos((prev) => [...prev, ...(data.uploaded ?? [])])
+      setSuccess(true)
+    } catch {
+      setError('Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleGalleryDelete = async (id: number) => {
+    const token = getAuthToken()
+    if (!token) return
+    try {
+      await apiFetch(`${getApiBaseUrl()}/api/v1/gym-owner/profile/photos/${id}`, token, {
+        method: 'DELETE',
+      })
+      setPhotos((prev) => prev.filter((p) => p.id !== id))
+    } catch {
+      setError('Failed to delete photo')
+    }
+  }
+
+  if (loading) return <div className="p-6 text-center text-gray-500">Loading…</div>
+
+  return (
+    <div className="space-y-6">
+      {/* Logo & Featured Image */}
+      <Card>
+        <CardHeader><CardTitle>Logo &amp; Featured Image</CardTitle></CardHeader>
+        <CardContent className="flex flex-wrap gap-10">
+          <SingleImageUpload
+            label="Gym Logo"
+            description="Square format recommended · JPG, PNG, WebP · Max 5 MB"
+            type="logo"
+            current={logo}
+            onUploaded={(file) => setLogo(file)}
+            onDeleted={() => setLogo(null)}
+          />
+          <SingleImageUpload
+            label="Featured Image"
+            description="Shown as the main banner on your gym listing · JPG, PNG, WebP · Max 5 MB"
+            type="featured_image"
+            current={featuredImage}
+            onUploaded={(file) => setFeaturedImage(file)}
+            onDeleted={() => setFeaturedImage(null)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Gallery */}
+      <Card>
+        <CardHeader><CardTitle>Photo Gallery</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#16a34a] cursor-pointer transition-colors"
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault()
+              handleGalleryUpload(e.dataTransfer.files)
+            }}
+          >
+            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-700">Click or drag photos to upload</p>
+            <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP · Max 5 MB each · Up to 10 at once</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleGalleryUpload(e.target.files)}
+            />
+          </div>
+          {uploading && <p className="text-sm text-gray-500">Uploading…</p>}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">Uploaded successfully.</p>}
+          {photos.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {photos.map((photo) => (
+                <div key={photo.id} className="relative group rounded-lg overflow-hidden aspect-square bg-gray-100">
+                  <Image
+                    src={photo.thumb_url || photo.url}
+                    alt={photo.file_name}
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleGalleryDelete(photo.id)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ─── Reviews Tab ──────────────────────────────────────────────────────────────
+
+function ReviewsTab({
+  isActive,
+  locations,
+}: {
+  isActive: boolean
+  locations: ApiLocation[]
+}) {
+  const [selectedLocId, setSelectedLocId] = useState<number | null>(
+    locations[0]?.id ?? null
+  )
+  const loadedLocRef = useRef<number | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [meta, setMeta] = useState<{ current_page: number; last_page: number } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError] = useState('')
+  const [responding, setResponding] = useState<Record<number, string>>({})
+  const [responseTexts, setResponseTexts] = useState<Record<number, string>>({})
+
+  const loadReviews = useCallback(async (locId: number, page = 1, append = false) => {
+    const token = getAuthToken()
+    if (!token) return
+    if (page === 1) setLoading(true); else setLoadingMore(true)
+    setError('')
+    try {
+      const base = getApiBaseUrl()
+      const data = await apiFetch(
+        `${base}/api/v1/gym-owner/locations/${locId}/reviews?page=${page}`,
+        token
+      )
+      setReviews((prev) => append ? [...prev, ...(data.data ?? [])] : (data.data ?? []))
+      setMeta(data.meta ?? null)
+    } catch {
+      setError('Failed to load reviews')
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isActive || selectedLocId === null) return
+    if (loadedLocRef.current === selectedLocId) return
+    loadedLocRef.current = selectedLocId
+    loadReviews(selectedLocId, 1, false)
+  }, [isActive, selectedLocId, loadReviews])
+
+  const handleRespond = async (reviewId: number) => {
+    const token = getAuthToken()
+    if (!token) return
+    const text = responseTexts[reviewId] ?? ''
+    if (!text.trim()) return
+    setResponding((prev) => ({ ...prev, [reviewId]: 'saving' }))
+    try {
+      const base = getApiBaseUrl()
+      await apiFetch(`${base}/api/v1/gym-owner/reviews/${reviewId}/respond`, token, {
+        method: 'POST',
+        body: JSON.stringify({ response: text }),
+      })
+      setReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? { ...r, owner_response: text } : r))
+      )
+      setResponseTexts((prev) => ({ ...prev, [reviewId]: '' }))
+      setResponding((prev) => ({ ...prev, [reviewId]: 'done' }))
+    } catch {
+      setResponding((prev) => ({ ...prev, [reviewId]: 'error' }))
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle>Member Reviews</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <LocationSelector
+            locations={locations}
+            selectedId={selectedLocId}
+            onChange={(id) => {
+              setSelectedLocId(id)
+              loadedLocRef.current = null
+            }}
+          />
+          {loading ? (
+            <div className="text-center text-gray-500 py-4">Loading…</div>
+          ) : error ? (
+            <p className="text-red-500 text-sm">{error}</p>
+          ) : reviews.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center py-8">No reviews yet for this location.</p>
+          ) : (
+            <>
+              {reviews.map((review) => (
+                <div key={review.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{review.reviewer}</p>
+                      <p className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-200'}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700">{review.text}</p>
+                  {review.owner_response ? (
+                    <div className="bg-gray-50 rounded p-3">
+                      <p className="text-xs font-medium text-gray-500 mb-1">Your response</p>
+                      <p className="text-sm text-gray-700">{review.owner_response}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <textarea
+                        className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#16a34a]"
+                        rows={3}
+                        placeholder="Write a response…"
+                        value={responseTexts[review.id] ?? ''}
+                        onChange={(e) =>
+                          setResponseTexts((prev) => ({ ...prev, [review.id]: e.target.value }))
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleRespond(review.id)}
+                        disabled={responding[review.id] === 'saving'}
+                        className="bg-[#16a34a] hover:bg-[#15803a] text-white"
+                      >
+                        {responding[review.id] === 'saving' ? 'Sending…' : 'Respond'}
+                      </Button>
+                      {responding[review.id] === 'error' && (
+                        <p className="text-red-500 text-xs">Failed to send response.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {meta && meta.current_page < meta.last_page && (
+                <div className="text-center pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => loadReviews(selectedLocId!, meta.current_page + 1, true)}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? 'Loading…' : `Load more (${meta.current_page} of ${meta.last_page} pages)`}
+                  </Button>
+                </div>
               )}
             </>
           )}
@@ -516,553 +1479,152 @@ function PricingTab({ token, locations }: { token: string; locations: Location[]
   )
 }
 
-// ─── Reviews Tab ──────────────────────────────────────────────────────────────
+// ─── Team Tab ─────────────────────────────────────────────────────────────────
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-const DAY_LABELS: Record<string, string> = {
-  monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed',
-  thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
-}
-
-function HoursTab({ token, locations }: { token: string; locations: Location[] }) {
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(locations[0]?.id ?? null)
-  const [hours, setHours] = useState<HourEntry[]>(() =>
-    DAYS.map((day) => ({ day, from: '06:00', to: '22:00', is_closed: false })),
-  )
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const fetchedLocationRef = useRef<number | null>(null)
-
-  const loadHours = useCallback(async (addressId: number) => {
-    setLoading(true)
-    const res = await apiGetHours(token, addressId)
-    if (res.success && res.hours) {
-      // Days not returned by the API are treated as closed
-      const merged = DAYS.map((day) => {
-        const found = res.hours!.find((h) => h.day === day)
-        if (found) {
-          return {
-            day: found.day,
-            from: found.from ?? '06:00',
-            to: found.to ?? '22:00',
-            is_closed: found.is_closed,
-          }
-        }
-        return { day, from: '06:00', to: '22:00', is_closed: true }
-      })
-      setHours(merged)
-    }
-    setLoading(false)
-  }, [token])
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!selectedLocation || fetchedLocationRef.current === selectedLocation) return
-    fetchedLocationRef.current = selectedLocation
-    loadHours(selectedLocation)
-  }, [selectedLocation])
-
-  function updateDay(day: string, patch: Partial<HourEntry>) {
-    setHours((prev) => prev.map((h) => (h.day === day ? { ...h, ...patch } : h)))
-  }
-
-  async function handleSave() {
-    if (!selectedLocation) return
-    setSaving(true)
-    setMessage(null)
-    // Only send open days — closed days are represented by their absence
-    const payload = hours
-      .filter((h) => !h.is_closed)
-      .map(({ day, from, to }) => ({
-        day,
-        from: from ?? '06:00',
-        to: to ?? '22:00',
-        is_closed: false,
-      }))
-    const res = await apiUpdateHours(token, selectedLocation, payload)
-    setSaving(false)
-    setMessage(
-      res.success
-        ? { type: 'success', text: 'Hours saved.' }
-        : { type: 'error', text: res.message ?? 'Failed to save hours.' },
-    )
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Operating Hours</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <LocationSelector
-          locations={locations}
-          selected={selectedLocation}
-          onChange={(id) => { setSelectedLocation(id); setMessage(null) }}
-        />
-
-        {!selectedLocation ? (
-          <p className="text-sm text-muted-foreground">Select a location to manage hours.</p>
-        ) : loading ? (
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto my-8" />
-        ) : (
-          <>
-            <div className="space-y-2">
-              {hours.map((h) => (
-                <div key={h.day} className="grid grid-cols-[80px_1fr] items-center gap-3 py-1">
-                  <span className="text-sm font-medium capitalize">{DAY_LABELS[h.day] ?? h.day}</span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={h.is_closed}
-                        onChange={(e) => updateDay(h.day, { is_closed: e.target.checked })}
-                        className="h-4 w-4"
-                      />
-                      Closed
-                    </label>
-                    {!h.is_closed && (
-                      <>
-                        <Input
-                          type="time"
-                          value={h.from ?? ''}
-                          onChange={(e) => updateDay(h.day, { from: e.target.value })}
-                          className="w-32 h-8 text-sm"
-                        />
-                        <span className="text-muted-foreground text-sm">to</span>
-                        <Input
-                          type="time"
-                          value={h.to ?? ''}
-                          onChange={(e) => updateDay(h.day, { to: e.target.value })}
-                          className="w-32 h-8 text-sm"
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {message && (
-              <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
-                {message.text}
-              </p>
-            )}
-
-            <Button size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving…' : 'Save Hours'}
-            </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Reviews Tab ──────────────────────────────────────────────────────────────
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <span className="text-yellow-500 text-sm">
-      {'★'.repeat(Math.round(rating))}{'☆'.repeat(5 - Math.round(rating))}
-    </span>
-  )
-}
-
-function ReviewCard({ review, token, addressId, onUpdated }: {
-  review: Review
-  token: string
-  addressId: number
-  onUpdated: (updated: Review) => void
-}) {
-  const [responding, setResponding] = useState(false)
-  const [responseText, setResponseText] = useState(review.owner_response ?? '')
-  const [showForm, setShowForm] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleRespond(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-    const res = await apiRespondToReview(token, review.id, responseText, addressId)
-    setSaving(false)
-    if (res.success) {
-      onUpdated({ ...review, owner_response: res.owner_response ?? responseText, owner_responded_at: res.owner_responded_at ?? null })
-      setShowForm(false)
-      setResponding(false)
-    } else {
-      setError(res.message ?? 'Failed to post response.')
-    }
-  }
-
-  return (
-    <div className="rounded-lg border p-4 space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-medium text-sm">{review.reviewer || 'Anonymous'}</p>
-          <StarRating rating={review.rating} />
-        </div>
-        <div className="text-right shrink-0">
-          <Badge variant="secondary" className="text-xs capitalize">{review.source}</Badge>
-          {review.status === 'pending' && (
-            <Badge className="ml-1 text-xs bg-yellow-500 text-white">Pending</Badge>
-          )}
-          <p className="text-xs text-muted-foreground mt-1">
-            {review.reviewed_at
-              ? new Date(review.reviewed_at).toLocaleDateString()
-              : new Date(review.created_at).toLocaleDateString()}
-          </p>
-        </div>
-      </div>
-
-      {review.text && <p className="text-sm text-muted-foreground">{review.text}</p>}
-
-      {/* Owner response */}
-      {review.owner_response && !showForm && (
-        <div className="rounded-md bg-muted/50 px-3 py-2 text-sm border-l-4 border-primary/30">
-          <p className="text-xs font-medium text-muted-foreground mb-1">Your response</p>
-          <p>{review.owner_response}</p>
-          <button
-            className="text-xs text-primary hover:underline mt-1"
-            onClick={() => { setShowForm(true); setResponseText(review.owner_response ?? '') }}
-          >
-            Edit response
-          </button>
-        </div>
-      )}
-
-      {/* Respond form */}
-      {showForm ? (
-        <form onSubmit={handleRespond} className="space-y-2">
-          <textarea
-            value={responseText}
-            onChange={(e) => setResponseText(e.target.value)}
-            rows={3}
-            maxLength={2000}
-            required
-            placeholder="Write your response..."
-            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? 'Posting…' : 'Post Response'}
-            </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => setShowForm(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      ) : !review.owner_response ? (
-        <button
-          className="text-xs text-primary hover:underline"
-          onClick={() => { setShowForm(true); setResponding(true) }}
-        >
-          {responding ? '' : 'Respond to this review'}
-        </button>
-      ) : null}
-    </div>
-  )
-}
-
-function ReviewsTab({ token, locations }: { token: string; locations: Location[] }) {
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(locations[0]?.id ?? null)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [meta, setMeta] = useState({ total: 0, current_page: 1, last_page: 1, per_page: 15 })
-  const [status, setStatus] = useState<'all' | 'pending' | 'approved'>('all')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const fetchedKeyRef = useRef<string | null>(null)
-
-  const loadReviews = useCallback(async (addressId: number, page = 1) => {
-    setLoading(true)
-    setError(null)
-    const res = await apiGetReviews(token, addressId, { status, page, per_page: 10 })
-    if (res.success) {
-      setReviews(res.data ?? [])
-      if (res.meta) setMeta(res.meta)
-    } else {
-      setError(res.message ?? 'Failed to load reviews.')
-    }
-    setLoading(false)
-  }, [token, status])
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!selectedLocation) return
-    const key = `${selectedLocation}-${status}`
-    if (fetchedKeyRef.current === key) return
-    fetchedKeyRef.current = key
-    loadReviews(selectedLocation)
-  }, [selectedLocation, status])
-
-  function handleReviewUpdated(updated: Review) {
-    setReviews((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Reviews</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <LocationSelector
-          locations={locations}
-          selected={selectedLocation}
-          onChange={(id) => { setSelectedLocation(id) }}
-        />
-
-        {!selectedLocation ? (
-          <p className="text-sm text-muted-foreground">Select a location to view reviews.</p>
-        ) : (
-          <>
-            {/* Filter */}
-            <div className="flex items-center gap-2">
-              {(['all', 'approved', 'pending'] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatus(s)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors border ${
-                    status === s
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-muted-foreground border-border hover:border-primary/50'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-              <span className="text-xs text-muted-foreground ml-auto">{meta.total} total</span>
-            </div>
-
-            {error && <p className="text-sm text-destructive">{error}</p>}
-
-            {loading ? (
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto my-8" />
-            ) : reviews.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center border border-dashed rounded-lg">
-                No reviews found.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {reviews.map((review) => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    token={token}
-                    addressId={selectedLocation!}
-                    onUpdated={handleReviewUpdated}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {meta.last_page > 1 && (
-              <div className="flex items-center justify-between pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={meta.current_page <= 1 || loading}
-                  onClick={() => selectedLocation && loadReviews(selectedLocation, meta.current_page - 1)}
-                >
-                  Previous
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Page {meta.current_page} of {meta.last_page}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={meta.current_page >= meta.last_page || loading}
-                  onClick={() => selectedLocation && loadReviews(selectedLocation, meta.current_page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Team Tab (Owner Only) ─────────────────────────────────────────────────────
-
-const STATUS_BADGE: Record<string, string> = {
-  pending:  'bg-yellow-100 text-yellow-800 border-yellow-200',
-  accepted: 'bg-green-100 text-green-800 border-green-200',
-  revoked:  'bg-gray-100 text-gray-500 border-gray-200',
-}
-
-function TeamTab({ token }: { token: string }) {
+function TeamTab({ isActive, isOwner }: { isActive: boolean; isOwner: boolean }) {
+  const loadedRef = useRef(false)
   const [members, setMembers] = useState<TeamMember[]>([])
-  const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [revokingId, setRevokingId] = useState<number | null>(null)
-  const [form, setForm] = useState({ email: '', name: '', role: 'manager' as 'manager' | 'staff' })
+  const [loading, setLoading] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName, setInviteName] = useState('')
+  const [inviteRole, setInviteRole] = useState<'manager' | 'staff'>('manager')
   const [inviting, setInviting] = useState(false)
-  const fetchedRef = useRef(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const loadMembers = useCallback(async () => {
-    const res = await apiListTeamMembers(token)
-    if (res.success) setMembers(res.members ?? [])
-    setLoading(false)
-  }, [token])
+    const token = getAuthToken()
+    if (!token) return
+    setLoading(true)
+    try {
+      const res = await apiListTeamMembers(token)
+      setMembers(res.members ?? [])
+    } catch {
+      setError('Failed to load team members')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    if (fetchedRef.current) return
-    fetchedRef.current = true
+    if (!isActive || loadedRef.current) return
+    loadedRef.current = true
     loadMembers()
-  }, [loadMembers])
+  }, [isActive, loadMembers])
 
-  async function handleInvite(e: React.FormEvent) {
-    e.preventDefault()
+  const handleInvite = async () => {
+    const token = getAuthToken()
+    if (!token || !inviteEmail) return
     setInviting(true)
-    setMessage(null)
-    const res = await apiInviteTeamMember(token, form.email, form.name, form.role)
-    setInviting(false)
-    if (res.success && res.member) {
-      setMembers((prev) => [res.member!, ...prev])
-      setForm({ email: '', name: '', role: 'manager' })
-      setMessage({ type: 'success', text: res.message ?? 'Invitation sent.' })
-    } else {
-      setMessage({ type: 'error', text: res.message ?? 'Failed to send invitation.' })
+    setError('')
+    setSuccess('')
+    try {
+      await apiInviteTeamMember(token, inviteEmail, inviteName, inviteRole)
+      setInviteEmail('')
+      setInviteName('')
+      setSuccess('Invitation sent!')
+      loadedRef.current = false
+      loadMembers()
+    } catch {
+      setError('Failed to send invitation')
+    } finally {
+      setInviting(false)
     }
   }
 
-  async function handleRevoke(id: number) {
-    if (!confirm('Revoke this member\'s access? They will be immediately logged out.')) return
-    setRevokingId(id)
-    const res = await apiRevokeTeamMember(token, id)
-    setRevokingId(null)
-    if (res.success) {
-      setMembers((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, status: 'revoked' } : m)),
-      )
-      setMessage({ type: 'success', text: 'Access revoked.' })
-    } else {
-      setMessage({ type: 'error', text: res.message ?? 'Failed to revoke access.' })
+  const handleRevoke = async (memberId: number) => {
+    const token = getAuthToken()
+    if (!token) return
+    try {
+      await apiRevokeTeamMember(token, memberId)
+      setMembers((prev) => prev.filter((m) => m.id !== memberId))
+    } catch {
+      setError('Failed to revoke access')
     }
   }
 
-  if (loading) return <TabSkeleton />
+  if (loading) return <div className="p-6 text-center text-gray-500">Loading…</div>
 
   return (
     <div className="space-y-6">
-      {/* Invite Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Invite Team Member</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Invite a manager or staff member to co-manage your gym listing. They will receive an email with a login link.
-          </p>
-          <form onSubmit={handleInvite} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Email Address *</label>
+      {isOwner && (
+        <Card>
+          <CardHeader><CardTitle>Invite Team Member</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Name</Label>
                 <Input
+                  className="mt-1"
+                  placeholder="Full name"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  className="mt-1"
                   type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="colleague@example.com"
+                  placeholder="email@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
                 />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Full Name</label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Optional"
-                  maxLength={255}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Role</label>
-                <select
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value as 'manager' | 'staff' })}
-                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="manager">Manager</option>
-                  <option value="staff">Staff</option>
-                </select>
               </div>
             </div>
-            {message && (
-              <p className={`text-sm ${message.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
-                {message.text}
-              </p>
-            )}
-            <Button type="submit" size="sm" disabled={inviting}>
-              {inviting ? 'Sending Invite…' : 'Send Invitation'}
+            <div>
+              <Label>Role</Label>
+              <select
+                className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+              >
+                <option value="manager">Manager</option>
+                <option value="staff">Staff</option>
+                <option value="trainer">Trainer</option>
+              </select>
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-600 text-sm">{success}</p>}
+            <Button
+              onClick={handleInvite}
+              disabled={inviting || !inviteEmail}
+              className="bg-[#16a34a] hover:bg-[#15803a] text-white"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              {inviting ? 'Sending…' : 'Send Invitation'}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Members List */}
+          </CardContent>
+        </Card>
+      )}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Team Members</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardHeader><CardTitle>Team Members</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
           {members.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">
-              No team members yet. Invite someone above.
-            </p>
+            <p className="text-gray-500 text-sm text-center py-4">No team members yet.</p>
           ) : (
-            <div className="space-y-3">
-              {members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-start justify-between gap-4 rounded-lg border p-4"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-sm truncate">
-                        {member.name || member.email}
-                      </span>
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_BADGE[member.status] ?? ''}`}
-                      >
-                        {member.status}
-                      </span>
-                      <Badge variant="secondary" className="text-xs capitalize">
-                        {member.role}
-                      </Badge>
-                    </div>
-                    {member.name && (
-                      <p className="text-xs text-muted-foreground truncate">{member.email}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Invited{' '}
-                      {member.invited_at
-                        ? new Date(member.invited_at).toLocaleDateString()
-                        : '—'}
-                      {member.accepted_at && (
-                        <> · Accepted {new Date(member.accepted_at).toLocaleDateString()}</>
-                      )}
-                    </p>
-                  </div>
-                  {member.status !== 'revoked' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            members.map((member) => (
+              <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <p className="font-medium text-sm">{member.name}</p>
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> {member.email}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="capitalize">{member.role}</Badge>
+                  {isOwner && (
+                    <button
+                      type="button"
                       onClick={() => handleRevoke(member.id)}
-                      disabled={revokingId === member.id}
+                      className="text-red-400 hover:text-red-600"
                     >
-                      {revokingId === member.id ? '…' : 'Revoke'}
-                    </Button>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </CardContent>
       </Card>
@@ -1070,110 +1632,98 @@ function TeamTab({ token }: { token: string }) {
   )
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function TabSkeleton() {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-3 animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/3" />
-          <div className="h-24 bg-muted rounded" />
-          <div className="h-9 bg-muted rounded w-28" />
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [token, setToken] = useState<string | null>(null)
-  const [locations, setLocations] = useState<Location[]>([])
-  const [loadingLocations, setLoadingLocations] = useState(true)
+  const [activeTab, setActiveTab] = useState('gym-info')
+  const [locations, setLocations] = useState<ApiLocation[]>([])
+  const [gymName, setGymName] = useState('')
   const [isOwner, setIsOwner] = useState(false)
+  const [bootstrapping, setBootstrapping] = useState(true)
+  const [bootError, setBootError] = useState('')
 
   useEffect(() => {
-    const t = getAuthToken()
-    if (!t) {
-      router.replace('/dashboard/auth/login')
+    const token = getAuthToken()
+    if (!token) {
+      router.push('/login')
       return
     }
-    setToken(t)
+    const base = getApiBaseUrl()
     Promise.all([
-      apiGetLocations(t),
-      apiListTeamMembers(t),
-    ]).then(([locRes, teamRes]) => {
-      if (locRes.success) setLocations(locRes.locations ?? [])
-      setIsOwner(teamRes.success === true)
-      setLoadingLocations(false)
-    })
+      apiFetch(`${base}/api/v1/gym-owner/locations`, token),
+      apiGetMe(token),
+    ])
+      .then(([locData, meData]) => {
+        setGymName(locData.gym_name ?? '')
+        setLocations(locData.locations ?? [])
+        setIsOwner(meData.is_owner ?? true)
+      })
+      .catch(() => setBootError('Failed to load gym data'))
+      .finally(() => setBootstrapping(false))
   }, [router])
 
-  if (!token || loadingLocations) {
+  if (bootstrapping) {
     return (
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading your profile…</p>
+      </div>
+    )
+  }
+
+  if (bootError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">{bootError}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-[calc(100vh-200px)] bg-muted/30">
-      {/* Header */}
-      <div className="border-b bg-background">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Manage Profile</h1>
-            <p className="text-sm text-muted-foreground">
-              Update your gym&apos;s public listing information
-            </p>
-          </div>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard">← Back to Dashboard</Link>
-          </Button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">{gymName || 'Gym Profile'}</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage your gym information, pricing, hours, and more.</p>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="description">
-          <TabsList className="flex flex-wrap h-auto gap-1 mb-6 w-full sm:w-auto">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="photos">Photos</TabsTrigger>
-            <TabsTrigger value="pricing">Pricing & Plans</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
+            <TabsTrigger value="gym-info">Gym Info</TabsTrigger>
+            <TabsTrigger value="amenities">Amenities</TabsTrigger>
+            <TabsTrigger value="pricing">Pricing</TabsTrigger>
             <TabsTrigger value="hours">Hours</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            {isOwner && <TabsTrigger value="team">Team</TabsTrigger>}
+            <TabsTrigger value="team">Team</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="description">
-            <DescriptionTab token={token} />
+          <TabsContent value="gym-info">
+            <GymInfoTab isActive={activeTab === 'gym-info'} isOwner={isOwner} />
           </TabsContent>
 
-          <TabsContent value="photos">
-            <PhotosTab token={token} locations={locations} />
+          <TabsContent value="amenities">
+            <AmenitiesTab isActive={activeTab === 'amenities'} />
           </TabsContent>
 
           <TabsContent value="pricing">
-            <PricingTab token={token} locations={locations} />
+            <PricingTab isActive={activeTab === 'pricing'} locations={locations} />
           </TabsContent>
 
           <TabsContent value="hours">
-            <HoursTab token={token} locations={locations} />
+            <HoursTab isActive={activeTab === 'hours'} locations={locations} />
+          </TabsContent>
+
+          <TabsContent value="photos">
+            <PhotosTab isActive={activeTab === 'photos'} />
           </TabsContent>
 
           <TabsContent value="reviews">
-            <ReviewsTab token={token} locations={locations} />
+            <ReviewsTab isActive={activeTab === 'reviews'} locations={locations} />
           </TabsContent>
 
-          {isOwner && (
-            <TabsContent value="team">
-              <TeamTab token={token} />
-            </TabsContent>
-          )}
+          <TabsContent value="team">
+            <TeamTab isActive={activeTab === 'team'} isOwner={isOwner} />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
