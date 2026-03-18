@@ -51,7 +51,7 @@ export async function apiInviteTeamMember(
   sessionToken: string,
   email: string,
   name: string,
-  role: 'manager' | 'staff',
+  role: 'manager' | 'staff' | 'trainer',
 ): Promise<TeamInviteResponse> {
   const res = await fetch(`${getApiBaseUrl()}/api/v1/gym-owner/team/invite`, {
     method: 'POST',
