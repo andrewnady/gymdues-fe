@@ -1487,7 +1487,7 @@ function TeamTab({ isActive, isOwner }: { isActive: boolean; isOwner: boolean })
   const [loading, setLoading] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
-  const [inviteRole, setInviteRole] = useState<'manager' | 'staff'>('manager')
+  const [inviteRole, setInviteRole] = useState<'manager' | 'staff' | 'trainer'>('manager')
   const [inviting, setInviting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -1577,7 +1577,7 @@ function TeamTab({ isActive, isOwner }: { isActive: boolean; isOwner: boolean })
               <select
                 className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
                 value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value)}
+                onChange={(e) => setInviteRole(e.target.value as "manager" | "staff" | "trainer")}
               >
                 <option value="manager">Manager</option>
                 <option value="staff">Staff</option>
