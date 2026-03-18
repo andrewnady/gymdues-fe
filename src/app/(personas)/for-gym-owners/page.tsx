@@ -157,10 +157,10 @@ export default function ForGymOwnersPage() {
                   <p className='text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1'>
                     <span>Can&apos;t find your gym?</span>
                     <a
-                      href='/gyms'
+                      href='#'
                       className='inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 font-medium text-primary hover:bg-primary/10 hover:border-primary/50 transition-colors whitespace-nowrap'
                     >
-                      Browse all gyms
+                      List your gym
                     </a>
                   </p>
                   <p className='text-xs text-muted-foreground sm:text-right inline-flex flex-nowrap items-center gap-x-1.5'>
