@@ -93,9 +93,9 @@ export default function ForGymOwnersPage() {
             <span className='mx-1.5'>/</span>
             <span className='text-foreground font-medium'>For Gym Owners</span>
           </nav>
-          <h2 className='text-2xl md:text-3xl font-bold tracking-tight text-foreground'>
+          {/* <h2 className='text-2xl md:text-3xl font-bold tracking-tight text-foreground'>
             For Gym Owners
-          </h2>
+          </h2> */}
         </header>
         {/* Section 1: Hero */}
         <section className='relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.06] px-6 py-12 md:px-10 md:py-16 lg:px-12'>
@@ -212,7 +212,7 @@ export default function ForGymOwnersPage() {
                     </li>
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
-                      <span>Lead contact details for trials and tours.</span>
+                      <span>Lead contact details for Subscriptions and tours.</span>
                     </li>
                     <li className='flex items-start gap-2'>
                       <CheckCircle2 className='h-4 w-4 shrink-0 text-primary/80 mt-0.5' />
@@ -245,7 +245,7 @@ export default function ForGymOwnersPage() {
                     </Badge>
                   </div>
                   <p className='text-[11px] text-muted-foreground leading-snug'>
-                    Claimed gyms show as verified and convert more clicks into tours, trials, and
+                    Claimed gyms show as verified and convert more clicks into tours, Subscriptions, and
                     memberships.
                   </p>
                 </div>
@@ -472,7 +472,7 @@ export default function ForGymOwnersPage() {
                             <span className='mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary'>
                               <CheckCircle2 className='h-3.5 w-3.5' aria-hidden />
                             </span>
-                            <span>Lead contact details for trials and tours.</span>
+                            <span>Lead contact details for Subscriptions and tours.</span>
                           </li>
                         </ul>
                         <ul className='space-y-2.5'>
@@ -547,7 +547,7 @@ export default function ForGymOwnersPage() {
                 </Badge>
               </div>
               <p className='text-xs text-muted-foreground'>
-                Profiles with the Verified badge get more clicks, more trial
+                Profiles with the Verified badge get more clicks, more Subscription
                 requests, and a higher chance of being shortlisted.
               </p>
             </Card>
