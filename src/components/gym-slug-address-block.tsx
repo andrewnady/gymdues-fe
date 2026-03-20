@@ -28,17 +28,24 @@ export function GymSlugAddressBlock({ slug, gym, initialAddresses }: GymSlugAddr
   const [addressId, setAddressId] = useState<string | null>(null)
 
   // Sync from hash on mount and when hash changes (e.g. user clicked an address).
+  // If gym has one location, default select it so Subscription/reviews work without manual selection.
   // useLayoutEffect so the selected address is shown on first paint when visiting with #location=.
   useLayoutEffect(() => {
-    setAddressId(getLocationFromHash())
-    const handleHashChange = () => setAddressId(getLocationFromHash())
+    const fromHash = getLocationFromHash()
+    const defaultId =
+      fromHash ?? (initialAddresses.length === 1 ? String(initialAddresses[0].id) : null)
+    setAddressId(defaultId)
+    const handleHashChange = () => {
+      const h = getLocationFromHash()
+      setAddressId(h ?? (initialAddresses.length === 1 ? String(initialAddresses[0].id) : null))
+    }
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
-  }, [])
+  }, [initialAddresses])
 
   return (
     <>
-      {(gym.addresses_count ?? 0) > 0 && (
+      {((gym.addresses_count ?? 0) > 0 || initialAddresses.length > 0) && (
         <GymLocationsMap
           slug={slug}
           gymId={gym.id}

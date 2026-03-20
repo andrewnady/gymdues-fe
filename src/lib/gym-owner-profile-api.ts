@@ -117,12 +117,58 @@ export interface RespondToReviewResponse {
   owner_responded_at?: string
 }
 
+export interface SubscriptionAddress {
+  full_address?: string | null
+  city?: string | null
+  state?: string | null
+  country?: string | null
+}
+
+export interface SubscriptionPlanSummary {
+  tier_name: string
+  price: string
+  frequency: string
+}
+
+export interface GymOwnerSubscription {
+  id: number
+  address_id: number
+  address: SubscriptionAddress
+  pricing_id: number
+  plan: SubscriptionPlanSummary
+  name: string
+  phone: string
+  notes: string | null
+  created_at: string
+}
+
+export interface SubscriptionsListResponse {
+  success: boolean
+  data?: GymOwnerSubscription[]
+  meta?: {
+    total: number
+    per_page: number
+    current_page: number
+    last_page: number
+  }
+  message?: string
+  error?: string
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function authHeaders(token: string) {
   return {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
+  }
+}
+
+function gymOwnerHeadersWithApiKey(token: string) {
+  const apiKey = process.env.NEXT_PUBLIC_GYM_API_KEY || ''
+  return {
+    ...authHeaders(token),
+    'X-Api-Key': apiKey,
   }
 }
 
@@ -317,4 +363,57 @@ export async function apiRespondToReview(
     },
   )
   return res.json()
+}
+
+// ─── Plan subscriptions (public form → owner list) ────────────────────────────
+
+/**
+ * GET /api/v1/gym-owner/subscriptions
+ * Requires Bearer session token and X-Api-Key.
+ */
+export async function apiGetSubscriptions(
+  token: string,
+  params?: { address_id?: number; page?: number; per_page?: number },
+): Promise<SubscriptionsListResponse> {
+  const url = new URL(`${getApiBaseUrl()}/api/v1/gym-owner/subscriptions`)
+  if (params?.address_id != null) {
+    url.searchParams.set('address_id', String(params.address_id))
+  }
+  if (params?.page != null && params.page > 0) {
+    url.searchParams.set('page', String(params.page))
+  }
+  if (params?.per_page != null && params.per_page > 0) {
+    const perPage = Math.min(100, Math.max(1, params.per_page))
+    url.searchParams.set('per_page', String(perPage))
+  }
+
+  const res = await fetch(url.toString(), {
+    headers: gymOwnerHeadersWithApiKey(token),
+  })
+
+  const json = (await res.json().catch(() => ({}))) as SubscriptionsListResponse & {
+    message?: string
+    error?: string
+  }
+
+  if (res.status === 401) {
+    return {
+      success: false,
+      message: json.error ?? json.message ?? 'Unauthorized – invalid or expired session token.',
+    }
+  }
+
+  if (!res.ok) {
+    return {
+      success: false,
+      message: json.message ?? json.error ?? `Failed to load subscriptions (${res.status}).`,
+    }
+  }
+
+  return {
+    success: json.success !== false,
+    data: json.data,
+    meta: json.meta,
+    message: json.message,
+  }
 }

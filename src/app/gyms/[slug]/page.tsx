@@ -140,16 +140,41 @@ export default async function GymDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch nearby gyms and gym addresses from API
+  // Fetch nearby gyms and gym addresses from API (graceful fallback if API unreachable)
   const addressId =
     typeof gym.address === 'object' && gym.address !== null ? gym.address.id : undefined
-  const [nearbyGyms, addressesResult] = await Promise.all([
+  const [nearbyResult, addressesResult] = await Promise.allSettled([
     getNearbyGyms(slug, { address_id: addressId, per_page: 10 }),
     (gym.addresses_count ?? 0) > 0
       ? getAddressesByGymId(gym.id, { page: 1, per_page: 100 })
       : Promise.resolve({ data: [], meta: null }),
   ])
-  const gymAddresses = addressesResult.data
+  const nearbyGyms = nearbyResult.status === 'fulfilled' ? nearbyResult.value : []
+  let gymAddresses =
+    addressesResult.status === 'fulfilled' ? addressesResult.value.data : []
+  // Fallback: when addresses API fails, use gym's primary address if available (from getGymBySlug)
+  if (gymAddresses.length === 0 && typeof gym.address === 'object' && gym.address !== null) {
+    const addr = gym.address as { id?: number | string; latitude?: number; longitude?: number; full_address?: string; street?: string; city?: string; state?: string; postal_code?: string }
+    if (addr.id != null && addr.latitude != null && addr.longitude != null) {
+      gymAddresses = [{
+        id: addr.id,
+        latitude: addr.latitude,
+        longitude: addr.longitude,
+        full_address: addr.full_address ?? null,
+        street: addr.street ?? null,
+        city: addr.city ?? null,
+        state: addr.state ?? null,
+        postal_code: addr.postal_code ?? null,
+        is_primary: true,
+      }]
+    }
+  }
+  if (nearbyResult.status === 'rejected') {
+    console.warn('Failed to fetch nearby gyms:', nearbyResult.reason)
+  }
+  if (addressesResult.status === 'rejected') {
+    console.warn('Failed to fetch gym addresses:', addressesResult.reason)
+  }
 
   // Get site URL from environment or default to production
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gymdues.com'
