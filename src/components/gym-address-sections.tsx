@@ -6,7 +6,7 @@ import type { Gym, AddressDetail, OperatingHours, Plan, Review } from '@/types/g
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GymReviewsPaginated } from '@/components/gym-reviews-paginated'
 import { ReadMoreText } from '@/components/read-more-text'
-import { Star } from 'lucide-react'
+import { Bell, Star } from 'lucide-react'
 import {
   Carousel,
   CarouselContent,
@@ -15,7 +15,9 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { LeaveReview } from './leave-a-review'
+import { SubscriptionModal } from './subscription-modal'
 
 function formatTimeToAmPm(timeString: string): string {
   if (!timeString) return ''
@@ -192,6 +194,21 @@ export function GymAddressSections({ gym, addressId }: GymAddressSectionsProps) 
                               </span>
                             </div>
                             <h3 className='text-xl font-semibold mb-2'>{plan.tier_name}</h3>
+                            {resolvedId != null && (
+                              <SubscriptionModal
+                                plan={plan}
+                                trigger={
+                                  <Button
+                                    variant='default'
+                                    size='default'
+                                    className='mt-2 shadow-md hover:shadow-lg transition-shadow font-semibold'
+                                  >
+                                    <Bell className='h-4 w-4' />
+                                    Subscribe
+                                  </Button>
+                                }
+                              />
+                            )}
                           </div>
                           <div
                             className='flex-1'

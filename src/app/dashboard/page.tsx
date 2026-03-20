@@ -104,6 +104,9 @@ export default function DashboardPage() {
                     Manage Profile
                   </Link>
                 </Button>
+                <Button asChild size="sm" variant="secondary">
+                  <Link href="/dashboard/subscriptions">Plan subscriptions</Link>
+                </Button>
                 <Button asChild size="sm" variant="outline">
                   <Link href={`/gyms/${gym.slug ?? encodeURIComponent(gym.name.toLowerCase().replace(/\s+/g, '-'))}`} target="_blank">
                     View Public Listing
